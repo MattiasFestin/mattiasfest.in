@@ -1,0 +1,46 @@
+@font-face {
+	font-family: 'FiraCode';
+	font-style: normal;
+  	font-weight: normal;
+	src: local(FiraCode Regular), url('../../../static/fonts/firacode/FiraCode-Regular.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'FiraCode';
+	font-style: normal;
+  	font-weight: bald;
+	src: local(FiraCode Regular), url('../../../static/fonts/firacode/FiraCode-Bold.woff2') format('woff2');
+}
+
+.live-code-editor {
+	padding: 20px;
+	.ace_editor {
+		width: 100% !important;
+	}
+	.live-code-editor-result {
+		top: -14px;
+		position: relative;
+		
+		display: block;
+		font-family: 'FiraCode';
+		background-color: black;
+		color: white;
+		font-weight: bold;
+
+		width: 100%;
+		// height: 200px;
+
+		// overflow: hidden;
+		overflow-wrap: break-word;
+		word-wrap: break-word;
+		white-space: normal;
+	
+
+		pre {
+			overflow-wrap: break-word;
+			word-wrap: break-word;
+			white-space: normal;
+			display: table;
+		}
+	}
+}

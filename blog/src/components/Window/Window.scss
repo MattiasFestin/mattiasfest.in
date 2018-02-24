@@ -1,0 +1,48 @@
+$bgColor: #c1c1c1;
+$topBarColor: #00007F;
+$iconBgColor: #ccc;
+
+// .window-wrapper {
+// 	cursor: nwse-resize;
+	.window {
+		cursor: pointer;
+		background-color: $bgColor;
+		border-color:  darken($bgColor, 5%);
+		border-width: 2px;
+		border-style: ridge;
+		padding: 1px;
+
+
+
+		.window-topbar {
+			height: 17px;
+			width: 100%;
+			position: relative;
+			display: block;
+			background-color: $topBarColor;
+			border-width: 1px;
+			border-style: solid;
+			border-color:  lighten($topBarColor, 20%);
+		}
+
+		.app-icon {
+			size: 16px;
+			padding: 1px;
+			float: left;
+			color: lighten($iconBgColor, 80%);
+			background-color: transparentize(darken($iconBgColor, 10%), .6);
+			border-color: transparentize($iconBgColor, .6);
+			border-width: 1px;
+			border-style: solid;
+		}
+
+		.actions {
+			float: right;
+			// color: lighten($iconBgColor, 80%) !important;
+		}
+
+		.window-content {
+			padding: 5px;
+		}
+	}
+// }
