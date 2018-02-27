@@ -164,10 +164,10 @@ exports.modifyWebpackConfig = ({ config, stage }) => {
 			break;
 		
 		case 'build-html':
-			config.plugin("CopyMonaco", CopyWebpackPlugin, [{
-				from: 'node_modules/monaco-editor/min/vs',
-				to: 'public/vs',
-			}]);
+			// config.plugin("CopyMonaco", CopyWebpackPlugin, [{
+			// 	from: 'node_modules/monaco-editor/min/vs',
+			// 	to: 'public/vs',
+			// }]);
 			break;
 	}
 };
