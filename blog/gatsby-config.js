@@ -1,5 +1,7 @@
 const config = require("./data/SiteConfig");
 
+const { fixedEl } = require('./src/rnd.js');
+
 const pathPrefix = config.pathPrefix === "/" ? "" : config.pathPrefix;
 
 module.exports = {
@@ -11,7 +13,7 @@ module.exports = {
       feed_url: config.siteUrl + pathPrefix + config.siteRss,
       title: config.siteTitle,
       description: config.siteDescription,
-      image_url: `${config.siteUrl + pathPrefix}/logos/logo-512.png`,
+      image_url: `${fixedEl('/logos/logo-512.png', config.cdn) + pathPrefix}/logos/logo-512.png`,
       author: config.userName,
       copyright: config.copyright
     }

@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import Helmet from "react-helmet";
 import config from "../../../data/SiteConfig";
 
+const { fixedEl } = require('../../rnd.js');
+
 class SEO extends Component {
   render() {
     const { postNode, postPath, postSEO } = this.props;
@@ -23,7 +25,7 @@ class SEO extends Component {
       image = config.siteLogo;
     }
     const realPrefix = config.pathPrefix === "/" ? "" : config.pathPrefix;
-    image = config.siteUrl + realPrefix + image;
+    image = fixedEl(image, config.cdn) + realPrefix + image;
     const blogURL = config.siteUrl + config.pathPrefix;
     const schemaOrgJSONLD = [
       {

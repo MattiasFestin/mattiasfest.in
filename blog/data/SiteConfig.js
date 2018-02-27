@@ -4,6 +4,12 @@ module.exports = {
   siteTitleAlt: "A programming blog about programming", // Alternative site title for SEO.
   siteLogo: "/logos/logo-1024.png", // Logo used for SEO and manifest.
   siteUrl: "https://mattiasfest.in", // Domain of your website without pathPrefix.
+  cdn: [
+    'https://cdn01.mattiasfest.in',
+    'https://cdn02.mattiasfest.in',
+    'https://cdn03.mattiasfest.in',
+    'https://cdn04.mattiasfest.in'
+  ],
   pathPrefix: "/blog", // Prefixes all links. For cases when deployed to example.github.io/gatsby-material-starter/.
   fixedFooter: false, // Whether the footer component is fixed, i.e. always visible
   siteDescription: "A tech blog.", // Website description used for RSS feeds/meta description tag.
@@ -17,7 +23,7 @@ module.exports = {
   userLocation: "Kalix, Sweden", // User location to display in the author segment.
   userAvatar: "https://avatars3.githubusercontent.com/u/1441064?s=460&v=4", // User avatar to display in the author segment.
   userDescription:
-    "Yeah, I like animals better than people sometimes... Especially dogs. Dogs are the best. Every time you come home, they act like they haven't seen you in a year. And the good thing about dogs... is they got different dogs for different people.", // User description to display in the author segment.
+    "I am a developer living in the north of Sweden. I like computers, mathematics, electronics and beer brewing. I like animals, and have one dog and two cats.", // User description to display in the author segment.
   // Links to social profiles/projects you want to display in the author segment/navigation bar.
   userLinks: [
     {
