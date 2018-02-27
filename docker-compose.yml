@@ -1,0 +1,27 @@
+version: '3'
+services:
+    blog:
+        build:
+            context: ./blog
+            dockerfile: ./docker/BuildSite.dockerfile
+        volumes:
+            - content:/var/www
+
+    config:
+        build:
+            context: ./docker
+            dockerfile: ./docker/Config.dockerfile
+        volumes:
+            - config/etc/nginx/conf.d
+
+    nginx:
+        image: nginx
+        volumes:
+            - config:/etc/nginx/conf.d
+            - content:/var/www
+        depends_on:
+            - config
+            - blog
+volumes:
+    config:
+    content:
