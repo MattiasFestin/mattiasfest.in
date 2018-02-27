@@ -39,10 +39,16 @@ export default class PostTemplate extends React.Component {
 	}
 
 	initDependencies() {
-		window.MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+		if (typeof window !== 'undefined' && typeof window.MathJax === 'object' && window.MathJax.Hub && typeof window.MathJax.Hub.Queue === 'function') {
+			window.MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+		}
+
+		if (typeof window !== 'undefined' && typeof window.addthis === 'object' && window.addthis.layers && typeof window.addthis.layers.refresh === 'function') {
+			window.addthis.layers.refresh();
+		}
+
 		// window.Prism.highlightAll();
 		// window.klipse.plugin.init(klipse.run.plugin_prod.plugin.settings());
-		// window.addthis.layers.refresh();
 	}
 
 	componentDidUpdate() {
@@ -97,7 +103,7 @@ export default class PostTemplate extends React.Component {
 						</div>
 						<LiveCodeEditor src="123" lang="js" />
 					</Card>
-					<div className="addthis_inline_share_toolbox" data-url={ typeof window === 'undefined' ? '' : window.location.href } data-title={ post.title }></div>
+					<div className="addthis_inline_share_toolbox" data-url={ config.siteUrl + post.slug } data-title={ post.title }></div>
 					<Disqus postNode={postNode} expanded={expanded} />
 					<UserInfo
 						className="md-grid md-cell md-cell--12"
