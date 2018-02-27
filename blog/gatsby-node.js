@@ -164,7 +164,7 @@ exports.modifyWebpackConfig = ({ config, stage }) => {
 			break;
 		
 		case 'build-html':
-			consig.plugin("CopyMonaco", CopyWebpackPlugin, [{
+			config.plugin("CopyMonaco", CopyWebpackPlugin, [{
 				from: 'node_modules/monaco-editor/min/vs',
 				to: 'public/vs',
 			}]);
