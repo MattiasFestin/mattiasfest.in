@@ -97,7 +97,7 @@ export default class PostTemplate extends React.Component {
 						</div>
 						<LiveCodeEditor src="123" lang="js" />
 					</Card>
-					<div className="addthis_inline_share_toolbox" data-url={ window.location.href } data-title={ post.title }></div>
+					<div className="addthis_inline_share_toolbox" data-url={ typeof window === 'undefined' ? '' : window.location.href } data-title={ post.title }></div>
 					<Disqus postNode={postNode} expanded={expanded} />
 					<UserInfo
 						className="md-grid md-cell md-cell--12"

@@ -27,7 +27,7 @@ class LiveCodeEditor extends Component {
 		});
 		this.state = {
 			retVal: null,
-			src: window.localStorage.getItem('src')
+			src: (typeof window === 'undefined' ? '' : window.localStorage.getItem('src'))
 		};
 		this.props = {
 			lang: 'js'
