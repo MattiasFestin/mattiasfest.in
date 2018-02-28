@@ -161,28 +161,28 @@ module.exports = {
       resolve: `gatsby-plugin-netlify`,
       options: {
         headers: {
-          '*.js': [
+          '/*.js': [
             'Cache-Control: immutable'
           ],
-          '*.css': [
+          '/*.css': [
             'Cache-Control: immutable'
           ],
-          '*.woff2': [
+          '/*.woff2': [
             'Cache-Control: immutable'
           ],
-          '*.png': [
+          '/*.png': [
             'Cache-Control: immutable'
           ],
-          '*.jpg': [
+          '/*.jpg': [
             'Cache-Control: immutable'
           ],
-          '*.jpeg': [
+          '/*.jpeg': [
             'Cache-Control: immutable'
           ],
-          '*.webp': [
+          '/*.webp': [
             'Cache-Control: immutable'
           ],
-          '*.gif': [
+          '/*.gif': [
             'Cache-Control: immutable'
           ]
         },
@@ -193,7 +193,7 @@ module.exports = {
           `Strict-Transport-Security:max-age=31536000`,
           `includeSubDomains; preload`,
           `X-Content-Type:nosniff`,
-          `Content-Security-Policy: default-src 'self' 'unsafe-inline' *.mattiasfest.in s7.addthis.com cdnjs.cloudflare.com; script-src 'self' https://www.google-analytics.com; img-src *;`,
+          `Content-Security-Policy: default-src 'self' 'unsafe-inline' *.mattiasfest.in s7.addthis.com cdnjs.cloudflare.com; script-src 'self' www.google-analytics.com; img-src *; style-src: 'self' 'unsafe-inline' fonts.googleapis.com *.mattiasfest.in`,
           `Referrer-Policy: no-referrer`
         ], // option to add headers for all pages. `Link` headers are transformed by the below criteria
         mergeSecurityHeaders: true, // boolean to turn off the default security headers
