@@ -188,13 +188,13 @@ module.exports = {
         },
         // option to add more headers. `Link` headers are transformed by the below criteria
         allPageHeaders: [
-          'X-Frame-Options: deny',
-          'X-XSS-Protection: 1; mode=block',
-          'Strict-Transport-Security:max-age=31536000',
-          'includeSubDomains; preload',
-          'X-Content-Type:nosniff',
-          'Content-Security-Policy: default-src "self" "unsafe-inline" *.mattiasfest.in; script-src "self" https://www.google-analytics.com; img-src *; style-src "self"',
-          'Referrer-Policy: no-referrer'
+          `X-Frame-Options: deny`,
+          `X-XSS-Protection: 1; mode=block`,
+          `Strict-Transport-Security:max-age=31536000`,
+          `includeSubDomains; preload`,
+          `X-Content-Type:nosniff`,
+          `Content-Security-Policy: default-src 'self' 'unsafe-inline' *.mattiasfest.in; script-src 'self' https://www.google-analytics.com; img-src *; style-src 'self'`,
+          `Referrer-Policy: no-referrer`
         ], // option to add headers for all pages. `Link` headers are transformed by the below criteria
         mergeSecurityHeaders: true, // boolean to turn off the default security headers
         mergeLinkHeaders: true, // boolean to turn off the default gatsby js headers
