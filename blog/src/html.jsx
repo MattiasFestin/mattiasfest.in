@@ -40,10 +40,10 @@ export default class HTML extends React.Component {
 					<link rel="shortcut icon" href={favicon} />
 					{/* <href rel="stylesheet" href="https://storage.googleapis.com/app.klipse.tech/css/codemirror.css"/>
 					<script src="https://storage.googleapis.com/app.klipse.tech/plugin_prod/js/klipse_plugin.min.js"></script> */}
-					<script src="https://rawgit.com/Microsoft/TypeScript/master/lib/typescriptServices.js"></script>
-    				<script src="https://rawgit.com/basarat/typescript-script/master/transpiler.js"></script>
-					<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-					<script src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5a68a2b9e049f95c"></script> {/* &async=1 */}
+					{/* <script src="https://rawgit.com/Microsoft/TypeScript/master/lib/typescriptServices.js" integrety="sha256-"></script>
+    				<script src="https://rawgit.com/basarat/typescript-script/master/transpiler.js" integrety="sha256-"></script> */}
+					<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML" integrety="sha256-N0muzwx+6hUXeRm/+ZXio7f51Sgm7t2iCRPt9+9qrVU="></script>
+					<script src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5a68a2b9e049f95c" integrety="sha256-z4OfWfyKPB2JL83JV76A0aHNtFDAGKhml4dHYy7I2A8="></script> {/* &async=1 */}
 					{css}
 				</head>
 				<body>
