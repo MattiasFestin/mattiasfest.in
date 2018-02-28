@@ -157,7 +157,51 @@ module.exports = {
           }
         ]
       }
-    },
-    `gatsby-plugin-netlify`
+    }, {
+      resolve: `gatsby-plugin-netlify`,
+      options: {
+        headers: {
+          '*.js': [
+            'Cache-Control: immutable'
+          ],
+          '*.css': [
+            'Cache-Control: immutable'
+          ],
+          '*.woff2': [
+            'Cache-Control: immutable'
+          ],
+          '*.png': [
+            'Cache-Control: immutable'
+          ],
+          '*.jpg': [
+            'Cache-Control: immutable'
+          ],
+          '*.jpeg': [
+            'Cache-Control: immutable'
+          ],
+          '*.webp': [
+            'Cache-Control: immutable'
+          ],
+          '*.gif': [
+            'Cache-Control: immutable'
+          ]
+        },
+        // option to add more headers. `Link` headers are transformed by the below criteria
+        allPageHeaders: [
+          'X-Frame-Options: deny',
+          'X-XSS-Protection: 1; mode=block',
+          'Strict-Transport-Security:max-age=31536000'
+          'includeSubDomains; preload',
+          'X-Content-Type:nosniff',
+          'Content-Security-Policy: default-src "self" *.mattiasfest.in; script-src "self" https://www.google-analytics.com; img-src *',
+          'Referrer-Policy: no-referrer'
+        ], // option to add headers for all pages. `Link` headers are transformed by the below criteria
+        mergeSecurityHeaders: true, // boolean to turn off the default security headers
+        mergeLinkHeaders: true, // boolean to turn off the default gatsby js headers
+        mergeCachingHeaders: true, // boolean to turn off the default caching headers
+        transformHeaders: (headers, path) => headers, // optional transform for manipulating headers under each path (e.g.sorting), etc.
+        generateMatchPathRewrites: true, // boolean to turn off automatic creation of redirect rules for client only paths
+      }
+    }
   ]
 };
