@@ -190,7 +190,7 @@ module.exports = {
         allPageHeaders: [
           'X-Frame-Options: deny',
           'X-XSS-Protection: 1; mode=block',
-          'Strict-Transport-Security:max-age=31536000'
+          'Strict-Transport-Security:max-age=31536000',
           'includeSubDomains; preload',
           'X-Content-Type:nosniff',
           'Content-Security-Policy: default-src "self" *.mattiasfest.in; script-src "self" https://www.google-analytics.com; img-src *',
