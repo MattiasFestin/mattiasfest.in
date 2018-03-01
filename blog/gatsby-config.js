@@ -161,6 +161,12 @@ module.exports = {
       resolve: `gatsby-plugin-netlify`,
       options: {
         headers: {
+          '/manifest.json' {
+            'Cache-Control: public, must-revalidate, max-age=86400, s-maxage=86400'
+          },
+          '/*.html' {
+            'Cache-Control: no-cache'
+          },
           '/*.js': [
             'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ],
@@ -193,7 +199,7 @@ module.exports = {
           `Strict-Transport-Security:max-age=31536000`,
           `includeSubDomains; preload`,
           `X-Content-Type:nosniff`,
-          `Content-Security-Policy: default-src 'self' mattiasfest.in *.mattiasfest.in; script-src 'self' www.google-analytics.com s7.addthis.com cdnjs.cloudflare.com; img-src *; style-src 'self' 'unsafe-inline' fonts.googleapis.com mattiasfest.in *.mattiasfest.in; font-src *`,
+          `Content-Security-Policy: default-src 'self' mattiasfest.in *.mattiasfest.in; script-src 'self' 'unsafe-inline' www.google-analytics.com s7.addthis.com cdnjs.cloudflare.com; img-src *; style-src 'self' 'unsafe-inline' fonts.googleapis.com mattiasfest.in *.mattiasfest.in; font-src *`,
           `Referrer-Policy: no-referrer`
         ], // option to add headers for all pages. `Link` headers are transformed by the below criteria
         mergeSecurityHeaders: true, // boolean to turn off the default security headers
