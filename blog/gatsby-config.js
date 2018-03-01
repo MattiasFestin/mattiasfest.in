@@ -193,7 +193,7 @@ module.exports = {
           `Strict-Transport-Security:max-age=31536000`,
           `includeSubDomains; preload`,
           `X-Content-Type:nosniff`,
-          `Content-Security-Policy: default-src 'self' 'unsafe-inline' mattiasfest.in *.mattiasfest.in s7.addthis.com cdnjs.cloudflare.com; script-src 'self' www.google-analytics.com; img-src *; style-src 'self' 'unsafe-inline' fonts.googleapis.com mattiasfest.in *.mattiasfest.in`,
+          `Content-Security-Policy: default-src 'self' mattiasfest.in *.mattiasfest.in; script-src 'self' www.google-analytics.com s7.addthis.com cdnjs.cloudflare.com; img-src *; style-src 'self' 'unsafe-inline' fonts.googleapis.com mattiasfest.in *.mattiasfest.in; font-src *`,
           `Referrer-Policy: no-referrer`
         ], // option to add headers for all pages. `Link` headers are transformed by the below criteria
         mergeSecurityHeaders: true, // boolean to turn off the default security headers
