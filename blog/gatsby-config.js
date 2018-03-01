@@ -161,12 +161,12 @@ module.exports = {
       resolve: `gatsby-plugin-netlify`,
       options: {
         headers: {
-          '/manifest.json' {
+          '/manifest.json': [
             'Cache-Control: public, must-revalidate, max-age=86400, s-maxage=86400'
-          },
-          '/*.html' {
+          ],
+          '/*.html': [
             'Cache-Control: no-cache'
-          },
+          ],
           '/*.js': [
             'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ],

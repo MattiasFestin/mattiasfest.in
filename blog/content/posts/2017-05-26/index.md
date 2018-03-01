@@ -3,11 +3,12 @@ title: Catigories in TS
 date: "2017-05-25T22:40:32.169Z"
 cover: "https://upload.wikimedia.org/wikipedia/commons/0/0a/Lead_Photo_For_Category_%28mathematics%290-41319275833666325.png"
 category: "tech"
+published: false
 tags:
     - programming
     - stuff
 	- other
-published: false
+
 ---
 ```js_eval
 if (typeof window !== 'undefined') {

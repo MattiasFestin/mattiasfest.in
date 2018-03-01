@@ -3,11 +3,12 @@ title: Primes
 date: "2017-05-25T22:40:32.169Z"
 cover: "https://upload.wikimedia.org/wikipedia/commons/b/b0/Ulam_Spiral_Divisors_100000.png"
 category: "tech"
+published: false
 tags:
     - programming
     - stuff
     - other
-published: false
+
 ---
 
 ## 1 to 100
