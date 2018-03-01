@@ -164,9 +164,6 @@ module.exports = {
           '/manifest.json': [
             'Cache-Control: public, must-revalidate, max-age=86400, s-maxage=86400'
           ],
-          '/*.html': [
-            'Cache-Control: no-cache'
-          ],
           '/*.js': [
             'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ],
@@ -194,6 +191,7 @@ module.exports = {
         },
         // option to add more headers. `Link` headers are transformed by the below criteria
         allPageHeaders: [
+          'Cache-Control: no-cache',
           `X-Frame-Options: deny`,
           `X-XSS-Protection: 1; mode=block`,
           `Strict-Transport-Security:max-age=31536000`,
