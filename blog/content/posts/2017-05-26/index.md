@@ -6,7 +6,8 @@ category: "tech"
 tags:
     - programming
     - stuff
-    - other
+	- other
+published: false
 ---
 ```js_eval
 if (typeof window !== 'undefined') {

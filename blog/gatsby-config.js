@@ -162,28 +162,28 @@ module.exports = {
       options: {
         headers: {
           '/*.js': [
-            'Cache-Control: immutable'
+            'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ],
           '/*.css': [
-            'Cache-Control: immutable'
+            'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ],
           '/*.woff2': [
-            'Cache-Control: immutable'
+            'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ],
           '/*.png': [
-            'Cache-Control: immutable'
+            'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ],
           '/*.jpg': [
-            'Cache-Control: immutable'
+            'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ],
           '/*.jpeg': [
-            'Cache-Control: immutable'
+            'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ],
           '/*.webp': [
-            'Cache-Control: immutable'
+            'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ],
           '/*.gif': [
-            'Cache-Control: immutable'
+            'Cache-Control: public, immutable, max-age=1036800, s-maxage=1036800'
           ]
         },
         // option to add more headers. `Link` headers are transformed by the below criteria
@@ -193,7 +193,7 @@ module.exports = {
           `Strict-Transport-Security:max-age=31536000`,
           `includeSubDomains; preload`,
           `X-Content-Type:nosniff`,
-          `Content-Security-Policy: default-src 'self' 'unsafe-inline' *.mattiasfest.in s7.addthis.com cdnjs.cloudflare.com; script-src 'self' www.google-analytics.com; img-src *; style-src 'self' 'unsafe-inline' fonts.googleapis.com *.mattiasfest.in`,
+          `Content-Security-Policy: default-src 'self' 'unsafe-inline' mattiasfest.in *.mattiasfest.in s7.addthis.com cdnjs.cloudflare.com; script-src 'self' www.google-analytics.com; img-src *; style-src 'self' 'unsafe-inline' fonts.googleapis.com mattiasfest.in *.mattiasfest.in`,
           `Referrer-Policy: no-referrer`
         ], // option to add headers for all pages. `Link` headers are transformed by the below criteria
         mergeSecurityHeaders: true, // boolean to turn off the default security headers
