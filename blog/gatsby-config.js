@@ -191,7 +191,7 @@ module.exports = {
         },
         // option to add more headers. `Link` headers are transformed by the below criteria
         allPageHeaders: [
-          'Cache-Control: no-cache',
+          'Cache-Control: public, no-cache, must-revalidate, max-age=1036800, s-maxage=1036800',
           `X-Frame-Options: deny`,
           `X-XSS-Protection: 1; mode=block`,
           `Strict-Transport-Security:max-age=31536000`,

@@ -1,6 +1,6 @@
 module.exports = {
   blogPostDir: "posts", // The name of directory that contains your posts.
-  siteTitle: "Mattias Festin - Blog", // Site title.
+  siteTitle: "mattiasfest.in", // Site title.
   siteTitleAlt: "A programming blog about programming", // Alternative site title for SEO.
   siteLogo: "/logos/logo-1024.png", // Logo used for SEO and manifest.
   siteUrl: "https://mattiasfest.in", // Domain of your website without pathPrefix.
@@ -10,7 +10,7 @@ module.exports = {
     'https://cdn03.mattiasfest.in',
     'https://cdn04.mattiasfest.in'
   ],
-  pathPrefix: "/blog", // Prefixes all links. For cases when deployed to example.github.io/gatsby-material-starter/.
+  pathPrefix: "/", // Prefixes all links. For cases when deployed to example.github.io/gatsby-material-starter/.
   fixedFooter: false, // Whether the footer component is fixed, i.e. always visible
   siteDescription: "A tech blog.", // Website description used for RSS feeds/meta description tag.
   siteRss: "/rss.xml", // Path to the RSS file.
