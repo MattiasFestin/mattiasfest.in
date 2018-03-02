@@ -198,7 +198,8 @@ module.exports = {
           `includeSubDomains; preload`,
           `X-Content-Type:nosniff`,
           `Content-Security-Policy: block-all-mixed-content; default-src 'self' mattiasfest.in *.mattiasfest.in; script-src  data: blob: 'self' 'unsafe-inline' 'unsafe-eval' www.google-analytics.com *.addthisedge.com platform.twitter.com *.addthis.com cdnjs.cloudflare.com mattiasfestinblog.disqus.com graph.facebook.com; img-src * data: blob:; style-src 'self' 'unsafe-inline' fonts.googleapis.com mattiasfest.in *.mattiasfest.in; font-src *; object-src 'none'; frame-src *.addthis.com *.twitter.com archive.org`,
-          `Referrer-Policy: no-referrer`
+          `Referrer-Policy: no-referrer`,
+          `Last-Modified: ${(new Date()).toUTCString()}`
         ], // option to add headers for all pages. `Link` headers are transformed by the below criteria
         mergeSecurityHeaders: true, // boolean to turn off the default security headers
         mergeLinkHeaders: true, // boolean to turn off the default gatsby js headers
