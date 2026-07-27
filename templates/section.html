@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ section.title }} — {{ config.title }}{% endblock title %}
+{% block og_title %}{{ section.title }}{% endblock og_title %}
+{% block window_title %}{{ section.title }} — {{ config.title }}{% endblock window_title %}
+{% block taskbar_title %}{{ section.title }}{% endblock taskbar_title %}
+
+{% block content %}
+{{ section.content | safe }}
+
+{% if section.pages | length > 0 %}
+{% set pages = section.pages %}
+{% include "partials/post_table.html" %}
+{% else %}
+<p class="empty-folder">This folder is empty.</p>
+{% endif %}
+{% endblock content %}
+
+{% block status_bar %}
+<p class="status-bar-field">{{ section.pages | length }} object(s)</p>
+<p class="status-bar-field">&copy; {{ now() | date(format="%Y") }} Mattias</p>
+{% endblock status_bar %}

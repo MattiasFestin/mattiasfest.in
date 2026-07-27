@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page.title }} — {{ config.title }}{% endblock title %}
+{% block description %}{{ page.description | default(value=config.description) }}{% endblock description %}
+{% block og_title %}{{ page.title }}{% endblock og_title %}
+{% block og_description %}{{ page.description | default(value=config.description) }}{% endblock og_description %}
+{% block og_type %}article{% endblock og_type %}
+{% block window_title %}{{ page.title }} — {{ config.title }}{% endblock window_title %}
+{% block taskbar_title %}{{ page.title }}{% endblock taskbar_title %}
+
+{% block background_windows %}
+{% if page.date %}
+{% set blog = get_section(path="blog/_index.md") %}
+<section class="window app-window blog-window" data-win="blog" aria-label="Blog window (in background)">
+  <div class="title-bar inactive">
+    <div class="title-bar-text">{{ blog.title }} — {{ config.title }}</div>
+    <div class="title-bar-controls">
+      <button aria-label="Minimize"></button>
+      <button aria-label="Maximize"></button>
+      <button aria-label="Close"></button>
+    </div>
+  </div>
+  <div class="window-body">
+    <h2 class="blog-window-heading">C:\Blog</h2>
+    {% set pages = blog.pages %}
+    {% include "partials/post_table.html" %}
+  </div>
+  <div class="status-bar">
+    <p class="status-bar-field">{{ blog.pages | length }} object(s)</p>
+  </div>
+</section>
+{% endif %}
+{% endblock background_windows %}
+
+{% block taskbar_tasks %}
+{% if page.date %}
+<button class="taskbar-task" data-for="blog">Blog</button>
+<button class="taskbar-task active" data-for="main">{{ page.title }}</button>
+{% else %}
+{{ super() }}
+{% endif %}
+{% endblock taskbar_tasks %}
+
+{% block content %}
+<article>
+  <h1>{{ page.title }}</h1>
+  {% if page.date %}
+  <p class="post-meta">{{ page.date | date(format="%B %e, %Y") }} · {{ page.reading_time }} min read</p>
+  {% endif %}
+  {{ page.content | safe }}
+</article>
+{% endblock content %}
+
+{% block status_bar %}
+<p class="status-bar-field">{{ page.word_count }} words</p>
+{% if page.date %}<p class="status-bar-field">Modified: {{ page.date | date(format="%Y-%m-%d") }}</p>{% endif %}
+<p class="status-bar-field">&copy; {{ now() | date(format="%Y") }} Mattias</p>
+{% endblock status_bar %}

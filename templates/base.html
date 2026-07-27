@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#008080">
+  <title>{% block title %}{{ config.title }}{% endblock title %}</title>
+  <meta name="description" content="{% block description %}{{ config.description }}{% endblock description %}">
+  <meta property="og:site_name" content="{{ config.title }}">
+  <meta property="og:title" content="{% block og_title %}{{ config.title }}{% endblock og_title %}">
+  <meta property="og:description" content="{% block og_description %}{{ config.description }}{% endblock og_description %}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock og_type %}">
+  {% if current_url %}<meta property="og:url" content="{{ current_url }}">{% endif %}
+  <link rel="icon" href="{{ get_url(path='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ get_url(path='98/98.css') }}">
+  <link rel="stylesheet" href="{{ get_url(path='temml/Temml-Local.css') }}">
+  <link rel="stylesheet" href="{{ get_url(path='site.css') }}">
+  <link rel="alternate" type="application/atom+xml" title="{{ config.title }}" href="{{ get_url(path='atom.xml') }}">
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <div class="desktop" id="desktop">
+    <div class="desktop-icons">
+      <button class="desktop-icon" data-href="{{ get_url(path='') }}">
+        <img src="{{ get_url(path='icons/computer.svg') }}" alt="" width="32" height="32">
+        <span class="desktop-icon-label">My Computer</span>
+      </button>
+      <button class="desktop-icon" data-href="{{ get_url(path='blog/') }}">
+        <img src="{{ get_url(path='icons/folder.svg') }}" alt="" width="32" height="32">
+        <span class="desktop-icon-label">My Blog</span>
+      </button>
+      <button class="desktop-icon" data-href="{{ get_url(path='about/') }}">
+        <img src="{{ get_url(path='icons/about.svg') }}" alt="" width="32" height="32">
+        <span class="desktop-icon-label">About Me</span>
+      </button>
+    </div>
+
+    <div class="window-stack">
+      {% block background_windows %}{% endblock background_windows %}
+      <main class="window app-window main-window front{% block window_class %}{% endblock window_class %}" data-win="main">
+        <div class="title-bar">
+          <div class="title-bar-text">{% block window_title %}{{ config.title }}{% endblock window_title %}</div>
+          <div class="title-bar-controls">
+            <button aria-label="Minimize"></button>
+            <button aria-label="Maximize"></button>
+            <button aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="window-body" id="content">
+          {% block content %}{% endblock content %}
+        </div>
+        <div class="status-bar">
+          {% block status_bar %}
+          <p class="status-bar-field">Ready</p>
+          <p class="status-bar-field">&copy; {{ now() | date(format="%Y") }} Mattias</p>
+          {% endblock status_bar %}
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <footer class="taskbar">
+    <button class="start-button" id="start-button" aria-haspopup="menu" aria-expanded="false" aria-controls="start-menu">
+      <span class="start-logo" aria-hidden="true"></span> Start
+    </button>
+    <div class="taskbar-divider"></div>
+    {% block taskbar_tasks %}
+    <button class="taskbar-task active" data-for="main">{% block taskbar_title %}{{ config.title }}{% endblock taskbar_title %}</button>
+    {% endblock taskbar_tasks %}
+    <div class="taskbar-clock status-bar-field"><span id="clock">--:--</span></div>
+  </footer>
+
+  {% set cur = current_path | default(value="") %}
+  <nav class="start-menu" id="start-menu" hidden aria-label="Main navigation">
+    <div class="start-menu-banner" aria-hidden="true">mattiasfest<span>98</span></div>
+    <ul role="menu">
+      <li role="none">
+        <a role="menuitem" href="{{ get_url(path='') }}"{% if cur == "/" %} aria-current="page"{% endif %}>
+          <img src="{{ get_url(path='icons/home.svg') }}" alt="" width="22" height="22"> Home
+        </a>
+      </li>
+      <li role="none">
+        <a role="menuitem" href="{{ get_url(path='blog/') }}"{% if cur is starting_with("/blog") %} aria-current="page"{% endif %}>
+          <img src="{{ get_url(path='icons/blog.svg') }}" alt="" width="22" height="22"> Blog
+        </a>
+      </li>
+      <li role="none">
+        <a role="menuitem" href="{{ get_url(path='about/') }}"{% if cur == "/about/" %} aria-current="page"{% endif %}>
+          <img src="{{ get_url(path='icons/about.svg') }}" alt="" width="22" height="22"> About
+        </a>
+      </li>
+      <li role="none">
+        <a role="menuitem" href="{{ get_url(path='atom.xml') }}">
+          <img src="{{ get_url(path='icons/rss.svg') }}" alt="" width="22" height="22"> RSS Feed
+        </a>
+      </li>
+      <li role="separator" class="start-menu-separator"></li>
+      <li role="none">
+        <button role="menuitem" class="start-menu-item-button" id="menu-shutdown">
+          <img src="{{ get_url(path='icons/shutdown.svg') }}" alt="" width="22" height="22"> Shut Down...
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="shutdown-screen" id="shutdown" hidden>
+    <p>It's now safe to turn off<br>your computer.</p>
+    <p class="shutdown-hint">(click anywhere to turn it back on)</p>
+  </div>
+
+  <script>
+    (function () {
+      var startBtn = document.getElementById("start-button");
+      var startMenu = document.getElementById("start-menu");
+      var shutdown = document.getElementById("shutdown");
+
+      function tick() {
+        var d = new Date();
+        document.getElementById("clock").textContent =
+          String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+      }
+      tick();
+      setInterval(tick, 10000);
+
+      /* --- Multi-window management --- */
+      var windows = Array.prototype.slice.call(document.querySelectorAll(".app-window"));
+      var taskBtns = Array.prototype.slice.call(document.querySelectorAll(".taskbar-task"));
+
+      function winById(id) {
+        return windows.filter(function (w) { return w.dataset.win === id; })[0];
+      }
+      function btnFor(id) {
+        return taskBtns.filter(function (b) { return b.dataset.for === id; })[0];
+      }
+      function isVisible(w) {
+        return !w.classList.contains("closed") && !w.classList.contains("minimized");
+      }
+
+      function activate(id) {
+        windows.forEach(function (w) {
+          var on = w.dataset.win === id;
+          w.classList.toggle("front", on);
+          w.querySelector(".title-bar").classList.toggle("inactive", !on);
+        });
+        taskBtns.forEach(function (b) {
+          b.classList.toggle("active", b.dataset.for === id);
+        });
+      }
+
+      function activateTopmost() {
+        var candidates = windows.filter(isVisible);
+        if (candidates.length) {
+          activate(candidates[candidates.length - 1].dataset.win);
+        } else {
+          taskBtns.forEach(function (b) { b.classList.remove("active"); });
+        }
+      }
+
+      windows.forEach(function (w) {
+        var id = w.dataset.win;
+        var titleBar = w.querySelector(".title-bar");
+        var minBtn = w.querySelector('[aria-label="Minimize"]');
+        var maxBtn = w.querySelector('[aria-label="Maximize"]');
+        var closeBtn = w.querySelector('[aria-label="Close"]');
+
+        w.addEventListener("pointerdown", function () {
+          if (!w.classList.contains("front")) activate(id);
+        });
+
+        /* --- Dragging by the title bar --- */
+        var offset = { x: 0, y: 0 };
+        var drag = null;
+
+        titleBar.addEventListener("pointerdown", function (e) {
+          if (e.target.closest("button")) return;
+          if (e.button !== 0) return;
+          if (w.classList.contains("maximized")) return;
+          drag = {
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            baseX: offset.x,
+            baseY: offset.y,
+            rect: w.getBoundingClientRect(),
+          };
+          try {
+            titleBar.setPointerCapture(e.pointerId);
+          } catch (err) {
+            drag = null;
+          }
+        });
+
+        titleBar.addEventListener("pointermove", function (e) {
+          if (!drag || e.pointerId !== drag.pointerId) return;
+          // Primary button no longer down means we missed the pointerup
+          // (e.g. released outside the browser) - abandon the drag so the
+          // window doesn't chase the cursor on hover
+          if ((e.buttons & 1) === 0) {
+            drag = null;
+            return;
+          }
+          var dx = e.clientX - drag.startX;
+          var dy = e.clientY - drag.startY;
+
+          // Keep the title bar reachable: at least 60px of the window on
+          // screen horizontally, title bar between desktop top and taskbar
+          var vw = document.documentElement.clientWidth;
+          var vh = window.innerHeight - 34; // taskbar
+          var minDx = 60 - drag.rect.right;
+          var maxDx = vw - 60 - drag.rect.left;
+          var minDy = -drag.rect.top;
+          var maxDy = vh - 24 - drag.rect.top;
+          dx = Math.min(Math.max(dx, minDx), maxDx);
+          dy = Math.min(Math.max(dy, minDy), maxDy);
+
+          offset.x = drag.baseX + dx;
+          offset.y = drag.baseY + dy;
+          w.style.transform = "translate(" + offset.x + "px, " + offset.y + "px)";
+        });
+
+        function endDrag() {
+          drag = null;
+        }
+        titleBar.addEventListener("pointerup", endDrag);
+        titleBar.addEventListener("pointercancel", endDrag);
+        titleBar.addEventListener("lostpointercapture", endDrag);
+
+        /* --- Resizing by the bottom-right grip --- */
+        if (!w.classList.contains("dialog-window")) {
+          var grip = document.createElement("div");
+          grip.className = "resize-grip";
+          grip.setAttribute("aria-hidden", "true");
+          w.appendChild(grip);
+
+          var resize = null;
+
+          grip.addEventListener("pointerdown", function (e) {
+            if (w.classList.contains("maximized")) return;
+            if (e.button !== 0) return;
+            e.preventDefault();
+            resize = {
+              pointerId: e.pointerId,
+              startX: e.clientX,
+              startY: e.clientY,
+              w: w.offsetWidth,
+              h: w.offsetHeight,
+            };
+            // Freeze the current size before switching layout mode so a
+            // plain tap on the grip doesn't make the window jump
+            w.style.width = resize.w + "px";
+            w.style.height = resize.h + "px";
+            w.classList.add("resized");
+            try {
+              grip.setPointerCapture(e.pointerId);
+            } catch (err) {
+              resize = null;
+            }
+          });
+
+          grip.addEventListener("pointermove", function (e) {
+            if (!resize || e.pointerId !== resize.pointerId) return;
+            if ((e.buttons & 1) === 0) {
+              resize = null;
+              return;
+            }
+            var vw = document.documentElement.clientWidth;
+            var vh = window.innerHeight - 34; // taskbar
+            var width = Math.min(Math.max(resize.w + e.clientX - resize.startX, 280), vw);
+            var height = Math.min(Math.max(resize.h + e.clientY - resize.startY, 140), vh);
+            w.style.width = width + "px";
+            w.style.height = height + "px";
+          });
+
+          function endResize() {
+            resize = null;
+          }
+          grip.addEventListener("pointerup", endResize);
+          grip.addEventListener("pointercancel", endResize);
+          grip.addEventListener("lostpointercapture", endResize);
+        }
+
+        minBtn.addEventListener("click", function () {
+          w.classList.add("minimized");
+          activateTopmost();
+        });
+
+        function toggleMaximized() {
+          var on = w.classList.toggle("maximized");
+          maxBtn.setAttribute("aria-label", on ? "Restore" : "Maximize");
+          activate(id);
+        }
+
+        maxBtn.addEventListener("click", toggleMaximized);
+
+        titleBar.addEventListener("dblclick", function (e) {
+          if (e.target.closest("button")) return;
+          toggleMaximized();
+        });
+
+        closeBtn.addEventListener("click", function () {
+          w.classList.add("closed");
+          var b = btnFor(id);
+          if (b) b.hidden = true;
+          activateTopmost();
+        });
+      });
+
+      taskBtns.forEach(function (b) {
+        b.addEventListener("click", function () {
+          var id = b.dataset.for;
+          var w = winById(id);
+          if (!w) return;
+          if (w.classList.contains("minimized")) {
+            w.classList.remove("minimized");
+            activate(id);
+          } else if (b.classList.contains("active")) {
+            w.classList.add("minimized");
+            activateTopmost();
+          } else {
+            activate(id);
+          }
+        });
+      });
+
+      /* --- Desktop icons --- */
+      var icons = Array.prototype.slice.call(document.querySelectorAll(".desktop-icon"));
+
+      function deselectIcons() {
+        icons.forEach(function (i) { i.classList.remove("selected"); });
+      }
+
+      icons.forEach(function (icon) {
+        icon.addEventListener("click", function (e) {
+          e.stopPropagation();
+          deselectIcons();
+          icon.classList.add("selected");
+        });
+        icon.addEventListener("dblclick", function () {
+          location.href = icon.dataset.href;
+        });
+        icon.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            location.href = icon.dataset.href;
+          }
+        });
+      });
+
+      document.getElementById("desktop").addEventListener("click", function (e) {
+        if (!e.target.closest(".desktop-icon")) deselectIcons();
+      });
+
+      /* --- Post table rows (any window) --- */
+      document.querySelectorAll("tr[data-href]").forEach(function (row) {
+        row.addEventListener("click", function (e) {
+          if (e.target.closest("a")) return;
+          location.href = row.dataset.href;
+        });
+      });
+
+      /* --- Start menu --- */
+      function setStartMenu(open) {
+        startMenu.hidden = !open;
+        startBtn.classList.toggle("pressed", open);
+        startBtn.setAttribute("aria-expanded", String(open));
+        if (open) {
+          var first = startMenu.querySelector("[aria-current=page]") ||
+            startMenu.querySelector("[role=menuitem]");
+          if (first) first.focus();
+        }
+      }
+
+      startBtn.addEventListener("click", function () {
+        setStartMenu(startMenu.hidden);
+      });
+
+      document.addEventListener("click", function (e) {
+        if (startMenu.hidden) return;
+        if (startMenu.contains(e.target) || startBtn.contains(e.target)) return;
+        setStartMenu(false);
+      });
+
+      startMenu.addEventListener("keydown", function (e) {
+        var items = Array.prototype.slice.call(startMenu.querySelectorAll("[role=menuitem]"));
+        var idx = items.indexOf(document.activeElement);
+        if (e.key === "Escape") {
+          setStartMenu(false);
+          startBtn.focus();
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          items[(idx + 1) % items.length].focus();
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          items[(idx - 1 + items.length) % items.length].focus();
+        }
+      });
+
+      /* --- Shut Down... --- */
+      document.getElementById("menu-shutdown").addEventListener("click", function () {
+        setStartMenu(false);
+        shutdown.hidden = false;
+        document.body.classList.add("shut-down");
+      });
+
+      shutdown.addEventListener("click", function () {
+        shutdown.hidden = true;
+        document.body.classList.remove("shut-down");
+      });
+    })();
+  </script>
+</body>
+</html>

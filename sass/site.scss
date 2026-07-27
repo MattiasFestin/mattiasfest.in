@@ -1,0 +1,671 @@
+$taskbar-height: 34px;
+
+html {
+  height: 100%;
+  /* No rubber-band bounce on the desktop — Win98 never bounced */
+  overscroll-behavior: none;
+  /* Windows dragged past the screen edge clip, they don't widen the page */
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #008080;
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* On desktop-sized viewports the window body scrolls internally, so the
+   page itself never needs to scroll — lock it to kill Safari's bounce.
+   Small/short viewports keep natural page scrolling (content must stay
+   reachable), protected by overscroll-behavior above. */
+@media (min-width: 601px) and (min-height: 500px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+::selection {
+  background: navy;
+  color: #fff;
+}
+
+/* --- Skip link (a11y) --- */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 4px;
+  z-index: 100;
+  padding: 4px 10px;
+  background: silver;
+  color: #000;
+  text-decoration: none;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff,
+    inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+
+  &:focus {
+    left: 4px;
+  }
+}
+
+.desktop {
+  position: relative;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 12px calc(#{$taskbar-height} + 24px);
+}
+
+/* --- Desktop icons --- */
+.desktop-icons {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 0;
+}
+
+.desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 76px;
+  padding: 2px;
+  background: none;
+  border: none;
+  box-shadow: none;
+  min-width: 0;
+  min-height: 0;
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: default;
+
+  img {
+    image-rendering: pixelated;
+  }
+
+  .desktop-icon-label {
+    padding: 1px 3px;
+    text-shadow: 1px 1px #000;
+  }
+
+  &.selected .desktop-icon-label,
+  &:focus-visible .desktop-icon-label {
+    background: navy;
+    outline: 1px dotted #ffcc00;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:active {
+    box-shadow: none;
+    text-shadow: none;
+    padding: 2px;
+  }
+}
+
+/* --- Window stack --- */
+.window-stack {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  z-index: 1;
+}
+
+.app-window {
+  position: relative;
+  z-index: 1;
+  /* Inline width/height from resizing measure the full box */
+  box-sizing: border-box;
+
+  &.front {
+    z-index: 2;
+  }
+
+  /* Draggable by the title bar */
+  .title-bar {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Win98 sizing grip in the bottom-right corner */
+  .resize-grip {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    touch-action: none;
+    z-index: 3;
+    background: repeating-linear-gradient(
+      135deg,
+      transparent 0 2px,
+      #fff 2px 3px,
+      #808080 3px 5px
+    );
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  }
+
+  /* Once the user resizes, the window-body fills the chosen height */
+  &.resized {
+    display: flex;
+    flex-direction: column;
+    max-width: none;
+
+    .window-body {
+      flex: 1;
+      max-height: none;
+      min-height: 0;
+    }
+  }
+
+  &.maximized .resize-grip {
+    display: none;
+  }
+}
+
+/* Background blog window behind an open article, cascade-style */
+.blog-window {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 100%;
+
+  .window-body {
+    max-height: 40vh;
+  }
+}
+
+.title-bar-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Authentic 16x14 buttons on desktop; comfortable 24px targets on touch */
+@media (pointer: coarse) {
+  .title-bar-controls button[aria-label] {
+    min-width: 26px;
+    min-height: 24px;
+    background-position: center;
+  }
+}
+
+/* --- Window states --- */
+.app-window.minimized,
+.app-window.closed {
+  display: none;
+}
+
+.app-window.maximized {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: $taskbar-height;
+  width: auto !important;
+  height: auto !important;
+  max-width: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+  /* Ignore any drag offset while maximized; it comes back on restore */
+  transform: none !important;
+
+  .window-body {
+    flex: 1;
+    max-height: none;
+  }
+}
+
+/* --- Dialog window (404) --- */
+.main-window.dialog-window {
+  max-width: 420px;
+  margin: 15vh auto 0;
+
+  .window-body {
+    max-height: none;
+    min-height: 0;
+    background: silver;
+    border: none;
+    box-shadow: none;
+    margin: 0;
+    padding: 16px;
+  }
+}
+
+/* --- Window body / typography --- */
+.app-window .window-body {
+  background: #fff;
+  margin: 0 3px;
+  padding: 14px 18px;
+  /* Authentic Win98 sunken client area: two-tone bevel with exact colors.
+     Outer ring is a real border so the scrollbar stays inside the frame */
+  border: 1px solid;
+  border-color: #808080 #fff #fff #808080;
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #dfdfdf;
+  max-height: calc(100vh - #{$taskbar-height} - 160px);
+  min-height: 200px;
+  overflow-y: auto;
+  /* No elastic bounce inside the window's client area */
+  overscroll-behavior: none;
+
+  h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+  }
+
+  h2 {
+    font-size: 16px;
+    margin: 20px 0 8px;
+  }
+
+  h3 {
+    font-size: 13px;
+    margin: 16px 0 6px;
+  }
+
+  p, li {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  p, ul, ol, blockquote, h1, h2, h3 {
+    max-width: 65ch;
+  }
+
+  a {
+    color: navy;
+
+    &:focus-visible {
+      outline: 1px dotted #000;
+    }
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  blockquote {
+    margin: 12px 0;
+    padding: 8px 12px;
+    background: #ffffcc;
+    border: 1px solid #808080;
+  }
+
+  code {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    background: #efefef;
+    padding: 0 3px;
+  }
+
+  pre {
+    padding: 12px;
+    border: 1px solid;
+    border-color: #808080 #fff #fff #808080;
+    box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #dfdfdf;
+    overflow-x: auto;
+    overscroll-behavior-x: none;
+
+    code {
+      background: none;
+      padding: 0;
+    }
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #fff;
+  }
+}
+
+.post-meta {
+  color: #595959;
+  margin-top: 0;
+}
+
+/* --- Post lists --- */
+.post-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    padding: 2px 0;
+  }
+
+  .post-date {
+    font-family: "Courier New", monospace;
+    color: #595959;
+    margin-right: 8px;
+  }
+}
+
+.blog-window-heading {
+  margin-top: 0;
+}
+
+.post-table-panel {
+  background: #fff;
+  margin-top: 12px;
+}
+
+.post-table {
+  width: 100%;
+
+  a {
+    text-decoration: none;
+  }
+
+  tbody tr {
+    cursor: pointer;
+
+    &:hover {
+      background: navy;
+      color: #fff;
+
+      a {
+        color: #fff;
+      }
+    }
+  }
+}
+
+.empty-folder {
+  color: #595959;
+  text-align: center;
+  padding: 32px 0;
+}
+
+/* --- Error dialog (404) --- */
+.error-dialog {
+  .error-icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: #ff0000;
+    color: #fff;
+    font-weight: bold;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  > p {
+    display: flex;
+    align-items: center;
+    margin-top: 0;
+  }
+
+  .error-buttons {
+    justify-content: center;
+    margin-top: 16px;
+
+    button {
+      min-width: 80px;
+    }
+  }
+}
+
+/* --- Taskbar --- */
+.taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: $taskbar-height;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px;
+  box-sizing: border-box;
+  background: silver;
+  box-shadow: inset 0 1px 0 #fff;
+  border-top: 1px solid #dfdfdf;
+  z-index: 10;
+
+  .start-button {
+    font-weight: bold;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &.pressed {
+      box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a,
+        inset -2px -2px #dfdfdf, inset 2px 2px #808080;
+    }
+  }
+
+  .start-logo {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background:
+      conic-gradient(from 90deg at 50% 50%,
+        #ff0000 0 25%, #00a800 0 50%, #0000ff 0 75%, #ffcc00 0);
+  }
+
+  .taskbar-divider {
+    width: 1px;
+    align-self: stretch;
+    border-left: 1px solid #808080;
+    border-right: 1px solid #fff;
+    margin: 0 2px;
+  }
+
+  .taskbar-task {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &.active {
+      font-weight: bold;
+      box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a,
+        inset -2px -2px #dfdfdf, inset 2px 2px #808080;
+      background-image: repeating-conic-gradient(
+        #fff 0 25%, silver 0 50%
+      );
+      background-size: 2px 2px;
+    }
+  }
+
+  .taskbar-clock {
+    /* Real Win98 tray: compact sunken well hugging the right edge,
+       same height as the task buttons */
+    flex-grow: 0;
+    flex-shrink: 0;
+    margin-left: auto;
+    margin-right: 2px;
+    height: 23px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 12px 0 16px;
+    box-shadow: inset -1px -1px #fff, inset 1px 1px #808080;
+  }
+}
+
+/* --- Start menu --- */
+.start-menu {
+  position: fixed;
+  left: 2px;
+  bottom: $taskbar-height - 2px;
+  z-index: 30;
+  display: flex;
+  background: silver;
+  padding: 3px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #dfdfdf,
+    inset -2px -2px #808080, inset 2px 2px #fff;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .start-menu-banner {
+    background: linear-gradient(180deg, #1084d0, navy);
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+    letter-spacing: 1px;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    padding: 8px 3px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    user-select: none;
+
+    span {
+      color: #c0c0c0;
+      font-weight: normal;
+      margin-top: 4px;
+    }
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    min-width: 180px;
+  }
+
+  [role="menuitem"] {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 20px 7px 8px;
+    color: #000;
+    font-family: inherit;
+    font-size: 12px;
+    text-decoration: none;
+    text-align: left;
+    background: none;
+    border: none;
+    box-shadow: none;
+    min-height: 0;
+    min-width: 0;
+    cursor: default;
+
+    img {
+      image-rendering: pixelated;
+      flex-shrink: 0;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: navy;
+      color: #fff;
+      outline: none;
+      text-shadow: none;
+    }
+
+    &[aria-current="page"] {
+      font-weight: bold;
+    }
+  }
+
+  .start-menu-separator {
+    height: 0;
+    margin: 3px 2px;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #fff;
+  }
+}
+
+/* --- Shutdown easter egg --- */
+.shutdown-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #000;
+  color: #ffb000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1.6;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .shutdown-hint {
+    font-size: 12px;
+    color: #808080;
+  }
+}
+
+body.shut-down {
+  overflow: hidden;
+}
+
+/* --- Small screens --- */
+@media (max-width: 600px) {
+  .desktop {
+    padding: 8px 6px calc(#{$taskbar-height} + 12px);
+  }
+
+  /* No room for desktop icons; Start menu covers navigation */
+  .desktop-icons {
+    display: none;
+  }
+
+  .app-window .window-body {
+    max-height: none;
+    padding: 10px 12px;
+  }
+
+  .app-window.maximized {
+    position: static;
+    min-height: calc(100vh - #{$taskbar-height});
+  }
+
+  /* Tighter cascade so the background window stays on screen */
+  .blog-window {
+    top: -8px;
+    left: -4px;
+
+    /* Controls are obscured while behind the front window — tap the
+       title bar to bring it forward and they come back */
+    &:not(.front) .title-bar-controls {
+      display: none;
+    }
+
+    .window-body {
+      max-height: 30vh;
+    }
+  }
+
+  .taskbar .taskbar-task {
+    max-width: 110px;
+  }
+}

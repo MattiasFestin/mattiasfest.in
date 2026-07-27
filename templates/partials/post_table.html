@@ -1,0 +1,16 @@
+{# Expects `pages` (list of pages) in context #}
+<div class="sunken-panel post-table-panel">
+  <table class="interactive post-table">
+    <thead>
+      <tr><th>Name</th><th>Date modified</th></tr>
+    </thead>
+    <tbody>
+      {% for p in pages %}
+      <tr data-href="{{ p.permalink }}">
+        <td><a href="{{ p.permalink }}">{{ p.title }}</a></td>
+        <td>{{ p.date | date(format="%Y-%m-%d") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

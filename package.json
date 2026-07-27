@@ -1,0 +1,12 @@
+{
+  "name": "mattiasfest.in",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "zola build && node scripts/render-math.mjs",
+    "dev": "node scripts/dev.mjs"
+  },
+  "devDependencies": {
+    "temml": "^0.13.3"
+  }
+}
