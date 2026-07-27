@@ -9,6 +9,7 @@ Unicode range 1D49C to 1D4B5.
   src: url('Temml.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 math {

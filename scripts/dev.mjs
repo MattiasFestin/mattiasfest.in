@@ -43,6 +43,14 @@ function build() {
     console.error("✗ math rendering failed (see above)");
     return;
   }
+  const optimize = spawnSync(process.execPath, [join(ROOT, "scripts/optimize.mjs")], {
+    cwd: ROOT,
+    stdio: ["ignore", "ignore", "inherit"],
+  });
+  if (optimize.status !== 0) {
+    console.error("✗ asset optimization failed (see above)");
+    return;
+  }
   console.log(`✓ Rebuilt in ${Date.now() - started}ms`);
 }
 

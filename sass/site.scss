@@ -203,7 +203,11 @@ body {
 }
 
 /* --- Window states --- */
-.app-window.maximized {
+/* html.start-maximized is set by a tiny inline script in <head> before
+   first paint (based on saved settings / screen size), so a maximized
+   main window doesn't cause a layout shift when main.js catches up. */
+.app-window.maximized,
+html.start-maximized .main-window:not(.dialog-window) {
   position: fixed;
   top: 0;
   left: 0;

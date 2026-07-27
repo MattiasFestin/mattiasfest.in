@@ -3,10 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "zola build && node scripts/render-math.mjs",
+    "build": "zola build && node scripts/render-math.mjs && node scripts/optimize.mjs",
     "dev": "node scripts/dev.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.28.1",
     "temml": "^0.13.3"
   }
 }
