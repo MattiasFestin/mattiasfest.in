@@ -8,6 +8,12 @@ This blog now supports math, rendered at build time to native MathML —
 no JavaScript, no images, no fonts shipped to you unless a page actually
 uses math.
 
+How it works: posts are written with LaTeX in the markdown, and a small
+post-build step converts every formula into a native `<math>` element
+using [Temml](https://temml.org/). Your browser renders it like any
+other text — selectable, accessible, and styled by CSS. Very 1998 in
+spirit: the server does the work, the client just displays a document.
+
 Inline math like `$E = mc^2$` sits nicely in a sentence, and so does
 something with subscripts like `$x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}$`.
 

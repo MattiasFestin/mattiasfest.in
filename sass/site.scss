@@ -207,11 +207,6 @@ body {
 }
 
 /* --- Window states --- */
-.app-window.minimized,
-.app-window.closed {
-  display: none;
-}
-
 .app-window.maximized {
   position: fixed;
   top: 0;
@@ -232,6 +227,13 @@ body {
     flex: 1;
     max-height: none;
   }
+}
+
+/* Hidden states must win over any display set above (e.g. maximized),
+   so they come last */
+.app-window.minimized,
+.app-window.closed {
+  display: none;
 }
 
 /* --- Dialog window (404) --- */
@@ -266,28 +268,56 @@ body {
   /* No elastic bounce inside the window's client area */
   overscroll-behavior: none;
 
+  /* Reading text: Verdana — Microsoft's 1996 screen font. Period-correct
+     but far more readable than the bitmap font, which stays on UI chrome */
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 14px;
+  /* 98.css turns font smoothing off for the whole window (right for the
+     bitmap font, wrong for text and math) — restore it for content */
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+
+  /* UI controls inside the client area keep the authentic pixel font */
+  button {
+    font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+    font-size: 12px;
+    -webkit-font-smoothing: none;
+  }
+
   h1 {
-    font-size: 20px;
+    font-size: 22px;
     margin: 0 0 4px;
   }
 
   h2 {
-    font-size: 16px;
-    margin: 20px 0 8px;
+    font-size: 17px;
+    margin: 22px 0 8px;
   }
 
   h3 {
-    font-size: 13px;
-    margin: 16px 0 6px;
+    font-size: 15px;
+    margin: 18px 0 6px;
   }
 
   p, li {
-    font-size: 12px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.6;
   }
 
-  p, ul, ol, blockquote, h1, h2, h3 {
-    max-width: 65ch;
+  /* Centered reading column: in a small window nothing changes, but in a
+     wide/maximized window the text and the (auto-centered) display math
+     stay together as one column instead of drifting apart.
+     Width is user-adjustable via the Control Panel. */
+  > * {
+    max-width: var(--reading-width, 72ch);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Wide display math scrolls instead of breaking the column */
+  math[display="block"] {
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   a {
@@ -311,7 +341,7 @@ body {
 
   code {
     font-family: "Courier New", monospace;
-    font-size: 12px;
+    font-size: 13px;
     background: #efefef;
     padding: 0 3px;
   }
@@ -370,6 +400,14 @@ body {
 
 .post-table {
   width: 100%;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+
+  td {
+    padding: 3px 6px;
+  }
 
   a {
     text-decoration: none;
@@ -598,6 +636,334 @@ body {
   }
 }
 
+/* --- Popup dialogs (Control Panel, Save As, Open) --- */
+.popup-dialog {
+  position: fixed;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  width: min(340px, calc(100vw - 16px));
+  z-index: 40;
+
+  &[hidden] {
+    display: none;
+  }
+
+  fieldset {
+    margin-bottom: 4px;
+  }
+
+  .field-row-stacked {
+    margin-bottom: 10px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+  }
+
+  select {
+    width: 100%;
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+  }
+
+  .dialog-note {
+    color: #595959;
+    font-size: 11px;
+    margin: 8px 0 0;
+  }
+
+  .dialog-buttons {
+    justify-content: flex-end;
+    margin-top: 12px;
+
+    button {
+      min-width: 75px;
+    }
+  }
+}
+
+/* Overwrite warning: sits on top of the Save As dialog */
+.overwrite-dialog {
+  z-index: 41;
+  width: min(300px, calc(100vw - 16px));
+
+  .overwrite-text {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0 0;
+    white-space: pre-line;
+  }
+
+  /* Classic yellow warning triangle */
+  .overwrite-icon {
+    flex-shrink: 0;
+    width: 34px;
+    height: 30px;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    background: #ffcc00;
+    color: #000;
+    font-weight: bold;
+    font-size: 15px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 2px;
+    box-sizing: border-box;
+  }
+
+  .dialog-buttons {
+    justify-content: center;
+  }
+}
+
+/* --- Screen-reader-only utility --- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- "Try me" on Python code blocks --- */
+.tryme-wrap {
+  position: relative;
+  margin: 12px 0;
+
+  pre {
+    margin: 0;
+    max-width: none;
+  }
+
+  .tryme-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    min-width: 0;
+    min-height: 0;
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+}
+
+/* --- Python editor (Python.exe) --- */
+.editor-window {
+  position: fixed;
+  top: 7vh;
+  left: calc(50% - min(340px, 48vw));
+  width: min(680px, 96vw);
+  height: min(540px, 78vh);
+  display: flex;
+  flex-direction: column;
+  z-index: 3;
+
+  &.front {
+    z-index: 6; /* above a maximized main window (z-index 5) */
+  }
+
+  /* Flat Win98 menu bar: File / Run / Clear */
+  .editor-menubar {
+    display: flex;
+    align-items: center;
+    padding: 1px 2px 2px;
+
+    .menubar-btn {
+      min-width: 0;
+      min-height: 0;
+      padding: 3px 9px;
+      background: none;
+      border: none;
+      box-shadow: none;
+
+      &:hover,
+      &:focus-visible {
+        box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+        outline: none;
+      }
+
+      &:active,
+      &[aria-expanded="true"] {
+        box-shadow: inset 1px 1px #808080, inset -1px -1px #fff;
+      }
+    }
+  }
+
+  .editor-menu {
+    position: relative;
+  }
+
+  .editor-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 50;
+    min-width: 170px;
+    display: flex;
+    flex-direction: column;
+    background: silver;
+    padding: 2px;
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #dfdfdf,
+      inset -2px -2px #808080, inset 2px 2px #fff;
+
+    &[hidden] {
+      display: none;
+    }
+
+    button {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      min-width: 0;
+      min-height: 0;
+      padding: 5px 16px 5px 18px;
+      background: none;
+      border: none;
+      box-shadow: none;
+      text-align: left;
+
+      &:hover,
+      &:focus-visible {
+        background: navy;
+        color: #fff;
+        outline: none;
+      }
+    }
+
+    .menu-shortcut {
+      color: inherit;
+      opacity: 0.75;
+    }
+  }
+
+  .window-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    max-height: none;
+    min-height: 0;
+
+    /* No reading column inside the editor */
+    > * {
+      max-width: none;
+      margin: 0;
+    }
+  }
+
+  .editor-body {
+    /* Code area: line-number gutter + highlighted code with a transparent
+       textarea on top. All three layers share identical font metrics so
+       the text, colors and numbers stay pixel-aligned while scrolling. */
+    .editor-pane {
+      flex: 1.5;
+      min-height: 0;
+      display: flex;
+      background: #fff;
+    }
+
+    .editor-gutter,
+    .editor-highlight,
+    .editor-code {
+      font-family: "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.4;
+      white-space: pre;
+      tab-size: 4;
+    }
+
+    .editor-gutter {
+      flex-shrink: 0;
+      min-width: 30px;
+      box-sizing: border-box;
+      /* Big bottom padding: the textarea's horizontal scrollbar steals
+         viewport height, so the gutter needs extra scroll headroom to
+         stay in sync at the very bottom */
+      padding: 6px 6px 60px 8px;
+      background: silver;
+      border-right: 1px solid #808080;
+      color: #404040;
+      text-align: right;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .editor-code-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .editor-highlight,
+    .editor-code {
+      position: absolute;
+      inset: 0;
+      box-sizing: border-box;
+      margin: 0;
+      border: none;
+      outline: none;
+      box-shadow: none;
+    }
+
+    .editor-highlight {
+      /* Extra right/bottom padding = scroll headroom (see gutter note) */
+      padding: 6px 60px 60px 8px;
+      overflow: hidden;
+      background: #fff;
+      color: #000;
+    }
+
+    .editor-code {
+      padding: 6px 8px;
+      resize: none;
+      overflow: auto;
+      overscroll-behavior: none;
+      background: transparent;
+      color: transparent;
+      caret-color: #000;
+
+      /* Text is transparent, so paint selection under the highlight text */
+      &::selection {
+        background: rgba(0, 0, 128, 0.3);
+        color: transparent;
+      }
+    }
+
+    /* MS-DOS style output pane */
+    .editor-output {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 6px 8px;
+      border: none;
+      border-top: 1px solid #808080;
+      box-shadow: 0 1px 0 #fff inset;
+      font-family: "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #000;
+      color: #c0c0c0;
+    }
+  }
+}
+
+/* Python token colors (VC++ 6 vibes) */
+.tok-keyword { color: #0000ff; }
+.tok-string { color: #a00000; }
+.tok-comment { color: #008000; }
+.tok-number { color: #008080; }
+
 /* --- Shutdown easter egg --- */
 .shutdown-screen {
   position: fixed;
@@ -667,5 +1033,12 @@ body.shut-down {
 
   .taskbar .taskbar-task {
     max-width: 110px;
+  }
+
+  .editor-window {
+    top: 4px;
+    left: 4px;
+    width: calc(100vw - 8px);
+    height: calc(100vh - #{$taskbar-height} - 8px);
   }
 }

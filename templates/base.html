@@ -57,6 +57,45 @@
           {% endblock status_bar %}
         </div>
       </main>
+
+      <section class="window app-window editor-window closed" data-win="pyedit" aria-label="Python editor">
+        <div class="title-bar">
+          <div class="title-bar-text">untitled.py - Python.exe</div>
+          <div class="title-bar-controls">
+            <button aria-label="Minimize"></button>
+            <button aria-label="Maximize"></button>
+            <button aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="editor-menubar">
+          <div class="editor-menu">
+            <button id="pyedit-file-btn" class="menubar-btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="pyedit-file-menu">File</button>
+            <div class="editor-menu-dropdown" id="pyedit-file-menu" role="menu" hidden>
+              <button id="pyedit-file-new" type="button" role="menuitem">New</button>
+              <button id="pyedit-file-open" type="button" role="menuitem">Open&#8230;</button>
+              <button id="pyedit-file-save" type="button" role="menuitem">Save <span class="menu-shortcut">Ctrl+S</span></button>
+              <button id="pyedit-file-saveas" type="button" role="menuitem">Save As&#8230;</button>
+            </div>
+          </div>
+          <button id="pyedit-run" class="menubar-btn" type="button">&#9654; Run (F5)</button>
+          <button id="pyedit-clear" class="menubar-btn" type="button">Clear output</button>
+        </div>
+        <div class="window-body editor-body">
+          <div class="editor-pane">
+            <div class="editor-gutter" id="pyedit-gutter" aria-hidden="true">1</div>
+            <div class="editor-code-wrap">
+              <pre class="editor-highlight" id="pyedit-highlight" aria-hidden="true"></pre>
+              <label class="sr-only" for="pyedit-code">Python code</label>
+              <textarea id="pyedit-code" class="editor-code" spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea>
+            </div>
+          </div>
+          <pre id="pyedit-output" class="editor-output" aria-live="polite" aria-label="Program output"></pre>
+        </div>
+        <div class="status-bar">
+          <p class="status-bar-field" id="pyedit-status">Ready</p>
+          <p class="status-bar-field">Python 3 (Pyodide)</p>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -68,6 +107,7 @@
     {% block taskbar_tasks %}
     <button class="taskbar-task active" data-for="main">{% block taskbar_title %}{{ config.title }}{% endblock taskbar_title %}</button>
     {% endblock taskbar_tasks %}
+    <button class="taskbar-task" data-for="pyedit" hidden>Python.exe</button>
     <div class="taskbar-clock status-bar-field"><span id="clock">--:--</span></div>
   </footer>
 
@@ -97,12 +137,108 @@
       </li>
       <li role="separator" class="start-menu-separator"></li>
       <li role="none">
+        <button role="menuitem" class="start-menu-item-button" id="menu-python">
+          <img src="{{ get_url(path='icons/python.svg') }}" alt="" width="22" height="22"> Python.exe
+        </button>
+      </li>
+      <li role="none">
+        <button role="menuitem" class="start-menu-item-button" id="menu-control-panel">
+          <img src="{{ get_url(path='icons/settings.svg') }}" alt="" width="22" height="22"> Control Panel
+        </button>
+      </li>
+      <li role="none">
         <button role="menuitem" class="start-menu-item-button" id="menu-shutdown">
           <img src="{{ get_url(path='icons/shutdown.svg') }}" alt="" width="22" height="22"> Shut Down...
         </button>
       </li>
     </ul>
   </nav>
+
+  <div class="window popup-dialog" id="control-panel" hidden role="dialog" aria-labelledby="cp-title" aria-modal="false">
+    <div class="title-bar">
+      <div class="title-bar-text" id="cp-title">Control Panel</div>
+      <div class="title-bar-controls">
+        <button aria-label="Close" id="cp-close"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <fieldset>
+        <legend>Display</legend>
+        <div class="field-row-stacked">
+          <label for="cp-width">Reading column width: <span id="cp-width-value">72</span> characters</label>
+          <input type="range" id="cp-width" min="50" max="110" step="2" value="72">
+        </div>
+        <div class="field-row">
+          <input type="checkbox" id="cp-maximized">
+          <label for="cp-maximized">Open windows maximized</label>
+        </div>
+      </fieldset>
+      <section class="field-row dialog-buttons">
+        <button id="cp-ok">OK</button>
+        <button id="cp-cancel">Cancel</button>
+        <button id="cp-defaults">Defaults</button>
+      </section>
+    </div>
+  </div>
+
+  <div class="window popup-dialog" id="pyedit-saveas-dialog" hidden role="dialog" aria-labelledby="pyedit-saveas-title" aria-modal="false">
+    <div class="title-bar">
+      <div class="title-bar-text" id="pyedit-saveas-title">Save As</div>
+      <div class="title-bar-controls">
+        <button aria-label="Close" id="pyedit-saveas-close"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <div class="field-row-stacked">
+        <label for="pyedit-saveas-name">File name:</label>
+        <input type="text" id="pyedit-saveas-name" value="untitled.py" spellcheck="false" autocomplete="off">
+      </div>
+      <p class="dialog-note">Files are saved to the virtual C:\ drive (this browser's localStorage).</p>
+      <section class="field-row dialog-buttons">
+        <button id="pyedit-saveas-ok">Save</button>
+        <button id="pyedit-saveas-cancel">Cancel</button>
+      </section>
+    </div>
+  </div>
+
+  <div class="window popup-dialog overwrite-dialog" id="pyedit-overwrite-dialog" hidden role="alertdialog" aria-labelledby="pyedit-overwrite-title" aria-describedby="pyedit-overwrite-msg">
+    <div class="title-bar">
+      <div class="title-bar-text" id="pyedit-overwrite-title">Save As</div>
+      <div class="title-bar-controls">
+        <button aria-label="Close" id="pyedit-overwrite-close"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <p class="overwrite-text">
+        <span class="overwrite-icon" aria-hidden="true">!</span>
+        <span id="pyedit-overwrite-msg"></span>
+      </p>
+      <section class="field-row dialog-buttons">
+        <button id="pyedit-overwrite-yes">Yes</button>
+        <button id="pyedit-overwrite-no">No</button>
+      </section>
+    </div>
+  </div>
+
+  <div class="window popup-dialog" id="pyedit-open-dialog" hidden role="dialog" aria-labelledby="pyedit-open-title" aria-modal="false">
+    <div class="title-bar">
+      <div class="title-bar-text" id="pyedit-open-title">Open</div>
+      <div class="title-bar-controls">
+        <button aria-label="Close" id="pyedit-open-close"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <div class="field-row-stacked">
+        <label for="pyedit-open-list">File on C:\</label>
+        <select id="pyedit-open-list"></select>
+      </div>
+      <section class="field-row dialog-buttons">
+        <button id="pyedit-open-ok">Open</button>
+        <button id="pyedit-open-delete">Delete</button>
+        <button id="pyedit-open-cancel">Cancel</button>
+      </section>
+    </div>
+  </div>
 
   <div class="shutdown-screen" id="shutdown" hidden>
     <p>It's now safe to turn off<br>your computer.</p>
@@ -114,6 +250,30 @@
       var startBtn = document.getElementById("start-button");
       var startMenu = document.getElementById("start-menu");
       var shutdown = document.getElementById("shutdown");
+
+      /* --- Settings --- */
+      var SETTINGS_KEY = "mf-settings";
+      function loadSettings() {
+        try {
+          return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+        } catch (e) {
+          return {};
+        }
+      }
+      function saveSettings() {
+        try {
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        } catch (e) { /* private browsing etc. */ }
+      }
+      var settings = loadSettings();
+
+      function applyReadingWidth() {
+        document.documentElement.style.setProperty(
+          "--reading-width",
+          (settings.readingWidth || 72) + "ch"
+        );
+      }
+      applyReadingWidth();
 
       function tick() {
         var d = new Date();
@@ -323,6 +483,16 @@
         });
       });
 
+      /* Start maximized (after wiring, so button labels stay in sync) */
+      if (settings.startMaximized) {
+        var mainWin = document.querySelector(".main-window");
+        if (mainWin) {
+          mainWin.classList.add("maximized");
+          var mainMaxBtn = mainWin.querySelector('[aria-label="Maximize"]');
+          if (mainMaxBtn) mainMaxBtn.setAttribute("aria-label", "Restore");
+        }
+      }
+
       /* --- Desktop icons --- */
       var icons = Array.prototype.slice.call(document.querySelectorAll(".desktop-icon"));
 
@@ -395,6 +565,495 @@
           items[(idx - 1 + items.length) % items.length].focus();
         }
       });
+
+      /* --- Control Panel --- */
+      var cpWin = document.getElementById("control-panel");
+      var cpWidth = document.getElementById("cp-width");
+      var cpWidthValue = document.getElementById("cp-width-value");
+      var cpMaximized = document.getElementById("cp-maximized");
+
+      function cpSyncControls() {
+        cpWidth.value = settings.readingWidth || 72;
+        cpWidthValue.textContent = cpWidth.value;
+        cpMaximized.checked = !!settings.startMaximized;
+      }
+
+      function cpOpen() {
+        cpSyncControls();
+        cpWin.hidden = false;
+        cpWidth.focus();
+      }
+
+      function cpClose(save) {
+        if (save) {
+          settings.readingWidth = Number(cpWidth.value);
+          settings.startMaximized = cpMaximized.checked;
+          saveSettings();
+        }
+        applyReadingWidth(); // reverts live preview unless saved
+        cpWin.hidden = true;
+      }
+
+      document.getElementById("menu-control-panel").addEventListener("click", function () {
+        setStartMenu(false);
+        cpOpen();
+      });
+
+      /* Live preview while dragging the slider */
+      cpWidth.addEventListener("input", function () {
+        cpWidthValue.textContent = cpWidth.value;
+        document.documentElement.style.setProperty("--reading-width", cpWidth.value + "ch");
+      });
+
+      document.getElementById("cp-ok").addEventListener("click", function () { cpClose(true); });
+      document.getElementById("cp-cancel").addEventListener("click", function () { cpClose(false); });
+      document.getElementById("cp-close").addEventListener("click", function () { cpClose(false); });
+      document.getElementById("cp-defaults").addEventListener("click", function () {
+        cpWidth.value = 72;
+        cpWidthValue.textContent = "72";
+        cpMaximized.checked = false;
+        document.documentElement.style.setProperty("--reading-width", "72ch");
+      });
+
+      cpWin.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") cpClose(false);
+      });
+
+      /* --- Python editor (Python.exe) --- */
+      var pyWin = document.querySelector('[data-win="pyedit"]');
+      var pyCode = document.getElementById("pyedit-code");
+      var pyHighlight = document.getElementById("pyedit-highlight");
+      var pyGutter = document.getElementById("pyedit-gutter");
+      var pyOut = document.getElementById("pyedit-output");
+      var pyRunBtn = document.getElementById("pyedit-run");
+      var pyStatusField = document.getElementById("pyedit-status");
+      var pyTitleText = pyWin.querySelector(".title-bar-text");
+      var pyodidePromise = null;
+      var pyCurrentFile = null;
+
+      var PY_DEFAULT = '# Welcome to Python.exe\n# Press F5 (or Run) to execute. File > Save writes to the virtual C:\\ drive.\n\nprint("Hello, World!")\n';
+
+      function pyStatus(msg) {
+        pyStatusField.textContent = msg;
+      }
+
+      /* Virtual file system: one folder, lives in localStorage */
+      var PYFILES_KEY = "mf-pyfiles";
+      function pyFsRead() {
+        try {
+          return JSON.parse(localStorage.getItem(PYFILES_KEY)) || {};
+        } catch (e) {
+          return {};
+        }
+      }
+      function pyFsWrite(files) {
+        try {
+          localStorage.setItem(PYFILES_KEY, JSON.stringify(files));
+          return true;
+        } catch (e) {
+          pyStatus("Write error on drive C: \u2014 disk full?");
+          return false;
+        }
+      }
+
+      function setPyTitle() {
+        pyTitleText.textContent = (pyCurrentFile || "untitled.py") + " - Python.exe";
+      }
+
+      /* --- Syntax highlighting + line numbers --- */
+      /* One combined regex; the token kind is decided by its first character:
+         quote = string, # = comment, digit = number, letter = keyword */
+      var PY_TOKEN_RE = /("""[\s\S]*?(?:"""|$)|'''[\s\S]*?(?:'''|$)|"(?:\\.|[^"\\\n])*"?|'(?:\\.|[^'\\\n])*'?|#[^\n]*|\b(?:False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|match|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b|\b\d[\d_]*(?:\.[\d_]*)?(?:[eE][+-]?\d+)?[jJ]?)/g;
+
+      function pyEscapeHtml(s) {
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function pyTokenClass(tok) {
+        var c = tok.charAt(0);
+        if (c === '"' || c === "'") return "tok-string";
+        if (c === "#") return "tok-comment";
+        if (c >= "0" && c <= "9") return "tok-number";
+        return "tok-keyword";
+      }
+
+      function pySyncScroll() {
+        pyHighlight.scrollTop = pyCode.scrollTop;
+        pyHighlight.scrollLeft = pyCode.scrollLeft;
+        pyGutter.scrollTop = pyCode.scrollTop;
+      }
+
+      function pyRefresh() {
+        var src = pyCode.value;
+        var html = "";
+        var last = 0;
+        var m;
+        PY_TOKEN_RE.lastIndex = 0;
+        while ((m = PY_TOKEN_RE.exec(src)) !== null) {
+          html += pyEscapeHtml(src.slice(last, m.index));
+          html += '<span class="' + pyTokenClass(m[0]) + '">' + pyEscapeHtml(m[0]) + "</span>";
+          last = m.index + m[0].length;
+        }
+        html += pyEscapeHtml(src.slice(last));
+        /* Trailing newline so the last line always renders */
+        pyHighlight.innerHTML = html + "\n";
+
+        var lines = src.split("\n").length;
+        var nums = "";
+        for (var i = 1; i <= lines; i++) nums += i + "\n";
+        pyGutter.textContent = nums;
+        pySyncScroll();
+      }
+
+      function setPyCode(code) {
+        pyCode.value = code;
+        pyRefresh();
+      }
+
+      pyCode.addEventListener("input", pyRefresh);
+      pyCode.addEventListener("scroll", pySyncScroll);
+
+      /* --- File menu --- */
+      var pyFileBtn = document.getElementById("pyedit-file-btn");
+      var pyFileMenu = document.getElementById("pyedit-file-menu");
+
+      function setFileMenu(open) {
+        pyFileMenu.hidden = !open;
+        pyFileBtn.setAttribute("aria-expanded", String(open));
+      }
+
+      pyFileBtn.addEventListener("click", function () {
+        setFileMenu(pyFileMenu.hidden);
+      });
+
+      document.addEventListener("click", function (e) {
+        if (pyFileMenu.hidden) return;
+        if (pyFileBtn.contains(e.target) || pyFileMenu.contains(e.target)) return;
+        setFileMenu(false);
+      });
+
+      /* --- Save As dialog --- */
+      var pySaveAsDlg = document.getElementById("pyedit-saveas-dialog");
+      var pySaveAsName = document.getElementById("pyedit-saveas-name");
+
+      function pySaveAsOpen() {
+        pySaveAsName.value = pyCurrentFile || "untitled.py";
+        pySaveAsDlg.hidden = false;
+        pySaveAsName.focus();
+        pySaveAsName.select();
+      }
+
+      function pySaveCommit(name) {
+        var files = pyFsRead();
+        files[name] = pyCode.value;
+        if (pyFsWrite(files)) {
+          pyCurrentFile = name;
+          setPyTitle();
+          pyStatus("Saved C:\\" + name);
+        }
+        pySaveAsDlg.hidden = true;
+        pyCode.focus();
+      }
+
+      /* Overwrite warning ("C:\foo.py already exists...") */
+      var pyOverwriteDlg = document.getElementById("pyedit-overwrite-dialog");
+      var pyOverwriteMsg = document.getElementById("pyedit-overwrite-msg");
+      var pyPendingName = null;
+
+      function pyOverwriteCancel() {
+        pyOverwriteDlg.hidden = true;
+        pyPendingName = null;
+        /* Back to the Save As dialog to pick another name */
+        pySaveAsName.focus();
+        pySaveAsName.select();
+      }
+
+      function pySaveAsDo() {
+        var name = pySaveAsName.value.trim();
+        if (!name) return;
+        if (!/\.py$/i.test(name)) name += ".py";
+        /* Saving over a *different* existing file needs a nod first */
+        if (name !== pyCurrentFile && (name in pyFsRead())) {
+          pyPendingName = name;
+          pyOverwriteMsg.textContent =
+            "C:\\" + name + " already exists.\nDo you want to replace it?";
+          pyOverwriteDlg.hidden = false;
+          document.getElementById("pyedit-overwrite-yes").focus();
+          return;
+        }
+        pySaveCommit(name);
+      }
+
+      function pySave() {
+        if (!pyCurrentFile) {
+          pySaveAsOpen();
+          return;
+        }
+        var files = pyFsRead();
+        files[pyCurrentFile] = pyCode.value;
+        if (pyFsWrite(files)) pyStatus("Saved C:\\" + pyCurrentFile);
+      }
+
+      document.getElementById("pyedit-saveas-ok").addEventListener("click", pySaveAsDo);
+      document.getElementById("pyedit-saveas-cancel").addEventListener("click", function () {
+        pySaveAsDlg.hidden = true;
+      });
+      document.getElementById("pyedit-saveas-close").addEventListener("click", function () {
+        pySaveAsDlg.hidden = true;
+      });
+      pySaveAsName.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          pySaveAsDo();
+        }
+      });
+      pySaveAsDlg.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") pySaveAsDlg.hidden = true;
+      });
+
+      document.getElementById("pyedit-overwrite-yes").addEventListener("click", function () {
+        pyOverwriteDlg.hidden = true;
+        if (pyPendingName) pySaveCommit(pyPendingName);
+        pyPendingName = null;
+      });
+      document.getElementById("pyedit-overwrite-no").addEventListener("click", pyOverwriteCancel);
+      document.getElementById("pyedit-overwrite-close").addEventListener("click", pyOverwriteCancel);
+      pyOverwriteDlg.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") pyOverwriteCancel();
+      });
+
+      /* --- Open dialog --- */
+      var pyOpenDlg = document.getElementById("pyedit-open-dialog");
+      var pyOpenList = document.getElementById("pyedit-open-list");
+
+      function pyOpenRefreshList() {
+        var names = Object.keys(pyFsRead()).sort();
+        pyOpenList.innerHTML = "";
+        if (!names.length) {
+          var empty = document.createElement("option");
+          empty.value = "";
+          empty.textContent = "(no files on C:\\)";
+          pyOpenList.appendChild(empty);
+          pyOpenList.disabled = true;
+          return;
+        }
+        pyOpenList.disabled = false;
+        names.forEach(function (n) {
+          var opt = document.createElement("option");
+          opt.value = n;
+          opt.textContent = n;
+          pyOpenList.appendChild(opt);
+        });
+        pyOpenList.selectedIndex = 0;
+      }
+
+      function pyOpenDlgShow() {
+        pyOpenRefreshList();
+        pyOpenDlg.hidden = false;
+        pyOpenList.focus();
+      }
+
+      function pyOpenDo() {
+        var name = pyOpenList.value;
+        var files = pyFsRead();
+        if (!name || !(name in files)) return;
+        setPyCode(files[name]);
+        pyCurrentFile = name;
+        setPyTitle();
+        pyStatus("Opened C:\\" + name);
+        pyOpenDlg.hidden = true;
+        pyCode.focus();
+      }
+
+      document.getElementById("pyedit-open-ok").addEventListener("click", pyOpenDo);
+      pyOpenList.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          pyOpenDo();
+        }
+      });
+      document.getElementById("pyedit-open-delete").addEventListener("click", function () {
+        var name = pyOpenList.value;
+        if (!name) return;
+        var files = pyFsRead();
+        delete files[name];
+        if (pyFsWrite(files)) {
+          if (pyCurrentFile === name) {
+            pyCurrentFile = null;
+            setPyTitle();
+          }
+          pyStatus("Deleted C:\\" + name);
+          pyOpenRefreshList();
+        }
+      });
+      document.getElementById("pyedit-open-cancel").addEventListener("click", function () {
+        pyOpenDlg.hidden = true;
+      });
+      document.getElementById("pyedit-open-close").addEventListener("click", function () {
+        pyOpenDlg.hidden = true;
+      });
+      pyOpenDlg.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") pyOpenDlg.hidden = true;
+      });
+
+      /* --- File menu items --- */
+      document.getElementById("pyedit-file-new").addEventListener("click", function () {
+        setFileMenu(false);
+        setPyCode("");
+        pyCurrentFile = null;
+        setPyTitle();
+        pyStatus("New file");
+        pyCode.focus();
+      });
+      document.getElementById("pyedit-file-open").addEventListener("click", function () {
+        setFileMenu(false);
+        pyOpenDlgShow();
+      });
+      document.getElementById("pyedit-file-save").addEventListener("click", function () {
+        setFileMenu(false);
+        pySave();
+      });
+      document.getElementById("pyedit-file-saveas").addEventListener("click", function () {
+        setFileMenu(false);
+        pySaveAsOpen();
+      });
+
+      function pyAppend(text) {
+        pyOut.textContent += text;
+        pyOut.scrollTop = pyOut.scrollHeight;
+      }
+
+      function loadPyodideOnce() {
+        if (pyodidePromise) return pyodidePromise;
+        pyStatus("Downloading Python runtime\u2026");
+        pyodidePromise = new Promise(function (resolve, reject) {
+          var s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js";
+          s.onload = function () {
+            loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.28.3/full/" })
+              .then(resolve, reject);
+          };
+          s.onerror = function () { reject(new Error("network error")); };
+          document.head.appendChild(s);
+        }).then(
+          function (py) {
+            pyStatus("Ready");
+            return py;
+          },
+          function (err) {
+            pyodidePromise = null; // allow retry
+            pyStatus("Failed to load Python \u2014 check your connection");
+            throw err;
+          }
+        );
+        return pyodidePromise;
+      }
+
+      function openPyEditor(code) {
+        if (code != null) {
+          /* Opened from a "Try me" button: load that snippet as a new file */
+          setPyCode(code);
+          pyCurrentFile = null;
+          pyOut.textContent = "";
+        } else if (!pyCode.value) {
+          /* Opened from the Start menu with an empty buffer */
+          setPyCode(PY_DEFAULT);
+        }
+        setPyTitle();
+        pyWin.classList.remove("closed");
+        pyWin.classList.remove("minimized");
+        var b = btnFor("pyedit");
+        if (b) b.hidden = false;
+        activate("pyedit");
+        loadPyodideOnce().catch(function () {});
+        pyCode.focus();
+      }
+
+      var pyRunning = false;
+      function runPython() {
+        if (pyRunning) return;
+        pyRunning = true;
+        pyRunBtn.disabled = true;
+        var source = pyCode.value;
+        loadPyodideOnce()
+          .then(function (py) {
+            pyStatus("Running\u2026");
+            if (pyOut.textContent) pyAppend("\n");
+            py.setStdout({ batched: function (s) { pyAppend(s + "\n"); } });
+            py.setStderr({ batched: function (s) { pyAppend(s + "\n"); } });
+            var t0 = Date.now();
+            return py
+              .loadPackagesFromImports(source)
+              .then(function () { return py.runPythonAsync(source); })
+              .then(function (result) {
+                if (result !== undefined && result !== null) {
+                  pyAppend(String(result) + "\n");
+                  if (result && typeof result.destroy === "function") result.destroy();
+                }
+                pyStatus("Done in " + (Date.now() - t0) + " ms");
+              })
+              .catch(function (err) {
+                pyAppend(String(err && err.message ? err.message : err) + "\n");
+                pyStatus("Error \u2014 see output");
+              });
+          })
+          .catch(function () { /* status already set by loader */ })
+          .then(function () {
+            pyRunning = false;
+            pyRunBtn.disabled = false;
+          });
+      }
+
+      pyRunBtn.addEventListener("click", runPython);
+      document.getElementById("pyedit-clear").addEventListener("click", function () {
+        pyOut.textContent = "";
+        pyStatus("Ready");
+      });
+
+      pyWin.addEventListener("keydown", function (e) {
+        if (e.key === "F5" || (e.key === "Enter" && (e.ctrlKey || e.metaKey))) {
+          e.preventDefault();
+          runPython();
+        } else if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+          e.preventDefault();
+          pySave();
+        }
+      });
+
+      /* Tab inserts spaces, like a real editor */
+      pyCode.addEventListener("keydown", function (e) {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          pyCode.setRangeText("    ", pyCode.selectionStart, pyCode.selectionEnd, "end");
+          pyRefresh(); /* setRangeText fires no input event */
+        }
+      });
+
+      /* Start menu entry */
+      document.getElementById("menu-python").addEventListener("click", function () {
+        setStartMenu(false);
+        openPyEditor(null);
+      });
+
+      /* "Try me" buttons on Python code blocks */
+      document
+        .querySelectorAll('#content pre > code[data-lang="python"], #content pre > code[data-lang="py"]')
+        .forEach(function (code) {
+          var pre = code.parentElement;
+          var wrap = document.createElement("div");
+          wrap.className = "tryme-wrap";
+          pre.parentNode.insertBefore(wrap, pre);
+          wrap.appendChild(pre);
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "tryme-btn";
+          btn.innerHTML = "&#9654; Try me";
+          btn.setAttribute("aria-label", "Open this code in the Python editor");
+          btn.addEventListener("click", function () {
+            openPyEditor(code.textContent.replace(/\n$/, ""));
+          });
+          wrap.appendChild(btn);
+        });
 
       /* --- Shut Down... --- */
       document.getElementById("menu-shutdown").addEventListener("click", function () {

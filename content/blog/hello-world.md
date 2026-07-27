@@ -21,6 +21,18 @@ fn main() {
 }
 ```
 
+And here's some Python you can actually run — hit the **Try me** button
+and it opens in a little editor, no installation required:
+
+```python
+def fizzbuzz(n):
+    for i in range(1, n + 1):
+        word = "Fizz" * (i % 3 == 0) + "Buzz" * (i % 5 == 0)
+        print(word or i)
+
+fizzbuzz(15)
+```
+
 > Tip of the day: You can double-click the title bar to maximize a window.
 
 More posts coming soon. Stay tuned!
