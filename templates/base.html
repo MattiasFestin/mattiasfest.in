@@ -628,7 +628,8 @@
       var pyRunBtn = document.getElementById("pyedit-run");
       var pyStatusField = document.getElementById("pyedit-status");
       var pyTitleText = pyWin.querySelector(".title-bar-text");
-      var pyodidePromise = null;
+      var pyWorker = null;
+      var pyWorkerReady = null;
       var pyCurrentFile = null;
 
       var PY_DEFAULT = '# Welcome to Python.exe\n# Press F5 (or Run) to execute. File > Save writes to the virtual C:\\ drive.\n\nprint("Hello, World!")\n';
@@ -923,30 +924,40 @@
         pyOut.scrollTop = pyOut.scrollHeight;
       }
 
-      function loadPyodideOnce() {
-        if (pyodidePromise) return pyodidePromise;
+      function loadRuntimeOnce() {
+        if (pyWorkerReady) return pyWorkerReady;
         pyStatus("Downloading Python runtime\u2026");
-        pyodidePromise = new Promise(function (resolve, reject) {
-          var s = document.createElement("script");
-          s.src = "https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js";
-          s.onload = function () {
-            loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.28.3/full/" })
-              .then(resolve, reject);
-          };
-          s.onerror = function () { reject(new Error("network error")); };
-          document.head.appendChild(s);
+        pyWorkerReady = new Promise(function (resolve, reject) {
+          var w;
+          try {
+            w = new Worker("/pyworker.js");
+          } catch (e) {
+            reject(e);
+            return;
+          }
+          w.addEventListener("message", function (e) {
+            var d = e.data || {};
+            if (d.kind === "status") pyStatus(d.text);
+            else if (d.kind === "ready") resolve(w);
+            else if (d.kind === "fatal") reject(new Error(d.message));
+          });
+          w.addEventListener("error", function (e) {
+            reject(new Error(e.message || "worker error"));
+          });
+          w.postMessage({ kind: "init" });
         }).then(
-          function (py) {
+          function (w) {
+            pyWorker = w;
             pyStatus("Ready");
-            return py;
+            return w;
           },
           function (err) {
-            pyodidePromise = null; // allow retry
+            pyWorkerReady = null; // allow retry
             pyStatus("Failed to load Python \u2014 check your connection");
             throw err;
           }
         );
-        return pyodidePromise;
+        return pyWorkerReady;
       }
 
       function openPyEditor(code) {
@@ -965,7 +976,7 @@
         var b = btnFor("pyedit");
         if (b) b.hidden = false;
         activate("pyedit");
-        loadPyodideOnce().catch(function () {});
+        loadRuntimeOnce().catch(function () {});
         pyCode.focus();
       }
 
@@ -975,27 +986,35 @@
         pyRunning = true;
         pyRunBtn.disabled = true;
         var source = pyCode.value;
-        loadPyodideOnce()
-          .then(function (py) {
+        loadRuntimeOnce()
+          .then(function (w) {
             pyStatus("Running\u2026");
             if (pyOut.textContent) pyAppend("\n");
-            py.setStdout({ batched: function (s) { pyAppend(s + "\n"); } });
-            py.setStderr({ batched: function (s) { pyAppend(s + "\n"); } });
             var t0 = Date.now();
-            return py
-              .loadPackagesFromImports(source)
-              .then(function () { return py.runPythonAsync(source); })
-              .then(function (result) {
-                if (result !== undefined && result !== null) {
-                  pyAppend(String(result) + "\n");
-                  if (result && typeof result.destroy === "function") result.destroy();
+            return new Promise(function (resolve) {
+              function onMsg(e) {
+                var d = e.data || {};
+                if (d.kind === "out") {
+                  pyAppend(d.text + "\n");
+                } else if (d.kind === "status") {
+                  pyStatus(d.text);
+                } else if (d.kind === "done") {
+                  if (d.result != null) pyAppend(d.result + "\n");
+                  pyStatus("Done in " + (Date.now() - t0) + " ms");
+                  cleanup();
+                } else if (d.kind === "error") {
+                  pyAppend(d.message + "\n");
+                  pyStatus("Error \u2014 see output");
+                  cleanup();
                 }
-                pyStatus("Done in " + (Date.now() - t0) + " ms");
-              })
-              .catch(function (err) {
-                pyAppend(String(err && err.message ? err.message : err) + "\n");
-                pyStatus("Error \u2014 see output");
-              });
+              }
+              function cleanup() {
+                w.removeEventListener("message", onMsg);
+                resolve();
+              }
+              w.addEventListener("message", onMsg);
+              w.postMessage({ kind: "run", source: source });
+            });
           })
           .catch(function () { /* status already set by loader */ })
           .then(function () {
