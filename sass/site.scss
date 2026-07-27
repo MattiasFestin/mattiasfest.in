@@ -19,16 +19,12 @@ body {
   overflow-x: hidden;
 }
 
-/* On desktop-sized viewports the window body scrolls internally, so the
-   page itself never needs to scroll — lock it to kill Safari's bounce.
-   Small/short viewports keep natural page scrolling (content must stay
-   reachable), protected by overscroll-behavior above. */
-@media (min-width: 601px) and (min-height: 500px) {
-  html,
-  body {
-    height: 100%;
-    overflow: hidden;
-  }
+/* The desktop is never scrollable, on any device: windows scroll their
+   client area internally, exactly like Win98. */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
 }
 
 ::selection {
@@ -263,6 +259,7 @@ body {
   border-color: #808080 #fff #fff #808080;
   box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #dfdfdf;
   max-height: calc(100vh - #{$taskbar-height} - 160px);
+  max-height: calc(100dvh - #{$taskbar-height} - 160px);
   min-height: 200px;
   overflow-y: auto;
   /* No elastic bounce inside the window's client area */
@@ -380,12 +377,16 @@ body {
 
   li {
     padding: 2px 0;
+    /* Date stays put, wrapped title lines align under the title */
+    display: flex;
+    align-items: baseline;
   }
 
   .post-date {
     font-family: "Courier New", monospace;
     color: #595959;
     margin-right: 8px;
+    flex-shrink: 0;
   }
 }
 
@@ -400,10 +401,24 @@ body {
 
 .post-table {
   width: 100%;
+  /* 98.css forces nowrap on tables; fixed layout + ellipsis keeps the
+     date column on screen instead of growing a horizontal scrollbar */
+  table-layout: fixed;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   font-size: 13px;
   -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: auto;
+
+  th,
+  td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  th:last-child,
+  td:last-child {
+    width: 100px;
+  }
 
   td {
     padding: 3px 6px;
@@ -1006,14 +1021,13 @@ body.shut-down {
   }
 
   .app-window .window-body {
-    max-height: none;
     padding: 10px 12px;
   }
 
-  .app-window.maximized {
-    position: static;
-    min-height: calc(100vh - #{$taskbar-height});
-  }
+  /* Maximized needs no special casing here: the global rule (fixed,
+     edge-to-edge above the taskbar, scrolling client area) is exactly
+     the right behavior on phones too. */
+
 
   /* Tighter cascade so the background window stays on screen */
   .blog-window {
@@ -1029,6 +1043,11 @@ body.shut-down {
     .window-body {
       max-height: 30vh;
     }
+  }
+
+  /* The editor lays out its own panes itself */
+  .editor-window .window-body {
+    padding: 0;
   }
 
   .taskbar .taskbar-task {

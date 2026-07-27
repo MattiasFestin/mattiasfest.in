@@ -483,8 +483,15 @@
         });
       });
 
-      /* Start maximized (after wiring, so button labels stay in sync) */
-      if (settings.startMaximized) {
+      /* Start maximized (after wiring, so button labels stay in sync).
+         Small screens default to maximized; the Control Panel setting
+         still wins in both directions once the user has touched it. */
+      var smallScreen = window.matchMedia && window.matchMedia("(max-width: 600px)").matches;
+      function wantsStartMaximized() {
+        if (typeof settings.startMaximized === "boolean") return settings.startMaximized;
+        return smallScreen;
+      }
+      if (wantsStartMaximized()) {
         var mainWin = document.querySelector(".main-window");
         if (mainWin) {
           mainWin.classList.add("maximized");
@@ -575,7 +582,7 @@
       function cpSyncControls() {
         cpWidth.value = settings.readingWidth || 72;
         cpWidthValue.textContent = cpWidth.value;
-        cpMaximized.checked = !!settings.startMaximized;
+        cpMaximized.checked = wantsStartMaximized();
       }
 
       function cpOpen() {
