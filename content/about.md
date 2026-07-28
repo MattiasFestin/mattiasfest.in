@@ -57,7 +57,13 @@ Besides this blog, I write about security for Decerno:
 ## This site
 
 - Generated with [Zola](https://www.getzola.org/)
-- Styled with [98.css](https://jdan.github.io/98.css/)
+- Styled with [98.css](https://github.com/jdan/98.css) by Jordan Scales (MIT license)
+- Math rendered with [Temml](https://temml.org/) (MIT license)
+- Python.exe powered by [Pyodide](https://pyodide.org/) (MPL-2.0, loaded from jsDelivr)
+- Icons and other pixel art are from Windows 98 and are © Microsoft Corporation
+  (sourced via the [Win98-Icons](https://github.com/zhaotianff/Win98-Icons)
+  collection). They appear here as a nostalgic homage; this site is not
+  affiliated with or endorsed by Microsoft.
 - Hosted somewhere on the information superhighway
 
 Best viewed in 800×600 at 256 colors.

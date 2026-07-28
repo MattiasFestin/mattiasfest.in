@@ -6,6 +6,8 @@
 {% block og_description %}{{ page.description | default(value=config.description) }}{% endblock og_description %}
 {% block og_type %}article{% endblock og_type %}
 {% block window_title %}{{ page.title }} — {{ config.title }}{% endblock window_title %}
+{% block window_icon %}<span class="title-bar-icon icon icon-notepad-16" aria-hidden="true"></span>{% endblock window_icon %}
+{% block taskbar_icon %}<span class="icon icon-notepad-16" aria-hidden="true"></span>{% endblock taskbar_icon %}
 {% block taskbar_title %}{{ page.title }}{% endblock taskbar_title %}
 
 {% block background_windows %}
@@ -13,6 +15,7 @@
 {% set blog = get_section(path="blog/_index.md") %}
 <section class="window app-window blog-window" data-win="blog" aria-label="Blog window (in background)">
   <div class="title-bar inactive">
+    <span class="title-bar-icon icon icon-folder-16" aria-hidden="true"></span>
     <div class="title-bar-text">{{ blog.title }} — {{ config.title }}</div>
     <div class="title-bar-controls">
       <button aria-label="Minimize"></button>
@@ -34,8 +37,14 @@
 
 {% block taskbar_tasks %}
 {% if page.date %}
-<button class="taskbar-task" data-for="blog">Blog</button>
-<button class="taskbar-task active" data-for="main">{{ page.title }}</button>
+<button class="taskbar-task" data-for="blog">
+  <span class="icon icon-folder-16" aria-hidden="true"></span>
+  <span class="taskbar-task-label">Blog</span>
+</button>
+<button class="taskbar-task active" data-for="main">
+  <span class="icon icon-notepad-16" aria-hidden="true"></span>
+  <span class="taskbar-task-label">{{ page.title }}</span>
+</button>
 {% else %}
 {{ super() }}
 {% endif %}

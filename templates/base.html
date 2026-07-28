@@ -11,7 +11,7 @@
   <meta property="og:description" content="{% block og_description %}{{ config.description }}{% endblock og_description %}">
   <meta property="og:type" content="{% block og_type %}website{% endblock og_type %}">
   {% if current_url %}<meta property="og:url" content="{{ current_url }}">{% endif %}
-  <link rel="icon" href="{{ get_url(path='favicon.svg') }}" type="image/svg+xml">
+  <link rel="icon" href="{{ get_url(path='favicon.png') }}" type="image/png">
   <script>
     /* Pre-paint settings: apply saved reading width and the "start
        maximized" state before first render to avoid layout shifts.
@@ -39,15 +39,15 @@
   <div class="desktop" id="desktop">
     <div class="desktop-icons">
       <button class="desktop-icon" data-href="{{ get_url(path='') }}">
-        <img src="{{ get_url(path='icons/computer.svg') }}" alt="" width="32" height="32">
+        <span class="icon icon-computer-32" aria-hidden="true"></span>
         <span class="desktop-icon-label">My Computer</span>
       </button>
       <button class="desktop-icon" data-href="{{ get_url(path='blog/') }}">
-        <img src="{{ get_url(path='icons/folder.svg') }}" alt="" width="32" height="32">
+        <span class="icon icon-folder-32" aria-hidden="true"></span>
         <span class="desktop-icon-label">My Blog</span>
       </button>
       <button class="desktop-icon" data-href="{{ get_url(path='about/') }}">
-        <img src="{{ get_url(path='icons/about.svg') }}" alt="" width="32" height="32">
+        <span class="icon icon-question-32" aria-hidden="true"></span>
         <span class="desktop-icon-label">About Me</span>
       </button>
     </div>
@@ -56,6 +56,7 @@
       {% block background_windows %}{% endblock background_windows %}
       <main class="window app-window main-window front{% block window_class %}{% endblock window_class %}" data-win="main">
         <div class="title-bar">
+          {% block window_icon %}<span class="title-bar-icon icon icon-computer-16" aria-hidden="true"></span>{% endblock window_icon %}
           <div class="title-bar-text">{% block window_title %}{{ config.title }}{% endblock window_title %}</div>
           <div class="title-bar-controls">
             <button aria-label="Minimize"></button>
@@ -76,6 +77,7 @@
 
       <section class="window app-window editor-window closed" data-win="pyedit" aria-label="Python editor">
         <div class="title-bar">
+          <span class="title-bar-icon icon icon-console-16" aria-hidden="true"></span>
           <div class="title-bar-text">untitled.py - Python.exe</div>
           <div class="title-bar-controls">
             <button aria-label="Minimize"></button>
@@ -117,54 +119,60 @@
 
   <footer class="taskbar">
     <button class="start-button" id="start-button" aria-haspopup="menu" aria-expanded="false" aria-controls="start-menu">
-      <span class="start-logo" aria-hidden="true"></span> Start
+      <span class="icon icon-flag-14" aria-hidden="true"></span> Start
     </button>
     <div class="taskbar-divider"></div>
     {% block taskbar_tasks %}
-    <button class="taskbar-task active" data-for="main">{% block taskbar_title %}{{ config.title }}{% endblock taskbar_title %}</button>
+    <button class="taskbar-task active" data-for="main">
+      {% block taskbar_icon %}<span class="icon icon-computer-16" aria-hidden="true"></span>{% endblock taskbar_icon %}
+      <span class="taskbar-task-label">{% block taskbar_title %}{{ config.title }}{% endblock taskbar_title %}</span>
+    </button>
     {% endblock taskbar_tasks %}
-    <button class="taskbar-task" data-for="pyedit" hidden>Python.exe</button>
+    <button class="taskbar-task" data-for="pyedit" hidden>
+      <span class="icon icon-console-16" aria-hidden="true"></span>
+      <span class="taskbar-task-label">Python.exe</span>
+    </button>
     <div class="taskbar-clock status-bar-field"><span id="clock">--:--</span></div>
   </footer>
 
   {% set cur = current_path | default(value="") %}
   <nav class="start-menu" id="start-menu" hidden aria-label="Main navigation">
-    <div class="start-menu-banner" aria-hidden="true">mattiasfest<span>98</span></div>
+    <div class="start-menu-banner" aria-hidden="true">MattiasFestin</div>
     <ul role="menu">
       <li role="none">
         <a role="menuitem" href="{{ get_url(path='') }}"{% if cur == "/" %} aria-current="page"{% endif %}>
-          <img src="{{ get_url(path='icons/home.svg') }}" alt="" width="22" height="22"> Home
+          <span class="icon icon-computer-16" aria-hidden="true"></span> Home
         </a>
       </li>
       <li role="none">
         <a role="menuitem" href="{{ get_url(path='blog/') }}"{% if cur is starting_with("/blog") %} aria-current="page"{% endif %}>
-          <img src="{{ get_url(path='icons/blog.svg') }}" alt="" width="22" height="22"> Blog
+          <span class="icon icon-folder-16" aria-hidden="true"></span> Blog
         </a>
       </li>
       <li role="none">
         <a role="menuitem" href="{{ get_url(path='about/') }}"{% if cur == "/about/" %} aria-current="page"{% endif %}>
-          <img src="{{ get_url(path='icons/about.svg') }}" alt="" width="22" height="22"> About
+          <span class="icon icon-question-16" aria-hidden="true"></span> About
         </a>
       </li>
       <li role="none">
         <a role="menuitem" href="{{ get_url(path='atom.xml') }}">
-          <img src="{{ get_url(path='icons/rss.svg') }}" alt="" width="22" height="22"> RSS Feed
+          <span class="icon icon-channels-16" aria-hidden="true"></span> RSS Feed
         </a>
       </li>
       <li role="separator" class="start-menu-separator"></li>
       <li role="none">
         <button role="menuitem" class="start-menu-item-button" id="menu-python">
-          <img src="{{ get_url(path='icons/python.svg') }}" alt="" width="22" height="22"> Python.exe
+          <span class="icon icon-console-16" aria-hidden="true"></span> Python.exe
         </button>
       </li>
       <li role="none">
         <button role="menuitem" class="start-menu-item-button" id="menu-control-panel">
-          <img src="{{ get_url(path='icons/settings.svg') }}" alt="" width="22" height="22"> Control Panel
+          <span class="icon icon-control-panel-16" aria-hidden="true"></span> Control Panel
         </button>
       </li>
       <li role="none">
         <button role="menuitem" class="start-menu-item-button" id="menu-shutdown">
-          <img src="{{ get_url(path='icons/shutdown.svg') }}" alt="" width="22" height="22"> Shut Down...
+          <span class="icon icon-shutdown-16" aria-hidden="true"></span> Shut Down...
         </button>
       </li>
     </ul>
@@ -172,6 +180,7 @@
 
   <div class="window popup-dialog" id="control-panel" hidden role="dialog" aria-labelledby="cp-title" aria-modal="false">
     <div class="title-bar">
+      <span class="title-bar-icon icon icon-control-panel-16" aria-hidden="true"></span>
       <div class="title-bar-text" id="cp-title">Control Panel</div>
       <div class="title-bar-controls">
         <button aria-label="Close" id="cp-close"></button>
@@ -226,7 +235,7 @@
     </div>
     <div class="window-body">
       <p class="overwrite-text">
-        <span class="overwrite-icon" aria-hidden="true">!</span>
+        <span class="icon icon-warning-32" aria-hidden="true"></span>
         <span id="pyedit-overwrite-msg"></span>
       </p>
       <section class="field-row dialog-buttons">

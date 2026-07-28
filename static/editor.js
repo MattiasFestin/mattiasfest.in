@@ -308,6 +308,7 @@
   function loadRuntimeOnce() {
     if (pyWorkerReady) return pyWorkerReady;
     pyStatus("Downloading Python runtime\u2026");
+    pyWin.classList.add("busy");
     pyWorkerReady = new Promise(function (resolve, reject) {
       var w;
       try {
@@ -329,11 +330,13 @@
     }).then(
       function (w) {
         pyWorker = w;
+        pyWin.classList.remove("busy");
         pyStatus("Ready");
         return w;
       },
       function (err) {
         pyWorkerReady = null; // allow retry
+        pyWin.classList.remove("busy");
         pyStatus("Failed to load Python \u2014 check your connection");
         throw err;
       }
