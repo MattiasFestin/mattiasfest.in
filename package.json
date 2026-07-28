@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "zola build && node scripts/render-math.mjs && node scripts/optimize.mjs",
+    "build": "zola build && node scripts/render-math.mjs && node scripts/optimize.mjs && node scripts/fingerprint.mjs",
     "dev": "node scripts/dev.mjs"
   },
   "devDependencies": {

@@ -25,7 +25,7 @@ const CSS_SOURCES = [
   { file: "site.css", urlDir: "/" },
 ];
 
-const JS_FILES = ["main.js", "editor.js", "pyworker.js"];
+const JS_FILES = ["main.js", "editor.js", "pyworker.js", "sw.js"];
 
 /** Rewrite relative url(...) references to absolute paths. */
 function rebaseUrls(css, urlDir) {

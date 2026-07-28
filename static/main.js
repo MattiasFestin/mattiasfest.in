@@ -456,4 +456,49 @@
     shutdown.hidden = true;
     document.body.classList.remove("shut-down");
   });
+
+  /* --- Service worker (production only) ---
+     Dev builds skip the fingerprint step, so sw.js still holds its
+     unfilled placeholders there; never register it locally. */
+  if (
+    "serviceWorker" in navigator &&
+    location.hostname !== "localhost" &&
+    location.hostname !== "127.0.0.1"
+  ) {
+    window.addEventListener("load", function () {
+      /* If the page was already controlled, a controllerchange means a
+         new release took over (the new worker calls skipWaiting +
+         clients.claim). On first install the page starts uncontrolled,
+         so no dialog shows on a first visit. */
+      var wasControlled = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.register("/sw.js");
+      navigator.serviceWorker.addEventListener("controllerchange", function () {
+        if (wasControlled) showUpdateDialog();
+        wasControlled = true;
+      });
+    });
+  }
+
+  function showUpdateDialog() {
+    var dialog = document.getElementById("update-dialog");
+    if (!dialog || !dialog.hidden) return;
+
+    function close() {
+      dialog.hidden = true;
+      document.removeEventListener("keydown", onKey);
+    }
+    function onKey(e) {
+      if (e.key === "Escape") close();
+    }
+
+    document.getElementById("update-yes").addEventListener("click", function () {
+      location.reload();
+    });
+    document.getElementById("update-no").addEventListener("click", close);
+    document.getElementById("update-close").addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+
+    dialog.hidden = false;
+    document.getElementById("update-yes").focus();
+  }
 })();

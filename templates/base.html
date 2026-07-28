@@ -12,6 +12,7 @@
   <meta property="og:type" content="{% block og_type %}website{% endblock og_type %}">
   {% if current_url %}<meta property="og:url" content="{{ current_url }}">{% endif %}
   <link rel="icon" href="{{ get_url(path='favicon.png') }}" type="image/png">
+  <link rel="manifest" href="{{ get_url(path='site.webmanifest') }}">
   <script>
     /* Pre-paint settings: apply saved reading width and the "start
        maximized" state before first render to avoid layout shifts.
@@ -222,6 +223,26 @@
       <section class="field-row dialog-buttons">
         <button id="pyedit-saveas-ok">Save</button>
         <button id="pyedit-saveas-cancel">Cancel</button>
+      </section>
+    </div>
+  </div>
+
+  <div class="window popup-dialog overwrite-dialog" id="update-dialog" hidden role="alertdialog" aria-labelledby="update-dialog-title" aria-describedby="update-dialog-msg">
+    <div class="title-bar">
+      <div class="title-bar-text" id="update-dialog-title">System Settings Change</div>
+      <div class="title-bar-controls">
+        <button aria-label="Close" id="update-close"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <p class="overwrite-text">
+        <span class="icon icon-question-32" aria-hidden="true"></span>
+        <span id="update-dialog-msg">A new version of this site has been installed.
+Do you want to restart it now?</span>
+      </p>
+      <section class="field-row dialog-buttons">
+        <button id="update-yes">Yes</button>
+        <button id="update-no">No</button>
       </section>
     </div>
   </div>
