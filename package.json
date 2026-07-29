@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "zola build && node scripts/render-math.mjs && node scripts/optimize.mjs && node scripts/fingerprint.mjs",
+    "build:ci": "node scripts/prune-scheduled.mjs && npm run build",
     "dev": "node scripts/dev.mjs"
   },
   "devDependencies": {

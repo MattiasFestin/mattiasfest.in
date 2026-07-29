@@ -37,8 +37,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build site (Zola + math rendering)
-        run: npm run build
+      - name: Build site (prune scheduled posts, Zola + math rendering)
+        run: npm run build:ci
 
       - uses: actions/configure-pages@v5
 

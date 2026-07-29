@@ -1,0 +1,42 @@
+name: Publish scheduled posts
+
+# Runs once per day. If any post's publication date is today
+# (Europe/Stockholm), re-runs the deploy workflow; the CI build prunes
+# still-future posts, so the newly due post goes live and later ones
+# stay hidden.
+
+on:
+  schedule:
+    - cron: "15 4 * * *" # 04:15 UTC = 05:15/06:15 Stockholm
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  check-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for posts due today
+        id: due
+        run: |
+          TODAY=$(TZ=Europe/Stockholm date +%F)
+          echo "Today (Stockholm): $TODAY"
+          DUE=$(grep -l "^date = $TODAY$" content/blog/*.md 2>/dev/null || true)
+          if [ -n "$DUE" ]; then
+            echo "Posts due today:"
+            echo "$DUE"
+            echo "due=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No posts due today."
+            echo "due=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger site deploy
+        if: steps.due.outputs.due == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main
