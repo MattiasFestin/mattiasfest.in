@@ -19,8 +19,6 @@
   var BUNDLE_SRC = "/webamp/webamp.bundle.min.js";
 
   var taskBtn = window.MF.btnFor("winamp");
-  var errDialog = document.getElementById("winamp-dialog");
-  var errMsg = document.getElementById("winamp-dialog-msg");
 
   var webamp = null; /* Webamp instance, once booted */
   var rootEl = null; /* the #webamp element Webamp renders */
@@ -138,11 +136,11 @@
       function (err) {
         taskBtn.hidden = true;
         window.MF.activateTopmost();
-        errMsg.textContent =
+        window.MF.winampError(
           err && err.message === "unsupported"
             ? "Your browser is missing features Winamp needs. (Yes, the irony.)"
-            : "Winamp could not be loaded \u2014 check your connection and try again.";
-        errDialog.hidden = false;
+            : null
+        );
       }
     );
   }

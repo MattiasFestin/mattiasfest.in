@@ -44,7 +44,7 @@
   <a class="skip-link" href="#content">Skip to content</a>
 
   <div class="desktop" id="desktop">
-    <div class="desktop-icons">
+    <div class="desktop-icons" role="group" aria-label="Desktop shortcuts">
       <button class="desktop-icon" data-href="{{ get_url(path='') }}">
         <span class="icon icon-computer-32" aria-hidden="true"></span>
         <span class="desktop-icon-label">My Computer</span>
@@ -68,7 +68,6 @@
     </div>
 
     <div class="window-stack">
-      {% block background_windows %}{% endblock background_windows %}
       <main class="window app-window main-window front{% block window_class %}{% endblock window_class %}" data-win="main">
         <div class="title-bar">
           {% block window_icon %}<span class="title-bar-icon icon icon-computer-16" aria-hidden="true"></span>{% endblock window_icon %}
@@ -79,7 +78,7 @@
             <button aria-label="Close"></button>
           </div>
         </div>
-        <div class="window-body" id="content">
+        <div class="window-body" id="content" tabindex="-1">
           {% block content %}{% endblock content %}
         </div>
         <div class="status-bar">
@@ -89,6 +88,11 @@
           {% endblock status_bar %}
         </div>
       </main>
+
+      {# Background windows sit *after* the main window in the DOM so the
+         primary content comes first in tab/reading order; their visual
+         stacking is z-index-driven, not DOM-order-driven. #}
+      {% block background_windows %}{% endblock background_windows %}
 
       <section class="window app-window editor-window closed" data-win="pyedit" aria-label="Python editor">
         <div class="title-bar">
@@ -226,26 +230,26 @@
     </div>
   </div>
 
-  <footer class="taskbar">
+  <footer class="taskbar" aria-label="Taskbar">
     <button class="start-button" id="start-button" aria-haspopup="menu" aria-expanded="false" aria-controls="start-menu">
       <span class="icon icon-flag-14" aria-hidden="true"></span> Start
     </button>
     <div class="taskbar-divider"></div>
     {% block taskbar_tasks %}
-    <button class="taskbar-task active" data-for="main">
+    <button class="taskbar-task active" data-for="main" aria-pressed="true">
       {% block taskbar_icon %}<span class="icon icon-computer-16" aria-hidden="true"></span>{% endblock taskbar_icon %}
       <span class="taskbar-task-label">{% block taskbar_title %}{{ config.title }}{% endblock taskbar_title %}</span>
     </button>
     {% endblock taskbar_tasks %}
-    <button class="taskbar-task" data-for="pyedit" hidden>
+    <button class="taskbar-task" data-for="pyedit" hidden aria-pressed="false">
       <span class="icon icon-console-16" aria-hidden="true"></span>
       <span class="taskbar-task-label">Python.exe</span>
     </button>
-    <button class="taskbar-task" data-for="browser" hidden>
+    <button class="taskbar-task" data-for="browser" hidden aria-pressed="false">
       <span class="icon icon-ie-16" aria-hidden="true"></span>
       <span class="taskbar-task-label">The Internet</span>
     </button>
-    <button class="taskbar-task" data-for="winamp" hidden>
+    <button class="taskbar-task" data-for="winamp" hidden aria-pressed="false">
       <span class="icon icon-winamp-16" aria-hidden="true"></span>
       <span class="taskbar-task-label">Winamp</span>
     </button>
@@ -264,6 +268,7 @@
             if (!n) return;
             var tray = document.getElementById("tray-visitors");
             tray.title = "You are visitor \u2116 " + n;
+            tray.setAttribute("aria-label", "You are visitor number " + n);
             document.getElementById("tray-visitors-n").textContent = n;
             tray.hidden = false;
           })
@@ -271,7 +276,7 @@
       })();
       </script>
       {% endif %}
-      <span id="clock">--:--</span>
+      <span class="sr-only">Clock: </span><span id="clock">--:--</span>
     </div>
   </footer>
 
@@ -467,9 +472,9 @@ Do you want to restart it now?</span>
     </div>
   </div>
 
-  <div class="shutdown-screen" id="shutdown" hidden>
+  <div class="shutdown-screen" id="shutdown" hidden role="button" tabindex="-1" aria-label="Turn the computer back on">
     <p>It's now safe to turn off<br>your computer.</p>
-    <p class="shutdown-hint">(click anywhere to turn it back on)</p>
+    <p class="shutdown-hint">(click anywhere or press any key to turn it back on)</p>
   </div>
 
   {% if config.extra.goatcounter %}

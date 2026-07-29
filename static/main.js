@@ -63,17 +63,44 @@
       w.querySelector(".title-bar").classList.toggle("inactive", !on);
     });
     taskBtns.forEach(function (b) {
-      b.classList.toggle("active", b.dataset.for === id);
+      var on = b.dataset.for === id;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", String(on));
     });
   }
 
   function activateTopmost() {
     var candidates = windows.filter(isVisible);
     if (candidates.length) {
-      activate(candidates[candidates.length - 1].dataset.win);
+      /* Background windows (blog behind a post) sit after <main> in the
+         DOM for reading order, but should never win the "topmost"
+         heuristic over a regular window. */
+      var fg = candidates.filter(function (w) {
+        return !w.classList.contains("background-window");
+      });
+      var pool = fg.length ? fg : candidates;
+      activate(pool[pool.length - 1].dataset.win);
     } else {
-      taskBtns.forEach(function (b) { b.classList.remove("active"); });
+      taskBtns.forEach(function (b) {
+        b.classList.remove("active");
+        b.setAttribute("aria-pressed", "false");
+      });
     }
+  }
+
+  /* After a window is minimized or closed its controls disappear, which
+     would drop keyboard focus on <body>; park it on a sensible taskbar
+     button instead so keyboard/screen-reader users don't get lost. */
+  function focusTaskbarFallback(preferredId) {
+    var b = preferredId && btnFor(preferredId);
+    if (b && !b.hidden) {
+      b.focus();
+      return;
+    }
+    var active = taskBtns.filter(function (x) {
+      return x.classList.contains("active") && !x.hidden;
+    })[0];
+    (active || startBtn).focus();
   }
 
   windows.forEach(function (w) {
@@ -202,6 +229,7 @@
     minBtn.addEventListener("click", function () {
       w.classList.add("minimized");
       activateTopmost();
+      focusTaskbarFallback(id);
     });
 
     function toggleMaximized() {
@@ -222,6 +250,7 @@
       var b = btnFor(id);
       if (b) b.hidden = true;
       activateTopmost();
+      focusTaskbarFallback(null);
     });
   });
 
@@ -338,8 +367,48 @@
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       items[(idx - 1 + items.length) % items.length].focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      items[0].focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      items[items.length - 1].focus();
     }
   });
+
+  /* Menus close when keyboard focus leaves them (e.g. Tab), per the
+     menu pattern; the document click handler covers pointer users. */
+  startMenu.addEventListener("focusout", function (e) {
+    if (startMenu.hidden || !e.relatedTarget) return;
+    if (startMenu.contains(e.relatedTarget) || startBtn.contains(e.relatedTarget)) return;
+    setStartMenu(false);
+  });
+
+  /* --- Popup dialog focus management --- */
+  /* Dialogs remember what had focus when they opened and hand it back
+     on close, so keyboard and screen-reader users return to where they
+     were instead of being dropped at the top of the page. */
+  var dialogOpener = null;
+
+  function openPopup(dialog, focusTarget) {
+    dialogOpener = document.activeElement;
+    dialog.hidden = false;
+    var target = focusTarget || dialog.querySelector("button");
+    if (target) target.focus();
+  }
+
+  function closePopup(dialog) {
+    dialog.hidden = true;
+    var opener = dialogOpener;
+    dialogOpener = null;
+    if (opener && document.contains(opener) && opener.focus) {
+      opener.focus();
+      if (document.activeElement === opener) return;
+    }
+    /* Opener gone or unfocusable (e.g. an item in the now-hidden Start
+       menu): the Start button is the stable landmark to return to. */
+    startBtn.focus();
+  }
 
   /* --- Control Panel --- */
   var cpWin = document.getElementById("control-panel");
@@ -363,8 +432,7 @@
 
   function cpOpen() {
     cpSyncControls();
-    cpWin.hidden = false;
-    cpWidth.focus();
+    openPopup(cpWin, cpWidth);
   }
 
   function cpClose(save) {
@@ -377,7 +445,7 @@
       applyFaithful();
     }
     applyReadingWidth(); // reverts live preview unless saved
-    cpWin.hidden = true;
+    closePopup(cpWin);
   }
 
   document.getElementById("menu-control-panel").addEventListener("click", function () {
@@ -415,6 +483,7 @@
     activateTopmost: activateTopmost,
     btnFor: btnFor,
     loadScript: loadScript,
+    winampError: function (message) { winampError(message); },
   };
 
   var editorPromise = null;
@@ -511,10 +580,7 @@
     winampPromise.then(
       function (winamp) { winamp.open(); },
       function () {
-        var dialog = document.getElementById("winamp-dialog");
-        var msg = document.getElementById("winamp-dialog-msg");
-        if (msg) msg.textContent = "Winamp could not be loaded \u2014 check your connection and try again.";
-        if (dialog) dialog.hidden = false;
+        winampError("Winamp could not be loaded \u2014 check your connection and try again.");
       }
     );
   }
@@ -524,13 +590,23 @@
     openWinamp();
   });
 
-  /* The launch failure dialog is normally wired by winamp.js; wire it
-     here too for the case where winamp.js itself failed to load. */
-  document.getElementById("winamp-dialog-close").addEventListener("click", function () {
-    document.getElementById("winamp-dialog").hidden = true;
+  /* Winamp launch failure dialog: shown from here (winamp.js failed to
+     load) or from winamp.js (Webamp bundle failed); shared via MF. */
+  var winampDialog = document.getElementById("winamp-dialog");
+
+  function winampError(message) {
+    document.getElementById("winamp-dialog-msg").textContent =
+      message || "Winamp could not be loaded \u2014 check your connection and try again.";
+    openPopup(winampDialog, document.getElementById("winamp-dialog-ok"));
+  }
+
+  ["winamp-dialog-close", "winamp-dialog-ok"].forEach(function (id) {
+    document.getElementById(id).addEventListener("click", function () {
+      closePopup(winampDialog);
+    });
   });
-  document.getElementById("winamp-dialog-ok").addEventListener("click", function () {
-    document.getElementById("winamp-dialog").hidden = true;
+  winampDialog.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closePopup(winampDialog);
   });
 
   /* "Try me" buttons on Python code blocks */
@@ -558,11 +634,20 @@
     setStartMenu(false);
     shutdown.hidden = false;
     document.body.classList.add("shut-down");
+    shutdown.focus();
   });
 
-  shutdown.addEventListener("click", function () {
+  function turnBackOn() {
     shutdown.hidden = true;
     document.body.classList.remove("shut-down");
+    startBtn.focus();
+  }
+
+  shutdown.addEventListener("click", turnBackOn);
+  shutdown.addEventListener("keydown", function (e) {
+    /* any key wakes the machine, like the good old days */
+    e.preventDefault();
+    turnBackOn();
   });
 
   /* --- Service worker (production only) ---
@@ -592,7 +677,7 @@
     if (!dialog || !dialog.hidden) return;
 
     function close() {
-      dialog.hidden = true;
+      closePopup(dialog);
       document.removeEventListener("keydown", onKey);
     }
     function onKey(e) {
@@ -606,7 +691,6 @@
     document.getElementById("update-close").addEventListener("click", close);
     document.addEventListener("keydown", onKey);
 
-    dialog.hidden = false;
-    document.getElementById("update-yes").focus();
+    openPopup(dialog, document.getElementById("update-yes"));
   }
 })();

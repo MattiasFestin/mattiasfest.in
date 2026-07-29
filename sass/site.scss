@@ -828,6 +828,26 @@ html.start-maximized .main-window:not(.dialog-window) {
   }
 }
 
+/* --- Keyboard focus visibility --- */
+/* 98.css removes the focus outline from title-bar buttons and range
+   inputs entirely; restore a visible indicator for keyboard users
+   without affecting pointer clicks (focus-visible). */
+.title-bar-controls button:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -3px;
+}
+
+input[type="range"]:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: 2px;
+}
+
+.taskbar-task:focus-visible,
+.start-button:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -4px;
+}
+
 /* --- Screen-reader-only utility --- */
 .sr-only {
   position: absolute;

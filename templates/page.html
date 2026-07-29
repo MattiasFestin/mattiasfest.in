@@ -13,7 +13,7 @@
 {% block background_windows %}
 {% if page.date %}
 {% set blog = get_section(path="blog/_index.md") %}
-<section class="window app-window blog-window" data-win="blog" aria-label="Blog window (in background)">
+<section class="window app-window blog-window background-window" data-win="blog" aria-label="Blog window (in background)">
   <div class="title-bar inactive">
     <span class="title-bar-icon icon icon-folder-16" aria-hidden="true"></span>
     <div class="title-bar-text">{{ blog.title }} — {{ config.title }}</div>
@@ -37,11 +37,11 @@
 
 {% block taskbar_tasks %}
 {% if page.date %}
-<button class="taskbar-task" data-for="blog">
+<button class="taskbar-task" data-for="blog" aria-pressed="false">
   <span class="icon icon-folder-16" aria-hidden="true"></span>
   <span class="taskbar-task-label">Blog</span>
 </button>
-<button class="taskbar-task active" data-for="main">
+<button class="taskbar-task active" data-for="main" aria-pressed="true">
   <span class="icon icon-notepad-16" aria-hidden="true"></span>
   <span class="taskbar-task-label">{{ page.title }}</span>
 </button>
