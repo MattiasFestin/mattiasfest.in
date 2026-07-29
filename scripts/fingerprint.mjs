@@ -52,7 +52,7 @@ const TIERS = [
   /* worker: referenced by editor.js */
   ["/pyworker.js"],
   /* editor: referenced by main.js / HTML data attribute */
-  ["/editor.js"],
+  ["/editor.js", "/browser.js"],
   /* entry points: referenced by HTML only */
   ["/bundle.css", "/main.js"],
 ];

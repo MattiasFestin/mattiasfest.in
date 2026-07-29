@@ -64,6 +64,9 @@ Besides this blog, I write about security for Decerno:
   (sourced via the [Win98-Icons](https://github.com/zhaotianff/Win98-Icons)
   collection). They appear here as a nostalgic homage; this site is not
   affiliated with or endorsed by Microsoft.
+- Retro browsing is served straight from the
+  [Internet Archive's Wayback Machine](https://web.archive.org/) — consider
+  [donating](https://archive.org/donate) to them.
 - Hosted somewhere on the information superhighway
 
 Best viewed in 800×600 at 256 colors.

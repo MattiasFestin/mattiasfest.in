@@ -1,6 +1,8 @@
 (function () {
   var EDITOR_SRC =
     (document.currentScript && document.currentScript.dataset.editorSrc) || "/editor.js";
+  var BROWSER_SRC =
+    (document.currentScript && document.currentScript.dataset.browserSrc) || "/browser.js";
 
   var startBtn = document.getElementById("start-button");
   var startMenu = document.getElementById("start-menu");
@@ -272,15 +274,20 @@
       icon.classList.add("selected");
     });
     icon.addEventListener("dblclick", function () {
-      location.href = icon.dataset.href;
+      launchIcon(icon);
     });
     icon.addEventListener("keydown", function (e) {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        location.href = icon.dataset.href;
+        launchIcon(icon);
       }
     });
   });
+
+  function launchIcon(icon) {
+    if (icon.dataset.app === "browser") openBrowser();
+    else location.href = icon.dataset.href;
+  }
 
   document.getElementById("desktop").addEventListener("click", function (e) {
     if (!e.target.closest(".desktop-icon")) deselectIcons();
@@ -336,11 +343,13 @@
   var cpWidth = document.getElementById("cp-width");
   var cpWidthValue = document.getElementById("cp-width-value");
   var cpMaximized = document.getElementById("cp-maximized");
+  var cpModem = document.getElementById("cp-modem");
 
   function cpSyncControls() {
     cpWidth.value = settings.readingWidth || 72;
     cpWidthValue.textContent = cpWidth.value;
     cpMaximized.checked = wantsStartMaximized();
+    cpModem.checked = settings.modemSound !== false;
   }
 
   function cpOpen() {
@@ -353,6 +362,7 @@
     if (save) {
       settings.readingWidth = Number(cpWidth.value);
       settings.startMaximized = cpMaximized.checked;
+      settings.modemSound = cpModem.checked;
       saveSettings();
     }
     applyReadingWidth(); // reverts live preview unless saved
@@ -377,6 +387,7 @@
     cpWidth.value = 72;
     cpWidthValue.textContent = "72";
     cpMaximized.checked = false;
+    cpModem.checked = true;
     document.documentElement.style.setProperty("--reading-width", "72ch");
   });
 
@@ -393,20 +404,28 @@
   function loadEditor() {
     if (window.MFEditor) return Promise.resolve(window.MFEditor);
     if (editorPromise) return editorPromise;
-    editorPromise = new Promise(function (resolve, reject) {
+    editorPromise = loadScript(EDITOR_SRC, function () { return window.MFEditor; })
+      .catch(function (err) {
+        editorPromise = null; // allow retry
+        throw err;
+      });
+    return editorPromise;
+  }
+
+  function loadScript(src, getApi) {
+    return new Promise(function (resolve, reject) {
       var s = document.createElement("script");
-      s.src = EDITOR_SRC;
+      s.src = src;
       s.onload = function () {
-        if (window.MFEditor) resolve(window.MFEditor);
-        else reject(new Error("editor failed to initialize"));
+        var api = getApi();
+        if (api) resolve(api);
+        else reject(new Error("script failed to initialize"));
       };
       s.onerror = function () {
-        editorPromise = null; // allow retry
-        reject(new Error("failed to load editor"));
+        reject(new Error("failed to load " + src));
       };
       document.head.appendChild(s);
     });
-    return editorPromise;
   }
 
   function openPyEditor(code) {
@@ -423,6 +442,34 @@
   document.getElementById("menu-python").addEventListener("click", function () {
     setStartMenu(false);
     openPyEditor(null);
+  });
+
+  /* --- The Internet (lazy-loaded browser + modem theater) --- */
+  var browserPromise = null;
+  function openBrowser() {
+    if (window.MFBrowser) {
+      window.MFBrowser.open();
+      return;
+    }
+    if (!browserPromise) {
+      browserPromise = loadScript(BROWSER_SRC, function () { return window.MFBrowser; })
+        .catch(function (err) {
+          browserPromise = null; // allow retry
+          throw err;
+        });
+    }
+    browserPromise.then(
+      function (browser) { browser.open(); },
+      function () {
+        var status = document.getElementById("browser-status");
+        if (status) status.textContent = "Failed to load \u2014 no dial tone";
+      }
+    );
+  }
+
+  document.getElementById("menu-internet").addEventListener("click", function () {
+    setStartMenu(false);
+    openBrowser();
   });
 
   /* "Try me" buttons on Python code blocks */

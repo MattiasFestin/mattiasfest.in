@@ -37,7 +37,107 @@ const ICONS_SMALL = {
   shutdown: "shut_down_normal-1.png",
   notepad: "notepad-0.png",
   error: "msg_error-2.png",
+  ie: "msie1-3.png",
   flag: "windows-3.png", // 14x14, Start button
+  /* IE toolbar */
+  home: "homepage-1.png",
+  search: "search_web-1.png",
+  favorites: "directory_favorites_small-1.png",
+  history: "history-1.png",
+  mail: "envelope_closed-1.png",
+  print: "printer-1.png",
+  world: "world-1.png",
+};
+
+/* The Win98 pack has no IE nav arrows (Back/Forward/Stop/Refresh) -
+   in the real thing they live in a browser toolbar bitmap, not in
+   .ico files. Drawn here as pixel maps instead. */
+const PALETTE = {
+  D: [0x00, 0x66, 0x00, 0xff], // dark green outline
+  G: [0x00, 0xa8, 0x00, 0xff], // green body
+  g: [0x58, 0xd0, 0x58, 0xff], // light green highlight
+  E: [0x7b, 0x0b, 0x0b, 0xff], // dark red outline
+  R: [0xc8, 0x1e, 0x1e, 0xff], // red body
+  W: [0xff, 0xff, 0xff, 0xff], // white
+};
+
+const ARROW_BACK = [
+  "................",
+  "................",
+  "................",
+  "......DD........",
+  ".....DgD........",
+  "....DggDDDDDDD..",
+  "...DgggggggggD..",
+  "..DggggggggggD..",
+  ".DgggggggggggD..",
+  "..DGGGGGGGGGGD..",
+  "...DGGGDDDDDDD..",
+  "....DGGD........",
+  ".....DGD........",
+  "......DD........",
+  "................",
+  "................",
+];
+
+const ARROW_STOP = [
+  "................",
+  ".....EEEEE......",
+  "....ERRRRRE.....",
+  "...ERRRRRRRE....",
+  "..ERWWRRRWWRE...",
+  "..ERRWWRWWRRE...",
+  "..ERRRWWWRRRE...",
+  "..ERRRRWRRRRE...",
+  "..ERRRWWWRRRE...",
+  "..ERRWWRWWRRE...",
+  "..ERWWRRRWWRE...",
+  "...ERRRRRRRE....",
+  "....ERRRRRE.....",
+  ".....EEEEE......",
+  "................",
+  "................",
+];
+
+const ARROW_REFRESH = [
+  "................",
+  "...DDDDDDDDD....",
+  "..DGGGGGGGGGD...",
+  "..DGDDDDDDDGD...",
+  "..DGD....DDGDD..",
+  "..DGD...DGGGGGD.",
+  "..DGD....DGGGD..",
+  "..DGD.....DGD...",
+  "..DGD......D....",
+  "..DGD...........",
+  "..DGD.......D...",
+  "..DGDD.....DGD..",
+  "..DGGGDDDDDGGD..",
+  "...DGGGGGGGGD...",
+  "....DDDDDDDD....",
+  "................",
+];
+
+function mirrorMap(map) {
+  return map.map((row) => row.split("").reverse().join(""));
+}
+
+function drawIcon(map) {
+  const png = new PNG({ width: map[0].length, height: map.length });
+  map.forEach((row, y) => {
+    row.split("").forEach((ch, x) => {
+      const c = PALETTE[ch];
+      if (c) png.data.set(c, (y * png.width + x) * 4);
+    });
+  });
+  return png;
+}
+
+const DRAWN_SMALL = {
+  "nav-back": drawIcon(ARROW_BACK),
+  "nav-fwd": drawIcon(mirrorMap(ARROW_BACK)),
+  "nav-stop": drawIcon(ARROW_STOP),
+  "nav-refresh": drawIcon(ARROW_REFRESH),
 };
 
 const ICONS_LARGE = {
@@ -46,6 +146,8 @@ const ICONS_LARGE = {
   question: "help_question_mark-0.png",
   error: "msg_error-0.png",
   warning: "msg_warning-0.png",
+  ie: "msie1-0.png",
+  modem: "expansion_board_modem-0.png",
 };
 
 const SMALL_ROW_H = 16;
@@ -59,6 +161,10 @@ let x = 0;
 for (const [name, file] of Object.entries(ICONS_SMALL)) {
   const png = load(file);
   if (png.height > SMALL_ROW_H) throw new Error(`${file} too tall for the small row`);
+  placements.push({ name: `${name}-${png.width}`, png, x, y: 0 });
+  x += png.width;
+}
+for (const [name, png] of Object.entries(DRAWN_SMALL)) {
   placements.push({ name: `${name}-${png.width}`, png, x, y: 0 });
   x += png.width;
 }

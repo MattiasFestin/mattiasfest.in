@@ -31,7 +31,7 @@
     })();
   </script>
   <link rel="stylesheet" href="{{ get_url(path='bundle.css') }}">
-  <script src="{{ get_url(path='main.js') }}" data-editor-src="{{ get_url(path='editor.js') }}" defer></script>
+  <script src="{{ get_url(path='main.js') }}" data-editor-src="{{ get_url(path='editor.js') }}" data-browser-src="{{ get_url(path='browser.js') }}" defer></script>
   <link rel="alternate" type="application/atom+xml" title="{{ config.title }}" href="{{ get_url(path='atom.xml') }}">
 </head>
 <body>
@@ -50,6 +50,10 @@
       <button class="desktop-icon" data-href="{{ get_url(path='about/') }}">
         <span class="icon icon-question-32" aria-hidden="true"></span>
         <span class="desktop-icon-label">About Me</span>
+      </button>
+      <button class="desktop-icon" data-app="browser">
+        <span class="icon icon-ie-32" aria-hidden="true"></span>
+        <span class="desktop-icon-label">The Internet</span>
       </button>
     </div>
 
@@ -115,6 +119,100 @@
           <p class="status-bar-field">Python 3 (Pyodide)</p>
         </div>
       </section>
+
+      <section class="window app-window browser-window closed" data-win="browser" aria-label="Web browser">
+        <div class="title-bar">
+          <span class="title-bar-icon icon icon-ie-16" aria-hidden="true"></span>
+          <div class="title-bar-text" id="browser-title">The Internet</div>
+          <div class="title-bar-controls">
+            <button aria-label="Minimize"></button>
+            <button aria-label="Maximize"></button>
+            <button aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="browser-chrome">
+          <div class="browser-topbars">
+            <div class="browser-throbber" aria-hidden="true"><span class="icon icon-ie-32"></span></div>
+            <div class="browser-menubar" aria-hidden="true">
+              <span>File</span><span>Edit</span><span>View</span><span>Favorites</span><span>Tools</span><span>Help</span>
+            </div>
+            <div class="browser-toolbar">
+            <button id="browser-back" class="ie-btn" disabled>
+              <span class="icon icon-nav-back-16" aria-hidden="true"></span>Back
+            </button>
+            <button id="browser-fwd" class="ie-btn" disabled>
+              <span class="icon icon-nav-fwd-16" aria-hidden="true"></span>Forward
+            </button>
+            <button id="browser-stop" class="ie-btn" disabled>
+              <span class="icon icon-nav-stop-16" aria-hidden="true"></span>Stop
+            </button>
+            <button id="browser-refresh" class="ie-btn" disabled>
+              <span class="icon icon-nav-refresh-16" aria-hidden="true"></span>Refresh
+            </button>
+            <button id="browser-home" class="ie-btn" disabled>
+              <span class="icon icon-home-16" aria-hidden="true"></span>Home
+            </button>
+            <span class="ie-sep" aria-hidden="true"></span>
+            <button id="browser-search" class="ie-btn" disabled>
+              <span class="icon icon-search-16" aria-hidden="true"></span>Search
+            </button>
+            <button id="browser-favorites" class="ie-btn" disabled aria-haspopup="menu" aria-expanded="false" aria-controls="favorites-menu">
+              <span class="icon icon-favorites-16" aria-hidden="true"></span>Favorites
+            </button>
+            <button class="ie-btn" aria-hidden="true" tabindex="-1" type="button">
+              <span class="icon icon-history-16"></span>History
+            </button>
+            <span class="ie-sep" aria-hidden="true"></span>
+            <button class="ie-btn" aria-hidden="true" tabindex="-1" type="button">
+              <span class="icon icon-mail-16"></span>Mail
+            </button>
+            <button class="ie-btn" aria-hidden="true" tabindex="-1" type="button">
+              <span class="icon icon-print-16"></span>Print
+            </button>
+            </div>
+            <div class="favorites-menu" id="favorites-menu" hidden role="menu" aria-label="Favorites">
+              <button class="fav-item" id="fav-add" role="menuitem">
+                <span class="icon icon-favorites-16" aria-hidden="true"></span> Add to Favorites
+              </button>
+              <div class="fav-sep" aria-hidden="true"></div>
+              <div id="fav-list"><!-- filled by browser.js --></div>
+            </div>
+          </div>
+          <div class="browser-addressbar">
+            <label for="browser-address" class="browser-address-label">Address</label>
+            <span class="browser-address-field">
+              <span class="icon icon-ie-16" aria-hidden="true"></span>
+              <input type="text" id="browser-address" value="slashdot.org" disabled
+                     autocomplete="off" autocapitalize="off" spellcheck="false">
+            </span>
+            <button id="browser-go" class="ie-btn ie-btn-go" disabled>
+              <span class="icon icon-nav-fwd-16" aria-hidden="true"></span>Go
+            </button>
+            <span class="browser-links" aria-hidden="true">Links »</span>
+          </div>
+        </div>
+        <div class="window-body browser-body">
+          <div class="dialup" id="dialup" role="status">
+            <div class="dialup-inner">
+              <p class="dialup-row">
+                <span class="icon icon-modem-32" aria-hidden="true"></span>
+                <span>
+                  <strong>Connecting to The Information Superhighway</strong><br>
+                  <span id="dialup-status">Dialing 555-1998...</span>
+                </span>
+              </p>
+              <section class="field-row dialup-buttons">
+                <button id="dialup-cancel">Cancel</button>
+              </section>
+            </div>
+          </div>
+          <!-- iframe src is set by browser.js once "connected" -->
+        </div>
+        <div class="status-bar">
+          <p class="status-bar-field" id="browser-status">Ready</p>
+          <p class="status-bar-field browser-zone"><span class="icon icon-world-16" aria-hidden="true"></span> Internet zone (1998)</p>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -132,6 +230,10 @@
     <button class="taskbar-task" data-for="pyedit" hidden>
       <span class="icon icon-console-16" aria-hidden="true"></span>
       <span class="taskbar-task-label">Python.exe</span>
+    </button>
+    <button class="taskbar-task" data-for="browser" hidden>
+      <span class="icon icon-ie-16" aria-hidden="true"></span>
+      <span class="taskbar-task-label">The Internet</span>
     </button>
     <div class="taskbar-clock status-bar-field"><span id="clock">--:--</span></div>
   </footer>
@@ -161,6 +263,11 @@
         </a>
       </li>
       <li role="separator" class="start-menu-separator"></li>
+      <li role="none">
+        <button role="menuitem" class="start-menu-item-button" id="menu-internet">
+          <span class="icon icon-ie-16" aria-hidden="true"></span> The Internet
+        </button>
+      </li>
       <li role="none">
         <button role="menuitem" class="start-menu-item-button" id="menu-python">
           <span class="icon icon-console-16" aria-hidden="true"></span> Python.exe
@@ -197,6 +304,13 @@
         <div class="field-row">
           <input type="checkbox" id="cp-maximized">
           <label for="cp-maximized">Open windows maximized</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Sounds</legend>
+        <div class="field-row">
+          <input type="checkbox" id="cp-modem" checked>
+          <label for="cp-modem">Play modem sound when connecting</label>
         </div>
       </fieldset>
       <section class="field-row dialog-buttons">
