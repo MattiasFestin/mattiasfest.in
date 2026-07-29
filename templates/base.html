@@ -240,7 +240,30 @@
       <span class="icon icon-ie-16" aria-hidden="true"></span>
       <span class="taskbar-task-label">The Internet</span>
     </button>
-    <div class="taskbar-clock status-bar-field"><span id="clock">--:--</span></div>
+    <div class="taskbar-clock status-bar-field">
+      {% if config.extra.goatcounter %}
+      <span class="tray-visitors" id="tray-visitors" hidden>
+        <span class="icon icon-world-16" aria-hidden="true"></span>
+        <span id="tray-visitors-n"></span>
+      </span>
+      <script>
+      (function () {
+        fetch("https://{{ config.extra.goatcounter }}.goatcounter.com/counter/TOTAL.json")
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+          .then(function (data) {
+            var n = String(data.count || "").replace(/[^0-9]/g, "");
+            if (!n) return;
+            var tray = document.getElementById("tray-visitors");
+            tray.title = "You are visitor \u2116 " + n;
+            document.getElementById("tray-visitors-n").textContent = n;
+            tray.hidden = false;
+          })
+          .catch(function () {});
+      })();
+      </script>
+      {% endif %}
+      <span id="clock">--:--</span>
+    </div>
   </footer>
 
   {% set cur = current_path | default(value="") %}

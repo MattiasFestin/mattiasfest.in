@@ -84,5 +84,21 @@
 {% block status_bar %}
 <p class="status-bar-field">{{ page.word_count }} words</p>
 {% if page.date %}<p class="status-bar-field">Modified: {{ page.date | date(format="%Y-%m-%d") }}</p>{% endif %}
+{% if page.date and config.extra.goatcounter %}
+<p class="status-bar-field" id="view-counter" hidden>Views: <span id="view-counter-n"></span></p>
+<script>
+(function () {
+  fetch("https://{{ config.extra.goatcounter }}.goatcounter.com/counter/" + encodeURIComponent(location.pathname) + ".json")
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function (data) {
+      var n = String(data.count || "").replace(/[^0-9]/g, "");
+      if (!n) return;
+      document.getElementById("view-counter-n").textContent = n;
+      document.getElementById("view-counter").hidden = false;
+    })
+    .catch(function () {});
+})();
+</script>
+{% endif %}
 <p class="status-bar-field">&copy; {{ now() | date(format="%Y") }} Mattias</p>
 {% endblock status_bar %}

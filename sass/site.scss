@@ -415,43 +415,6 @@ html.start-maximized .main-window:not(.dialog-window) {
   margin-top: 0;
 }
 
-/* --- Old-school visitor counter (home page) --- */
-.hit-counter {
-  text-align: center;
-  margin-top: 16px;
-}
-
-.hit-counter-digits {
-  display: inline-flex;
-  gap: 2px;
-  padding: 3px;
-  background: #000;
-  vertical-align: middle;
-  margin-left: 4px;
-  /* sunken into the page, like a real 90s hit counter GIF */
-  box-shadow: inset -1px -1px #fff, inset 1px 1px grey,
-    inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a;
-
-  span {
-    display: inline-block;
-    min-width: 14px;
-    padding: 2px 1px;
-    background: #111;
-    border-right: 1px solid #333;
-    color: #0f0;
-    font-family: "Courier New", monospace;
-    font-weight: bold;
-    font-size: 16px;
-    line-height: 1;
-    text-align: center;
-    text-shadow: 0 0 2px #0f0;
-
-    &:last-child {
-      border-right: none;
-    }
-  }
-}
-
 /* --- Comments (giscus) --- */
 .comments {
   margin-top: 16px;
@@ -653,8 +616,21 @@ html.start-maximized .main-window:not(.dialog-window) {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: 0 12px 0 16px;
+    padding: 0 12px 0 8px;
     box-shadow: inset -1px -1px #fff, inset 1px 1px #808080;
+  }
+
+  /* Visitor counter: tray item left of the clock */
+  .tray-visitors {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 10px;
+    cursor: default;
+
+    &[hidden] {
+      display: none;
+    }
   }
 }
 

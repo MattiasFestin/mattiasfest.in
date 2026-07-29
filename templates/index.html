@@ -19,28 +19,4 @@
   </ul>
 </fieldset>
 {% endif %}
-
-{% if config.extra.goatcounter %}
-<p class="hit-counter" id="hit-counter" hidden>
-  You are visitor № <span class="hit-counter-digits" id="hit-counter-digits"></span>
-</p>
-<script>
-(function () {
-  fetch("https://{{ config.extra.goatcounter }}.goatcounter.com/counter/TOTAL.json", { cache: "no-store" })
-    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-    .then(function (data) {
-      var n = String(data.count || "0").replace(/[^0-9]/g, "") || "0";
-      while (n.length < 6) n = "0" + n;
-      var el = document.getElementById("hit-counter-digits");
-      for (var i = 0; i < n.length; i++) {
-        var d = document.createElement("span");
-        d.textContent = n[i];
-        el.appendChild(d);
-      }
-      document.getElementById("hit-counter").hidden = false;
-    })
-    .catch(function () {});
-})();
-</script>
-{% endif %}
 {% endblock content %}
