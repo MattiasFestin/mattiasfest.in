@@ -151,7 +151,8 @@ a {
 .window-stack {
   position: relative;
   width: 100%;
-  max-width: 720px;
+  /* fits the default 80ch reading column plus window chrome */
+  max-width: 800px;
   z-index: 1;
 }
 
@@ -352,7 +353,7 @@ html.start-maximized .main-window:not(.dialog-window) {
      stay together as one column instead of drifting apart.
      Width is user-adjustable via the Control Panel. */
   > * {
-    max-width: var(--reading-width, 72ch);
+    max-width: var(--reading-width, 80ch);
     margin-left: auto;
     margin-right: auto;
   }

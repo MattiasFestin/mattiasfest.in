@@ -27,7 +27,7 @@
   function applyReadingWidth() {
     document.documentElement.style.setProperty(
       "--reading-width",
-      (settings.readingWidth || 72) + "ch"
+      (settings.readingWidth || 80) + "ch"
     );
   }
   applyReadingWidth();
@@ -346,7 +346,7 @@
   var cpModem = document.getElementById("cp-modem");
 
   function cpSyncControls() {
-    cpWidth.value = settings.readingWidth || 72;
+    cpWidth.value = settings.readingWidth || 80;
     cpWidthValue.textContent = cpWidth.value;
     cpMaximized.checked = wantsStartMaximized();
     cpModem.checked = settings.modemSound !== false;
@@ -384,11 +384,11 @@
   document.getElementById("cp-cancel").addEventListener("click", function () { cpClose(false); });
   document.getElementById("cp-close").addEventListener("click", function () { cpClose(false); });
   document.getElementById("cp-defaults").addEventListener("click", function () {
-    cpWidth.value = 72;
-    cpWidthValue.textContent = "72";
+    cpWidth.value = 80;
+    cpWidthValue.textContent = "80";
     cpMaximized.checked = false;
     cpModem.checked = true;
-    document.documentElement.style.setProperty("--reading-width", "72ch");
+    document.documentElement.style.setProperty("--reading-width", "80ch");
   });
 
   cpWin.addEventListener("keydown", function (e) {
