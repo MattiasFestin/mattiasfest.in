@@ -4,14 +4,17 @@
  *
  *   1. CSS: concatenates 98.css + Temml-Local.css + site.css into a
  *      single minified public/bundle.css (relative url()s are rewritten
- *      to absolute paths so fonts keep resolving from their own folders).
+ *      to absolute paths so fonts keep resolving from their own folders),
+ *      and rewrites the three <link> tags in every HTML file to one
+ *      bundle.css link. Templates reference the source stylesheets so
+ *      plain `zola serve` works without this step.
  *   2. JS: minifies main.js, editor.js and pyworker.js in place.
  *
  * Templates reference bundle.css / main.js directly; editor.js is
  * lazy-loaded by main.js when the Python editor is first opened.
  */
 
-import { readFileSync, writeFileSync, rmSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, rmSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, posix } from "node:path";
 import { transform } from "esbuild";
 
@@ -48,7 +51,38 @@ async function bundleCss() {
   for (const { file } of CSS_SOURCES) {
     rmSync(join(PUBLIC_DIR, file), { force: true });
   }
-  console.log(`✓ bundle.css (${(code.length / 1024).toFixed(1)} kB minified)`);
+
+  /* Point every HTML file at the bundle: the first source stylesheet
+     link becomes bundle.css, the rest are removed. */
+  const linkRe = new RegExp(
+    `[ \\t]*<link rel="stylesheet" href="[^"]*?(?:${CSS_SOURCES.map((s) => s.file.replace(/[.\/]/g, "\\$&")).join("|")})">\\n?`,
+    "g"
+  );
+  let rewritten = 0;
+  for (const file of htmlFiles(PUBLIC_DIR)) {
+    const src = readFileSync(file, "utf8");
+    if (!linkRe.test(src)) continue;
+    linkRe.lastIndex = 0;
+    let first = true;
+    const out = src.replace(linkRe, (m) => {
+      if (!first) return "";
+      first = false;
+      return m.replace(/href="[^"]+"/, 'href="/bundle.css"').replace(/^[ \t]+/, "  ");
+    });
+    writeFileSync(file, out);
+    rewritten++;
+  }
+  console.log(`✓ bundle.css (${(code.length / 1024).toFixed(1)} kB minified, ${rewritten} HTML files rewritten)`);
+}
+
+function htmlFiles(dir) {
+  const out = [];
+  for (const entry of readdirSync(dir)) {
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) out.push(...htmlFiles(path));
+    else if (entry.endsWith(".html")) out.push(path);
+  }
+  return out;
 }
 
 async function minifyJs() {

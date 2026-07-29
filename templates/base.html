@@ -30,7 +30,12 @@
       } catch (e) { /* private browsing etc. */ }
     })();
   </script>
-  <link rel="stylesheet" href="{{ get_url(path='bundle.css') }}">
+  <!-- Source stylesheets, so plain `zola serve` works. The production
+       build (scripts/optimize.mjs) collapses these into one minified,
+       fingerprinted bundle.css. -->
+  <link rel="stylesheet" href="{{ get_url(path='98/98.css') }}">
+  <link rel="stylesheet" href="{{ get_url(path='temml/Temml-Local.css') }}">
+  <link rel="stylesheet" href="{{ get_url(path='site.css') }}">
   <script src="{{ get_url(path='main.js') }}" data-editor-src="{{ get_url(path='editor.js') }}" data-browser-src="{{ get_url(path='browser.js') }}" defer></script>
   <link rel="alternate" type="application/atom+xml" title="{{ config.title }}" href="{{ get_url(path='atom.xml') }}">
 </head>
