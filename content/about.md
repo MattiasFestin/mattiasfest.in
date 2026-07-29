@@ -60,6 +60,12 @@ Besides this blog, I write about security for Decerno:
 - Styled with [98.css](https://github.com/jdan/98.css) by Jordan Scales (MIT license)
 - Math rendered with [Temml](https://temml.org/) (MIT license)
 - Python.exe powered by [Pyodide](https://pyodide.org/) (MPL-2.0, loaded from jsDelivr)
+- Winamp.exe powered by [Webamp](https://webamp.org/) by Jordan Eldredge (MIT license).
+  It really whips the llama's ass.
+- The playlist is fan-made video game arrangements from
+  [OverClocked ReMix](https://ocremix.org/), used with artist and site credit
+  per OCR's content policy. Go support the community — the music is free and
+  wonderful.
 - Icons and other pixel art are from Windows 98 and are © Microsoft Corporation
   (sourced via the [Win98-Icons](https://github.com/zhaotianff/Win98-Icons)
   collection). They appear here as a nostalgic homage; this site is not
