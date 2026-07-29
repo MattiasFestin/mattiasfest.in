@@ -19,7 +19,7 @@ extra_grammars = ["syntaxes/math.tmLanguage.json"]
 [extra]
 # Analytics: GoatCounter site code (the CODE in https://CODE.goatcounter.com).
 # Leave empty to disable analytics.
-goatcounter = ""
+goatcounter = "mattiasfestin"
 
 # Comments: giscus (GitHub Discussions). Enable Discussions on the repo,
 # install https://github.com/apps/giscus, then grab category + category id
