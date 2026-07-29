@@ -3,6 +3,8 @@
     (document.currentScript && document.currentScript.dataset.editorSrc) || "/editor.js";
   var BROWSER_SRC =
     (document.currentScript && document.currentScript.dataset.browserSrc) || "/browser.js";
+  var WINAMP_SRC =
+    (document.currentScript && document.currentScript.dataset.winampSrc) || "/winamp.js";
 
   var startBtn = document.getElementById("start-button");
   var startMenu = document.getElementById("start-menu");
@@ -286,6 +288,7 @@
 
   function launchIcon(icon) {
     if (icon.dataset.app === "browser") openBrowser();
+    else if (icon.dataset.app === "winamp") openWinamp();
     else location.href = icon.dataset.href;
   }
 
@@ -344,12 +347,18 @@
   var cpWidthValue = document.getElementById("cp-width-value");
   var cpMaximized = document.getElementById("cp-maximized");
   var cpModem = document.getElementById("cp-modem");
+  var cpFaithful = document.getElementById("cp-faithful");
+
+  function applyFaithful() {
+    document.documentElement.classList.toggle("faithful-98", settings.faithful98 === true);
+  }
 
   function cpSyncControls() {
     cpWidth.value = settings.readingWidth || 80;
     cpWidthValue.textContent = cpWidth.value;
     cpMaximized.checked = wantsStartMaximized();
     cpModem.checked = settings.modemSound !== false;
+    cpFaithful.checked = settings.faithful98 === true;
   }
 
   function cpOpen() {
@@ -363,7 +372,9 @@
       settings.readingWidth = Number(cpWidth.value);
       settings.startMaximized = cpMaximized.checked;
       settings.modemSound = cpModem.checked;
+      settings.faithful98 = cpFaithful.checked;
       saveSettings();
+      applyFaithful();
     }
     applyReadingWidth(); // reverts live preview unless saved
     cpWin.hidden = true;
@@ -388,6 +399,7 @@
     cpWidthValue.textContent = "80";
     cpMaximized.checked = false;
     cpModem.checked = true;
+    cpFaithful.checked = false;
     document.documentElement.style.setProperty("--reading-width", "80ch");
   });
 
@@ -398,7 +410,12 @@
   /* --- Python editor (lazy-loaded) --- */
   /* The editor's code (syntax highlighting, virtual FS, Pyodide glue)
      lives in editor.js and is only fetched the first time it's opened. */
-  window.MF = { activate: activate, btnFor: btnFor };
+  window.MF = {
+    activate: activate,
+    activateTopmost: activateTopmost,
+    btnFor: btnFor,
+    loadScript: loadScript,
+  };
 
   var editorPromise = null;
   function loadEditor() {
@@ -470,6 +487,50 @@
   document.getElementById("menu-internet").addEventListener("click", function () {
     setStartMenu(false);
     openBrowser();
+  });
+
+  /* --- Winamp (lazy-loaded, doubly so) --- */
+  /* winamp.js is a small launcher fetched on first open; it in turn
+     pulls in the ~900 KB Webamp bundle. Neither costs page load
+     anything, and the bundle is excluded from the service worker
+     precache (scripts/fingerprint.mjs) so it's only ever downloaded
+     when someone actually whips the llama. */
+  var winampPromise = null;
+  function openWinamp() {
+    if (window.MFWinamp) {
+      window.MFWinamp.open();
+      return;
+    }
+    if (!winampPromise) {
+      winampPromise = loadScript(WINAMP_SRC, function () { return window.MFWinamp; })
+        .catch(function (err) {
+          winampPromise = null; // allow retry
+          throw err;
+        });
+    }
+    winampPromise.then(
+      function (winamp) { winamp.open(); },
+      function () {
+        var dialog = document.getElementById("winamp-dialog");
+        var msg = document.getElementById("winamp-dialog-msg");
+        if (msg) msg.textContent = "Winamp could not be loaded \u2014 check your connection and try again.";
+        if (dialog) dialog.hidden = false;
+      }
+    );
+  }
+
+  document.getElementById("menu-winamp").addEventListener("click", function () {
+    setStartMenu(false);
+    openWinamp();
+  });
+
+  /* The launch failure dialog is normally wired by winamp.js; wire it
+     here too for the case where winamp.js itself failed to load. */
+  document.getElementById("winamp-dialog-close").addEventListener("click", function () {
+    document.getElementById("winamp-dialog").hidden = true;
+  });
+  document.getElementById("winamp-dialog-ok").addEventListener("click", function () {
+    document.getElementById("winamp-dialog").hidden = true;
   });
 
   /* "Try me" buttons on Python code blocks */

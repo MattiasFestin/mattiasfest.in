@@ -51,11 +51,18 @@ const TIERS = [
   ],
   /* worker: referenced by editor.js */
   ["/pyworker.js"],
-  /* editor: referenced by main.js / HTML data attribute */
-  ["/editor.js", "/browser.js"],
+  /* webamp bundle: referenced by winamp.js */
+  ["/webamp/webamp.bundle.min.js"],
+  /* lazy apps: referenced by main.js / HTML data attributes */
+  ["/editor.js", "/browser.js", "/winamp.js"],
   /* entry points: referenced by HTML only */
   ["/bundle.css", "/main.js"],
 ];
+
+/* Fingerprinted (immutable, cache-first once fetched) but NOT precached
+   by the service worker: nobody should download ~900 KB of Webamp in
+   the background for a Winamp they may never open. */
+const NO_PRECACHE = new Set(["/webamp/webamp.bundle.min.js"]);
 
 const shortHash = (buf) => createHash("sha256").update(buf).digest("hex").slice(0, 8);
 
@@ -104,10 +111,15 @@ for (const tier of TIERS) {
 /* Version = hash of all content hashes: changes iff any asset changes. */
 const version = shortHash(Object.values(manifest).sort().join("\n"));
 
+const precache = Object.entries(manifest)
+  .filter(([url]) => !NO_PRECACHE.has(url))
+  .map(([, hashed]) => hashed);
+
 const swPath = join(PUBLIC_DIR, "sw.js");
 const sw = readFileSync(swPath, "utf8")
   .replace("__VERSION__", version)
-  .replace("__MANIFEST__", JSON.stringify(Object.values(manifest)));
+  .replace("__MANIFEST__", JSON.stringify(Object.values(manifest)))
+  .replace("__PRECACHE__", JSON.stringify(precache));
 writeFileSync(swPath, sw);
 
 console.log(`✓ fingerprinted ${Object.keys(manifest).length} assets (release ${version})`);

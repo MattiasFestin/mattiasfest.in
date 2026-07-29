@@ -27,6 +27,7 @@
           ? s.startMaximized
           : matchMedia("(max-width: 600px)").matches;
         if (max) document.documentElement.classList.add("start-maximized");
+        if (s.faithful98) document.documentElement.classList.add("faithful-98");
       } catch (e) { /* private browsing etc. */ }
     })();
   </script>
@@ -36,7 +37,7 @@
   <link rel="stylesheet" href="{{ get_url(path='98/98.css') }}">
   <link rel="stylesheet" href="{{ get_url(path='temml/Temml-Local.css') }}">
   <link rel="stylesheet" href="{{ get_url(path='site.css') }}">
-  <script src="{{ get_url(path='main.js') }}" data-editor-src="{{ get_url(path='editor.js') }}" data-browser-src="{{ get_url(path='browser.js') }}" defer></script>
+  <script src="{{ get_url(path='main.js') }}" data-editor-src="{{ get_url(path='editor.js') }}" data-browser-src="{{ get_url(path='browser.js') }}" data-winamp-src="{{ get_url(path='winamp.js') }}" defer></script>
   <link rel="alternate" type="application/atom+xml" title="{{ config.title }}" href="{{ get_url(path='atom.xml') }}">
 </head>
 <body>
@@ -59,6 +60,10 @@
       <button class="desktop-icon" data-app="browser">
         <span class="icon icon-ie-32" aria-hidden="true"></span>
         <span class="desktop-icon-label">The Internet</span>
+      </button>
+      <button class="desktop-icon" data-app="winamp">
+        <span class="icon icon-winamp-32" aria-hidden="true"></span>
+        <span class="desktop-icon-label">Winamp</span>
       </button>
     </div>
 
@@ -240,6 +245,10 @@
       <span class="icon icon-ie-16" aria-hidden="true"></span>
       <span class="taskbar-task-label">The Internet</span>
     </button>
+    <button class="taskbar-task" data-for="winamp" hidden>
+      <span class="icon icon-winamp-16" aria-hidden="true"></span>
+      <span class="taskbar-task-label">Winamp</span>
+    </button>
     <div class="taskbar-clock status-bar-field">
       {% if config.extra.goatcounter %}
       <span class="tray-visitors" id="tray-visitors" hidden>
@@ -297,6 +306,11 @@
         </button>
       </li>
       <li role="none">
+        <button role="menuitem" class="start-menu-item-button" id="menu-winamp">
+          <span class="icon icon-winamp-16" aria-hidden="true"></span> Winamp
+        </button>
+      </li>
+      <li role="none">
         <button role="menuitem" class="start-menu-item-button" id="menu-python">
           <span class="icon icon-console-16" aria-hidden="true"></span> Python.exe
         </button>
@@ -339,6 +353,13 @@
         <div class="field-row">
           <input type="checkbox" id="cp-modem" checked>
           <label for="cp-modem">Play modem sound when connecting</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Accessibility</legend>
+        <div class="field-row">
+          <input type="checkbox" id="cp-faithful">
+          <label for="cp-faithful">Faithful '98 experience (small window buttons)</label>
         </div>
       </fieldset>
       <section class="field-row dialog-buttons">
@@ -424,6 +445,24 @@ Do you want to restart it now?</span>
         <button id="pyedit-open-ok">Open</button>
         <button id="pyedit-open-delete">Delete</button>
         <button id="pyedit-open-cancel">Cancel</button>
+      </section>
+    </div>
+  </div>
+
+  <div class="window popup-dialog overwrite-dialog" id="winamp-dialog" hidden role="alertdialog" aria-labelledby="winamp-dialog-title" aria-describedby="winamp-dialog-msg">
+    <div class="title-bar">
+      <div class="title-bar-text" id="winamp-dialog-title">Winamp</div>
+      <div class="title-bar-controls">
+        <button aria-label="Close" id="winamp-dialog-close"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <p class="overwrite-text">
+        <span class="icon icon-error-32" aria-hidden="true"></span>
+        <span id="winamp-dialog-msg"></span>
+      </p>
+      <section class="field-row dialog-buttons">
+        <button id="winamp-dialog-ok">OK</button>
       </section>
     </div>
   </div>

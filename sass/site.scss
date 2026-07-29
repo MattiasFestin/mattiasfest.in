@@ -235,13 +235,54 @@ a {
   white-space: nowrap;
 }
 
-/* Authentic 16x14 buttons on desktop; comfortable 24px targets on touch.
-   (Deliberate trade-off: Lighthouse desktop flags these as small targets.) */
-@media (pointer: coarse) {
-  .title-bar-controls button[aria-label] {
-    min-width: 26px;
-    min-height: 24px;
-    background-position: center;
+/* Accessible by default: the authentic 16x14 title-bar buttons sit
+   below the 24px touch-target guideline (WCAG 2.5.8; Lighthouse
+   target-size flags them on desktop and mobile alike), so they render
+   at 2x - the same pixel art with chunkier pixels. The glyphs are
+   pixel-grid SVGs, so background-size scales them crisply;
+   image-rendering covers any raster. Control Panel > Accessibility >
+   "Faithful '98 experience" opts back into the originals. */
+.title-bar-controls button[aria-label] {
+  min-width: 28px;
+  min-height: 24px;
+  background-position: center;
+  image-rendering: pixelated;
+
+  &[aria-label="Minimize"] {
+    background-size: 12px 4px;
+    background-position: center bottom 5px;
+  }
+  &[aria-label="Maximize"] {
+    background-size: 18px 18px;
+  }
+  &[aria-label="Restore"] {
+    background-size: 16px 18px;
+  }
+  &[aria-label="Close"] {
+    background-size: 16px 14px;
+  }
+}
+
+/* The faithful experience restores 98.css's original metrics, but only
+   for precise pointers: fingers keep comfortable targets regardless. */
+html.faithful-98 {
+  @media (pointer: fine) {
+    .title-bar-controls button[aria-label] {
+      min-width: 16px;
+      min-height: 14px;
+      background-size: auto;
+      image-rendering: auto;
+    }
+    .title-bar-controls button[aria-label="Minimize"] {
+      background-position: bottom 3px left 4px;
+    }
+    .title-bar-controls button[aria-label="Maximize"],
+    .title-bar-controls button[aria-label="Restore"] {
+      background-position: top 2px left 3px;
+    }
+    .title-bar-controls button[aria-label="Close"] {
+      background-position: top 3px left 4px;
+    }
   }
 }
 
@@ -1361,6 +1402,26 @@ html.start-maximized .main-window:not(.dialog-window) {
 .tok-string { color: #a00000; }
 .tok-comment { color: #008000; }
 .tok-number { color: #008080; }
+
+/* --- Winamp (Webamp) --- */
+/* The host node Webamp renders into: it covers the desktop area
+   (viewport minus taskbar) so Webamp centers its window group there.
+   It doesn't catch clicks itself; Webamp's own windows within do. */
+.winamp-host {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: $taskbar-height;
+  /* above .front app windows (6), below the taskbar (10); matches the
+     zIndex passed to Webamp in winamp.js */
+  z-index: 7;
+  pointer-events: none;
+
+  #webamp * {
+    pointer-events: auto;
+  }
+}
 
 /* --- Shutdown easter egg --- */
 .shutdown-screen {

@@ -6,8 +6,10 @@
  * browser to install the new worker and run the cleanup in activate.
  *
  * Strategy:
- *   - manifest assets (content-hashed names): cache-first, precached
- *     at install; a hashed URL never changes content, so no revalidation
+ *   - manifest assets (content-hashed names): cache-first; most are
+ *     precached at install, big lazy ones (PRECACHE excludes them,
+ *     e.g. the Webamp bundle) are cached on first use; a hashed URL
+ *     never changes content, so no revalidation either way
  *   - versioned Pyodide CDN files: cache-first at runtime (URL contains
  *     the version, so it's immutable too; cached only once actually used)
  *   - HTML and everything else: network-first with cache fallback, so
@@ -21,6 +23,7 @@ var PAGES_CACHE = "mf-pages-" + VERSION;
 var RUNTIME_CACHE = "mf-pyodide-v1"; /* survives releases; URL-versioned */
 
 var MANIFEST = __MANIFEST__;
+var PRECACHE = __PRECACHE__;
 
 var PYODIDE_RE = /^https:\/\/cdn\.jsdelivr\.net\/pyodide\/v[\d.]+\//;
 
@@ -29,7 +32,7 @@ self.addEventListener("install", function (event) {
     caches
       .open(STATIC_CACHE)
       .then(function (cache) {
-        return cache.addAll(MANIFEST);
+        return cache.addAll(PRECACHE);
       })
       .then(function () {
         return self.skipWaiting();

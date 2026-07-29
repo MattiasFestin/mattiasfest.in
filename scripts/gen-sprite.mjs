@@ -122,6 +122,30 @@ function mirrorMap(map) {
   return map.map((row) => row.split("").reverse().join(""));
 }
 
+/** Pixel-art 2x downscale for icons that ship without a 16px variant:
+    each 2x2 block becomes its most common opaque color (ties go to the
+    darker one, keeping outlines), transparent when fully transparent. */
+function halveIcon(src) {
+  const out = new PNG({ width: src.width / 2, height: src.height / 2 });
+  const lum = (c) => c[0] * 0.3 + c[1] * 0.6 + c[2] * 0.1;
+  for (let y = 0; y < out.height; y++) {
+    for (let x = 0; x < out.width; x++) {
+      const counts = new Map();
+      for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+        const i = ((y * 2 + dy) * src.width + x * 2 + dx) * 4;
+        if (src.data[i + 3] < 128) continue;
+        const key = Array.from(src.data.subarray(i, i + 4)).join(",");
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+      const best = [...counts.entries()].sort(
+        (a, b) => b[1] - a[1] || lum(a[0].split(",")) - lum(b[0].split(","))
+      )[0];
+      if (best) out.data.set(best[0].split(",").map(Number), (y * out.width + x) * 4);
+    }
+  }
+  return out;
+}
+
 function drawIcon(map) {
   const png = new PNG({ width: map[0].length, height: map.length });
   map.forEach((row, y) => {
@@ -138,6 +162,8 @@ const DRAWN_SMALL = {
   "nav-fwd": drawIcon(mirrorMap(ARROW_BACK)),
   "nav-stop": drawIcon(ARROW_STOP),
   "nav-refresh": drawIcon(ARROW_REFRESH),
+  /* the 32px Winamp bolt has no 16px sibling; derive one */
+  winamp: halveIcon(PNG.sync.read(readFileSync(join(SRC_DIR, "winamp.png")))),
 };
 
 const ICONS_LARGE = {
@@ -148,6 +174,7 @@ const ICONS_LARGE = {
   warning: "msg_warning-0.png",
   ie: "msie1-0.png",
   modem: "expansion_board_modem-0.png",
+  winamp: "winamp.png",
 };
 
 const SMALL_ROW_H = 16;
