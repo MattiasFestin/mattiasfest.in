@@ -52,7 +52,7 @@ Besides this blog, I write about security for Decerno:
 
 - GitHub: [MattiasFestin](https://github.com/MattiasFestin)
 - LinkedIn: [mattias-festin](https://www.linkedin.com/in/mattias-festin-5ba220a6/)
-- X: [@mattiasfestin](https://x.com/mattiasfestin)
+- Email: [blog@mattiasfest.in](mailto:blog@mattiasfest.in)
 
 ## This site
 
