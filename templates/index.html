@@ -26,7 +26,7 @@
 </p>
 <script>
 (function () {
-  fetch("https://{{ config.extra.goatcounter }}.goatcounter.com/counter/TOTAL.json")
+  fetch("https://{{ config.extra.goatcounter }}.goatcounter.com/counter/TOTAL.json", { cache: "no-store" })
     .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
     .then(function (data) {
       var n = String(data.count || "0").replace(/[^0-9]/g, "") || "0";
