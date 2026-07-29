@@ -1,0 +1,245 @@
+/*!
+ * Win98 theme for giscus, based on giscus' light theme
+ * (Primer primitives, MIT License, (c) 2018 GitHub Inc.)
+ * Loaded inside the giscus iframe via data-theme.
+ */
+
+@font-face {
+  font-family: "Pixelated MS Sans Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/98/ms_sans_serif.woff2) format("woff2"),
+    url(/98/ms_sans_serif.woff) format("woff");
+}
+
+@font-face {
+  font-family: "Pixelated MS Sans Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(/98/ms_sans_serif_bold.woff2) format("woff2"),
+    url(/98/ms_sans_serif_bold.woff) format("woff");
+}
+
+main {
+  /* prettylights syntax: unchanged from the light theme */
+  --color-prettylights-syntax-comment: #6e7781;
+  --color-prettylights-syntax-constant: #0550ae;
+  --color-prettylights-syntax-entity: #8250df;
+  --color-prettylights-syntax-storage-modifier-import: #24292f;
+  --color-prettylights-syntax-entity-tag: #116329;
+  --color-prettylights-syntax-keyword: #cf222e;
+  --color-prettylights-syntax-string: #0a3069;
+  --color-prettylights-syntax-variable: #953800;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+  --color-prettylights-syntax-invalid-illegal-text: #f6f8fa;
+  --color-prettylights-syntax-invalid-illegal-bg: #82071e;
+  --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+  --color-prettylights-syntax-carriage-return-bg: #cf222e;
+  --color-prettylights-syntax-string-regexp: #116329;
+  --color-prettylights-syntax-markup-list: #3b2300;
+  --color-prettylights-syntax-markup-heading: #0550ae;
+  --color-prettylights-syntax-markup-italic: #24292f;
+  --color-prettylights-syntax-markup-bold: #24292f;
+  --color-prettylights-syntax-markup-deleted-text: #82071e;
+  --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
+  --color-prettylights-syntax-markup-inserted-text: #116329;
+  --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+  --color-prettylights-syntax-markup-changed-text: #953800;
+  --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+  --color-prettylights-syntax-markup-ignored-text: #eaeef2;
+  --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+  --color-prettylights-syntax-meta-diff-range: #8250df;
+  --color-prettylights-syntax-brackethighlighter-angle: #57606a;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #8c959f;
+  --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+
+  /* Win98 palette */
+  --color-fg-default: #222;
+  --color-fg-muted: #595959;
+  --color-fg-subtle: #808080;
+  --color-canvas-default: #fff;
+  --color-canvas-overlay: #fff;
+  --color-canvas-inset: #c0c0c0;
+  --color-canvas-subtle: #c0c0c0;
+  --color-border-default: #808080;
+  --color-border-muted: #b5b5b5;
+  --color-neutral-muted: rgba(128, 128, 128, 0.2);
+  --color-accent-fg: #00f;
+  --color-accent-emphasis: navy;
+  --color-accent-muted: rgba(0, 0, 128, 0.4);
+  --color-accent-subtle: #e6e6fa;
+  --color-success-fg: #008000;
+  --color-attention-fg: #808000;
+  --color-attention-muted: rgba(128, 128, 0, 0.4);
+  --color-attention-subtle: #ffffe1;
+  --color-danger-fg: #c00;
+  --color-danger-muted: rgba(204, 0, 0, 0.4);
+  --color-danger-subtle: #ffebe9;
+  --color-primer-shadow-inset: 0 0 transparent;
+
+  /* Buttons: raised silver bevel, exactly like 98.css.
+     Primer applies box-shadow: var(--color-btn-shadow), var(--color-btn-inset-shadow),
+     so the two variables together form the full 4-shadow Win98 bevel. */
+  --color-btn-text: #222;
+  --color-btn-bg: silver;
+  --color-btn-border: transparent;
+  --color-btn-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff;
+  --color-btn-inset-shadow: inset -2px -2px grey, inset 2px 2px #dfdfdf;
+  --color-btn-hover-bg: silver;
+  --color-btn-hover-border: transparent;
+  --color-btn-active-bg: silver;
+  --color-btn-active-border: transparent;
+  --color-btn-selected-bg: silver;
+  --color-btn-primary-text: #222;
+  --color-btn-primary-bg: silver;
+  --color-btn-primary-border: transparent;
+  --color-btn-primary-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff;
+  --color-btn-primary-inset-shadow: inset -2px -2px grey, inset 2px 2px #dfdfdf;
+  --color-btn-primary-hover-bg: silver;
+  --color-btn-primary-hover-border: transparent;
+  --color-btn-primary-selected-bg: silver;
+  --color-btn-primary-selected-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a,
+    inset -2px -2px #dfdfdf, inset 2px 2px grey;
+  --color-btn-primary-disabled-text: grey;
+  --color-btn-primary-disabled-bg: silver;
+  --color-btn-primary-disabled-border: transparent;
+  --color-action-list-item-default-hover-bg: navy;
+  --color-segmented-control-bg: #c0c0c0;
+  --color-segmented-control-button-bg: silver;
+  --color-segmented-control-button-selected-border: #808080;
+  --color-social-reaction-bg-hover: #c0c0c0;
+  --color-social-reaction-bg-reacted-hover: #e6e6fa;
+
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+  -webkit-font-smoothing: none;
+  color: #222;
+}
+
+main .pagination-loader-container {
+  background-image: url(https://github.com/images/modules/pulls/progressive-disclosure-line.svg);
+}
+
+main .gsc-loading-image {
+  background-image: url(https://github.githubassets.com/images/mona-loading-default.gif);
+}
+
+/*! Win98 custom CSS */
+
+/* No rounded corners in 1998 */
+main *,
+main *::before,
+main *::after {
+  border-radius: 0 !important;
+}
+
+/* Pixel font everywhere except code */
+main button,
+main input,
+main select,
+main textarea,
+main .btn {
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+  -webkit-font-smoothing: none;
+}
+
+main pre,
+main code,
+main tt,
+main kbd,
+main samp {
+  font-family: "Courier New", monospace;
+}
+
+/* Buttons: kill Primer's border so only the bevel shows.
+   Covers <button class="btn"> and the "Sign in with GitHub"
+   <a class="btn btn-primary"> anchor. */
+main .btn,
+main a.btn,
+main .btn-primary,
+main a.btn-primary {
+  border: none !important;
+  border-radius: 0 !important;
+  background-color: silver !important;
+  background-image: none !important;
+  color: #222 !important;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff,
+    inset -2px -2px grey, inset 2px 2px #dfdfdf !important;
+  text-shadow: 0 0 #222;
+  min-height: 23px;
+  padding: 2px 12px;
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+  -webkit-font-smoothing: none;
+  font-weight: 400;
+  text-decoration: none !important;
+}
+
+main .btn:hover,
+main a.btn:hover {
+  background-color: silver !important;
+  color: #222 !important;
+  text-decoration: none !important;
+}
+
+main .btn:not(:disabled):active,
+main a.btn:active {
+  box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a,
+    inset -2px -2px #dfdfdf, inset 2px 2px grey !important;
+}
+
+main .btn:focus,
+main a.btn:focus {
+  outline: 1px dotted #000;
+  outline-offset: -4px;
+}
+
+/* Octicons inside buttons (GitHub mark) pick up currentColor: black */
+main .btn svg {
+  fill: currentColor;
+}
+
+/* Comment input: sunken white field, like a Win98 textarea */
+main textarea {
+  border: none !important;
+  background: #fff;
+  box-shadow: inset -1px -1px #fff, inset 1px 1px grey,
+    inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a !important;
+  padding: 6px 8px;
+}
+
+main textarea:focus {
+  outline: none;
+}
+
+/* Comment boxes: flat grey borders instead of soft cards */
+main .gsc-comment > div,
+main .gsc-comment-box {
+  border: 1px solid #808080;
+}
+
+/* Comment header strip: silver, like a window title area */
+main .gsc-comment-header {
+  background: #c0c0c0;
+}
+
+/* Square avatars */
+main .gsc-comment-author-avatar img,
+main img.avatar {
+  border-radius: 0 !important;
+}
+
+/* Reaction pills: beveled silver chips */
+main .gsc-social-reaction-summary-item {
+  border: none;
+  background: silver;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff,
+    inset -2px -2px grey, inset 2px 2px #dfdfdf;
+  color: #222;
+}
+
+main .gsc-social-reaction-summary-item.has-reacted {
+  box-shadow: inset -1px -1px #fff, inset 1px 1px #0a0a0a,
+    inset -2px -2px #dfdfdf, inset 2px 2px grey;
+  background: #e6e6fa;
+}

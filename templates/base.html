@@ -410,5 +410,9 @@ Do you want to restart it now?</span>
     <p class="shutdown-hint">(click anywhere to turn it back on)</p>
   </div>
 
+  {% if config.extra.goatcounter %}
+  <script data-goatcounter="https://{{ config.extra.goatcounter }}.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+  {% endif %}
+
 </body>
 </html>

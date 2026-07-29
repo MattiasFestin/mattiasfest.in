@@ -415,6 +415,23 @@ html.start-maximized .main-window:not(.dialog-window) {
   margin-top: 0;
 }
 
+/* --- Comments (giscus) --- */
+.comments {
+  margin-top: 16px;
+  /* fieldsets default to min-width: min-content and refuse to shrink */
+  min-width: 0;
+
+  /* reserve space for the lazy-loaded iframe so layout doesn't jump */
+  .giscus {
+    min-height: 150px;
+  }
+
+  .giscus-frame {
+    display: block; /* kill inline-iframe baseline gap */
+    border: none;
+  }
+}
+
 /* --- Post lists --- */
 .post-list {
   list-style: none;

@@ -17,4 +17,14 @@ theme = "catppuccin-mocha"
 extra_grammars = ["syntaxes/math.tmLanguage.json"]
 
 [extra]
-# Put all your custom variables here
+# Analytics: GoatCounter site code (the CODE in https://CODE.goatcounter.com).
+# Leave empty to disable analytics.
+goatcounter = ""
+
+# Comments: giscus (GitHub Discussions). Enable Discussions on the repo,
+# install https://github.com/apps/giscus, then grab category + category id
+# from https://giscus.org. Comments render only when giscus_category_id is set.
+giscus_repo = "MattiasFestin/mattiasfest.in"
+giscus_repo_id = "R_kgDOTlPWJA"
+giscus_category = "Announcements"
+giscus_category_id = "DIC_kwDOTlPWJM4DCPjg"

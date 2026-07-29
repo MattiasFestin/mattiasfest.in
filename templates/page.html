@@ -57,6 +57,27 @@
   <p class="post-meta">{{ page.date | date(format="%B %e, %Y") }} · {{ page.reading_time }} min read</p>
   {% endif %}
   {{ page.content | safe }}
+{% if page.date and config.extra.giscus_category_id %}
+<fieldset class="comments">
+  <legend>Comments</legend>
+  <script src="https://giscus.app/client.js"
+    data-repo="{{ config.extra.giscus_repo }}"
+    data-repo-id="{{ config.extra.giscus_repo_id }}"
+    data-category="{{ config.extra.giscus_category }}"
+    data-category-id="{{ config.extra.giscus_category_id }}"
+    data-mapping="pathname"
+    data-strict="1"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="top"
+    data-theme="https://mattiasfest.in/giscus-theme.css"
+    data-lang="en"
+    data-loading="lazy"
+    crossorigin="anonymous"
+    async>
+  </script>
+</fieldset>
+{% endif %}
 </article>
 {% endblock content %}
 
