@@ -4,6 +4,7 @@ date = 2026-09-15
 description = "Ask a raw pretrained model \"What is the capital of Sweden?\" and it may answer with more exam questions — the predictor is doing its job perfectly; you asked for the next token when you wanted an assistant. The finale: supervised fine-tuning is the same cross-entropy on a tiny handwritten dataset, RLHF is a regression-shaped reward model with a KL leash to stop Goodharting, and hallucination is a precision failure shipped with a confident probability. Both series close: it's regressions all the way down, stacked, wired, and taught manners."
 
 [extra]
+linkedin = "Finale of From lines to language models: ask a raw pretrained model a question and it may answer with more exam questions — it's doing its job perfectly, you just asked for the next token when you wanted an assistant. SFT is the same cross-entropy on a tiny handwritten dataset, RLHF is a regression on human taste with a KL leash, and hallucination is a precision failure, not lying. It's regressions all the way down."
 tags = ["ml", "llm", "rlhf", "fine-tuning", "hallucination", "intuition"]
 categories = ["Research Notes"]
 +++
@@ -194,8 +195,5 @@ Thank you for walking the whole line. If someone asks you what a language model 
 ## Further reading
 
 - **Christiano, P. et al., "Deep Reinforcement Learning from Human Preferences" (NeurIPS, 2017)** — the origin of the recipe: humans rank pairs of behaviors, a reward model regresses the rankings, the policy optimizes the reward model. Demonstrated on backflipping simulated robots, years before chat.
-- **Stiennon, N. et al., "Learning to Summarize from Human Feedback" (NeurIPS, 2020)** — the recipe meets language: RLHF-tuned summarizers preferred over much larger supervised ones, and an early, explicit study of what happens when you over-optimize the reward model.
 - **Ouyang, L. et al., "Training Language Models to Follow Instructions with Human Feedback" (2022)** — InstructGPT: this post's three phases as a production pipeline, including the finding that a 1.3B tuned model beat a 175B raw one on human preference. The paper behind the product.
 - **Holtzman, A., Buys, J., Du, L., Forbes, M. & Choi, Y., "The Curious Case of Neural Text Degeneration" (ICLR, 2020)** — why greedy loops and the raw tail unravels, with the nucleus-sampling fix; the sampling section's evidence base.
-- **Kalai, A. T., Nachum, O., Vempala, S. S. & Zhang, E., "Why Language Models Hallucinate" (2025)** — the statistical case that hallucination is the expected behavior of a well-trained classifier graded with no reward for abstention: exams with no marks for "I don't know" produce confident guessers.
-- **Rafailov, R. et al., "Direct Preference Optimization: Your Language Model is Secretly a Reward Model" (NeurIPS, 2023)** — DPO: the KL-leashed objective's closed form inverted into a plain classification loss on preference pairs, deleting the RL loop from RLHF.

@@ -4,6 +4,7 @@ date = 2026-09-01
 description = "\"The cat sat on the ___\" is a multiple-choice exam with roughly 50,000 options, and a language model does nothing else, ever. The head of GPT is literally Part 3's softmax regression with a bigger K, and the labels come free because raw text grades its own next token. Plus: train a character-level language model in your browser and watch it babble."
 
 [extra]
+linkedin = "Part 5 of From lines to language models, and the punchline of the whole series: a language model is a classifier. \"The cat sat on the ___\" is a multiple-choice exam with ~50,000 options, the head of GPT is softmax regression with a bigger K, and the labels come free because raw text grades itself. Train a tiny language model in your browser and watch it babble."
 tags = ["ml", "llm", "language-models", "softmax", "next-token-prediction", "intuition"]
 categories = ["Research Notes"]
 +++
@@ -177,6 +178,4 @@ The bigram demo drew the ceiling in crayon: one token of context makes word-shap
 
 - **Shannon, C. E., "A Mathematical Theory of Communication" (1948)** and **"Prediction and Entropy of Printed English" (1951)** — the origin of everything in the perplexity section: entropy as die-size, and humans playing the next-letter game to bound the entropy of English at about one bit per character.
 - **Bengio, Y., Ducharme, R., Vincent, P. & Jauvin, C., "A Neural Probabilistic Language Model" (JMLR, 2003)** — the paper that assembled this post's exact recipe first: a learned embedding table, a hidden layer, and a softmax over the vocabulary, trained end to end by gradient descent.
-- **Karpathy, A., "The Unreasonable Effectiveness of Recurrent Neural Networks" (2015)** and the **makemore** series — this post's hero demo, grown up: character-level language models from bigram to network, built by hand, with the same "watch it babble, then watch it improve" arc.
 - **Radford, A., Wu, J., Child, R., Luan, D., Amodei, D. & Sutskever, I., "Language Models are Unsupervised Multitask Learners" (2019)** — the GPT-2 paper: next-token prediction at scale, the 50,257-token vocabulary this post kept quoting, and the discovery that one classifier, trained hard enough, quietly learns to do everything else.
-- **Jurafsky, D. & Martin, J. H., *Speech and Language Processing* (3rd ed. draft), Chapter 3** — n-gram language models done properly: the bigram demo's family tree, perplexity with all the fine print, and why counting was eventually outgunned by gradient descent. Free online from the authors.

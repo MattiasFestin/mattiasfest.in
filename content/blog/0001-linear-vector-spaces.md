@@ -352,7 +352,6 @@ A quadratic in `$t$` that never goes negative has non-positive discriminant: `$4
 
 - Sheldon Axler, *Linear Algebra Done Right*: the vector-space pillar, done properly.
 - Walter Rudin, *Principles of Mathematical Analysis*: metric spaces, completeness, topology.
-- Gilbert Strang, *Introduction to Linear Algebra* and the MIT OCW lectures: geometry-first intuition.
 - Beyer, Goldstein, Ramakrishnan, Shaft, *When Is "Nearest Neighbor" Meaningful?* (ICDT 1999): the distance-concentration result behind the high-dimensions section.
 
 ## Closing thoughts

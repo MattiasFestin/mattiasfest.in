@@ -3,7 +3,9 @@ name: Publish scheduled posts
 # Runs once per day. If any post's publication date is today
 # (Europe/Stockholm), re-runs the deploy workflow; the CI build prunes
 # still-future posts, so the newly due post goes live and later ones
-# stay hidden.
+# stay hidden. Once the deploy succeeds, posts that opted in with a
+# `linkedin = "..."` message in [extra] are announced on LinkedIn.
+# Because this workflow runs once per day, announcements can't double-post.
 
 on:
   schedule:
@@ -40,3 +42,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run deploy.yml --ref main
+
+      - name: Wait for deploy to finish
+        if: steps.due.outputs.due == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 15
+          RUN_ID=$(gh run list --workflow=deploy.yml --branch main --limit 1 --json databaseId --jq '.[0].databaseId')
+          echo "Watching deploy run $RUN_ID"
+          gh run watch "$RUN_ID" --exit-status
+
+      - name: Announce on LinkedIn
+        if: steps.due.outputs.due == 'true'
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_AUTHOR_URN: ${{ secrets.LINKEDIN_AUTHOR_URN }}
+        run: node scripts/linkedin-share.mjs

@@ -4,6 +4,7 @@ date = 2026-08-04
 description = "Fitting a line means choosing a loss, and different losses crown different lines. Least squares turns out to be an orthogonal projection, the normal equations fall out of one perpendicularity condition, and gradient descent reaches the same answer by walking downhill, which is why it scales to everything that comes later."
 
 [extra]
+linkedin = "New series: From lines to language models. Part 1 is linear regression, the atom of ML — fitting a line means choosing a loss, different losses crown different lines, and least squares turns out to be an orthogonal projection. Seven parts, ending inside a language model. Every post has runnable demos in the browser."
 tags = ["ml", "linear-regression", "gradient-descent", "intuition"]
 categories = ["Research Notes"]
 +++
@@ -210,4 +211,3 @@ But regression predicts a *quantity*. Next up: what happens when the thing you p
 - **Stigler, S. M., "Gauss and the Invention of Least Squares" (The Annals of Statistics, 1981)** — the definitive account of the Legendre-Gauss priority dispute: Legendre published first (1805), Gauss claimed he'd been using it since 1795, and historians have been adjudicating ever since.
 - **Hastie, Tibshirani & Friedman, *The Elements of Statistical Learning*, Chapter 3** — linear methods for regression done properly: least squares, ridge, lasso, and the subset-selection zoo. Free PDF from the authors.
 - **Boyd & Vandenberghe, *Introduction to Applied Linear Algebra* (VMLS), Chapters 12-13** — the cleanest treatment of least squares as projection and the normal equations, with the QR-factorization route you should actually use instead of forming `$X^T X$`.
-- **Strang, G., *Linear Algebra and Its Applications*, the "four fundamental subspaces" chapters** — where the column-space picture in this post comes from.

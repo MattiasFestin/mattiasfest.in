@@ -4,6 +4,7 @@ date = 2026-08-18
 description = "Part 1's linear score was secretly a log-odds all along: solve log(p/(1−p)) = s for p and the sigmoid falls out, nothing decreed. Maximum likelihood on Bernoulli labels hands you cross-entropy, a loss that charges confident wrongness unboundedly and confident correctness nothing, and its gradient collapses to (σ(s)−y)·x — exactly Part 1's MSE gradient with the prediction renamed, the vanishing σ′ from Part 2 cancelled clean away. Softmax extends the vote to K classes, sigmoid turns out to be softmax with two, and the whole machine is the InfoNCE loss from the embeddings series wearing a classification costume."
 
 [extra]
+linkedin = "Part 3 of From lines to language models: nobody decreed the sigmoid — ask for a probability whose log-odds is your linear score and it falls out. Maximum likelihood hands you cross-entropy, and its gradient is linear regression's gradient with the prediction renamed. Same machine, new costume. This loss runs everything later in the series."
 tags = ["ml", "logistic-regression", "classification", "cross-entropy", "intuition"]
 categories = ["Research Notes"]
 +++
@@ -184,6 +185,4 @@ But every classifier in this post draws a *flat* boundary. One line, however hon
 
 - **Cox, D. R., "The Regression Analysis of Binary Sequences" (JRSS B, 1958)** — the paper that made logistic regression a first-class statistical citizen: binary outcomes, the logistic link, and maximum likelihood, all in one place.
 - **McCullagh, P. & Nelder, J. A., *Generalized Linear Models* (2nd ed., 1989)** — the grand unification this post gestured at: pick a noise distribution and a link function, and MSE-with-identity and cross-entropy-with-logit fall out as siblings, gradients matching.
-- **Bishop, C. M., *Pattern Recognition and Machine Learning*, Sections 4.2-4.3** — logistic regression done properly: the maximum-likelihood derivation, the `$(\sigma - y)x$` gradient, IRLS, and the softmax multiclass case.
-- **Murphy, K. P., *Probabilistic Machine Learning: An Introduction*, Chapter 10** — the modern textbook treatment, with the Bernoulli/categorical likelihood view front and center. Free PDF from the author.
 - **Guo, C., Pleiss, G., Sun, Y. & Weinberger, K. Q., "On Calibration of Modern Neural Networks" (ICML 2017)** — the calibration aside with experiments: modern networks are systematically overconfident, reliability diagrams expose it, and temperature scaling (one scalar!) largely fixes it.

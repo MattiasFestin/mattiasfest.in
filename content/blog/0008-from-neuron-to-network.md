@@ -4,6 +4,7 @@ date = 2026-08-25
 description = "Four points labeled 0,1,1,0 defeat every line in existence, because no half-plane contains exactly two opposite corners of a square. The fix isn't a better neuron — a neuron is just Part 3's logistic regression — it's wiring: feed neurons' outputs to other neurons as features, and the hidden layer redraws the map so XOR becomes linearly separable in (h1, h2) coordinates. Two linear layers collapse into one, so the nonlinearity is load-bearing; backprop turns out to be the chain rule with caching, not a learning rule, and Part 3's g = p − y is still the entire signal, now flowing backward through the stack. Plus: why 'can approximate anything' doesn't mean 'will learn anything', and a committee beating a single voter on two moons."
 
 [extra]
+linkedin = "Part 4 of From lines to language models: four points labeled 0,1,1,0 defeat every line in existence. The fix isn't a better neuron — it's wiring. Hidden layers redraw the map until the unsolvable becomes linearly separable, and backprop is not a learning rule, it's the chain rule with caching."
 tags = ["ml", "neural-networks", "backpropagation", "deep-learning", "intuition"]
 categories = ["Research Notes"]
 +++
@@ -208,5 +209,3 @@ So we now own a machine that learns its own features and ends in the softmax vot
 - **Minsky, M. & Papert, S., *Perceptrons* (1969)** — the book that made XOR famous: a rigorous map of what single-layer machines cannot represent, widely (if unfairly) blamed for the first neural-network winter.
 - **Rumelhart, D. E., Hinton, G. E. & Williams, R. J., "Learning representations by back-propagating errors" (Nature, 1986)** — the paper that put backprop on the map, with hidden units learning internal representations — including, yes, XOR.
 - **Cybenko, G., "Approximation by superpositions of a sigmoidal function" (1989)** and **Hornik, K., "Approximation capabilities of multilayer feedforward networks" (1991)** — the universal approximation theorems, existence proofs with all the fine print this post's honest paragraph flagged.
-- **Goodfellow, I., Bengio, Y. & Courville, A., *Deep Learning*, Chapter 6** — feedforward networks done properly: activations, backprop as a general algorithm on computational graphs, and the depth-vs-width discussion. Free online from the authors.
-- **Karpathy, A., "Neural Networks: Zero to Hero"** — the modern practical companion: backprop built by hand from scalar operations upward, on video, with code. The best way to make this post's backward pass feel inevitable rather than clever.

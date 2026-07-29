@@ -192,8 +192,4 @@ In [Part 3](@/blog/0004-what-are-drift.md) we treat that as what it really is, *
 
 - Oord, Li, Vinyals, *Representation Learning with Contrastive Predictive Coding* (2018): where InfoNCE comes from.
 - Chen et al., *SimCLR* (2020): in-batch negatives, temperature, and batch size, studied carefully (in vision).
-- Wang & Isola, *Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere* (2020).
 - Karpukhin et al., *Dense Passage Retrieval* (2020): the dual-encoder retrieval blueprint.
-- Reimers & Gurevych, *Sentence-BERT* (2019): pooling choices and siamese training for sentence embeddings.
-- Wang et al., *Text Embeddings by Weakly-Supervised Contrastive Pre-training* (E5, 2022): the modern two-stage recipe with instruction prefixes.
-- Kusupati et al., *Matryoshka Representation Learning* (2022).

@@ -4,6 +4,7 @@ date = 2026-08-11
 description = "Fit a line to 0/1 spam labels and it works, until you add a few blatantly obvious spam emails and the previously-caught ones slip through, because squared error fines the model for being confidently right. The fix starts with an honest distinction: regression predicts a quantity, classification predicts a decision, and almost every classifier is secretly a regressor of scores plus a decision rule. Also: why a 99%-accurate spam filter can be useless, and why a threshold is a product decision, not math."
 
 [extra]
+linkedin = "Part 2 of From lines to language models: fit a line to spam labels and it works — until you add blatantly obvious spam and the previously-caught ones slip through. Why squared error fines a model for being confidently right, why a 99%-accurate filter can be useless, and why a threshold is a product decision, not math."
 tags = ["ml", "classification", "regression", "intuition"]
 categories = ["Research Notes"]
 +++
@@ -148,6 +149,5 @@ Next up: the line that votes. We squash the linear score into a probability, mee
 ## Further reading
 
 - **Hastie, Tibshirani & Friedman, *The Elements of Statistical Learning*, Chapter 4** — linear methods for classification, including exactly why regression on indicator labels misbehaves (and the "masking" problem it grows in the multi-class case). Free PDF from the authors.
-- **Bishop, C. M., *Pattern Recognition and Machine Learning*, Section 4.1.3** — the textbook version of this post's hook: least-squares classification and its famous figure of a decision boundary dragged out of position by points that are *too* correctly classified.
 - **Fawcett, T., "An Introduction to ROC Analysis" (Pattern Recognition Letters, 2006)** — the standard treatment of scorers vs thresholds: how one score function generates a whole curve of classifiers, and how to compare them without committing to a cutoff.
 - **Saito, T. & Rehmsmeier, M., "The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets" (PLOS ONE, 2015)** — the class-imbalance section of this post, with teeth and experiments.

@@ -4,6 +4,7 @@ date = 2026-09-08
 description = "\"The trophy would not fit in the suitcase because it was too ___\" — the next token depends on what 'it' refers to, and no fixed window can know that, because relevance depends on content, not position. Attention is the fix, built from machinery this series already owns: relevance is a query·key dot product, softmax over positions is the weighted opinion poll made literal, and the 1/√d scale is a temperature. Stack attend-then-think blocks, put Part 5's softmax head on top, and you own the whole transformer."
 
 [extra]
+linkedin = "Part 6 of From lines to language models: attention is dot products all the way down. Every position publishes a key, emits a query, offers a value; relevance is an inner product, softmax over positions is a literal weighted poll, and 1/√d is just a temperature. Stack attend-then-think blocks and you own the whole transformer."
 tags = ["ml", "llm", "attention", "transformers", "intuition"]
 categories = ["Research Notes"]
 +++
@@ -191,5 +192,3 @@ So the model is assembled — tokens to embeddings to N blocks to a 50,000-way v
 - **Vaswani, A. et al., "Attention Is All You Need" (NeurIPS, 2017)** — the transformer paper: the `$\text{softmax}(QK^\top/\sqrt{d_k})V$` display, multi-head attention, and the (then-radical) claim that the gather-then-think block needs no recurrence at all.
 - **Bahdanau, D., Cho, K. & Bengio, Y., "Neural Machine Translation by Jointly Learning to Align and Translate" (ICLR, 2015; arXiv 2014)** — attention's debut, three years earlier: a translation decoder learning to look back at the right source words, with the attention-weight matrices that made everyone believe.
 - **Elhage, N. et al., "A Mathematical Framework for Transformer Circuits" (Anthropic, 2021)** — the residual-stream view taken seriously: heads as read-write operations on a shared channel, and the discovery of induction heads with legible, testable jobs.
-- **Karpathy, A., nanoGPT and "Let's build GPT: from scratch, in code, spelled out" (2023)** — this post's pipeline as ~300 lines of PyTorch you can train yourself; the single best way to convince your fingers that there is no other component.
-- **Alammar, J., "The Illustrated Transformer" (2018)** — the diagrams this post rendered in words: queries, keys, values, and heads, drawn.

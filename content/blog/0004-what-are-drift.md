@@ -219,6 +219,5 @@ Nothing here is exotic. Version the interface, measure the break at the level th
 ## Further reading
 
 - Schönemann, *A generalized solution of the orthogonal Procrustes problem* (1966): the closed-form bridge.
-- Kornblith et al., *Similarity of Neural Network Representations Revisited* (CKA, 2019): principled cross-space geometry comparison.
 - Shen et al., *Towards Backward-Compatible Representation Learning* (2020): training new models to be compatible with old indexes, the industrial-strength cousin of the bridge.
 - Webber, Moffat, Zobel, *A Similarity Measure for Indefinite Rankings* (RBO, 2010): rank-aware neighbor-list comparison.
