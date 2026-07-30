@@ -313,6 +313,14 @@ html.start-maximized .main-window:not(.dialog-window) {
   }
 }
 
+/* Focus always wins over size: a maximized window must never cover the
+   window the user just switched to. Comes after the .maximized rule and
+   raises specificity so it beats z-index: 5 in every combination. */
+.app-window.front,
+.app-window.maximized.front {
+  z-index: 6;
+}
+
 /* Hidden states must win over any display set above (e.g. maximized),
    so they come last */
 .app-window.minimized,
@@ -916,11 +924,8 @@ input[type="range"]:focus-visible {
   height: min(600px, 80vh);
   display: flex;
   flex-direction: column;
+  /* Floats above the main window; .app-window.front handles focus */
   z-index: 3;
-
-  &.front {
-    z-index: 6; /* above a maximized main window (z-index 5) */
-  }
 
   /* IE5-style chrome: menu bar, big-button toolbar, Address bar */
   .browser-chrome {
@@ -1225,11 +1230,8 @@ input[type="range"]:focus-visible {
   height: min(540px, 78vh);
   display: flex;
   flex-direction: column;
+  /* Floats above the main window; .app-window.front handles focus */
   z-index: 3;
-
-  &.front {
-    z-index: 6; /* above a maximized main window (z-index 5) */
-  }
 
   /* Flat Win98 menu bar: File / Run / Clear */
   .editor-menubar {
