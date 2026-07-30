@@ -35,14 +35,15 @@ jobs:
           node-version: 22
           cache: npm
 
-      # Manim 0.20's rendering stack is tested on Python 3.11. Keep its
-      # isolated environment as the Python on PATH for the rest of the build:
+      # Manim 0.20 supports Python 3.12, which is also required by the
+      # NumPy version pinned for reproducible snippet output. Keep its isolated
+      # environment as the Python on PATH for the rest of the build:
       # scripts/run-python.mjs then executes snippets with the same pinned
       # interpreter that rendered the figures.
       - uses: actions/setup-python@v5
         id: python
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           # Caches pip's downloaded wheels/source archives. The complete
           # virtualenv is cached separately below, so a warm build skips both
           # download and installation work.
