@@ -47,6 +47,16 @@ test("marked Python snippets are executed at build time, output inlined", async 
   for (const text of await panes.allTextContents()) expect(text.trim()).not.toBe("");
 });
 
+test("a page can mix pre-run and press-Run-yourself snippets", async ({ page }) => {
+  await page.goto("/blog/python-exe/");
+  // Only the marked block gets a pane; the invitations to run it yourself
+  // (including the deliberately random one) are left alone.
+  const blocks = page.locator('#content pre > code[data-lang="python"]');
+  expect(await blocks.count()).toBeGreaterThan(1);
+  await expect(page.locator("#content .code-output")).toHaveCount(1);
+  await expect(page.locator("#content .code-output pre")).toContainText("Floppy disks:");
+});
+
 test("posts have a giscus comments section", async ({ page }) => {
   await page.goto("/blog/hello-world/");
   const comments = page.locator("fieldset.comments");

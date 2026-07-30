@@ -78,6 +78,36 @@ x = np.array([1.0, 0.0])
 print("x rotated 90 degrees:", np.round(R @ x, 3))
 ```
 
+## Some snippets come pre-run
+
+A block with a black **Output** pane under it didn't wait for you: it
+ran when this page was built, on a real CPython, and whatever it printed
+was pasted in. Read the answer without clicking, then click anyway if
+you don't believe it. Same code, two runtimes, and the pane is my
+problem if they ever disagree.
+
+How much of a problem 1998 would have had with this page, for instance:
+
+```python
+runtime_bytes = 10 * 1024 * 1024   # Pyodide, roughly
+floppy_bytes = 1_474_560           # one 1.44 MB HD floppy, actual capacity
+modem_kbps = 56                    # V.90, downstream, on a good day
+
+floppies = -(-runtime_bytes // floppy_bytes)          # ceiling division
+minutes = runtime_bytes * 8 / (modem_kbps * 1000) / 60
+
+print(f"Python runtime:   {runtime_bytes:,} bytes")
+print(f"Floppy disks:     {floppies}   (label them 1 of {floppies}...)")
+print(f"Over a 56k modem: {minutes:.0f} minutes")
+```
+
+<!-- output -->
+
+The catch, for me rather than for you: a pre-run snippet has to print
+the same thing every time, or the post would quietly rewrite itself on
+every build. Which is exactly why the darts above aren't pre-run. Being
+different every time is the whole point of them.
+
 ## The fine print
 
 - Everything runs client-side in a sandbox, so you can't break the blog.
