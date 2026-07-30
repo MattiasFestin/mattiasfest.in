@@ -45,11 +45,11 @@ test.describe("python editor", () => {
     expect(requests.some((u) => /editor.*\.js/.test(u))).toBe(true);
   });
 
-  test("opens with the welcome buffer, focused, cursor at top-left", async ({ page }) => {
+  test("opens with the welcome buffer, active without focusing the code field", async ({ page }) => {
     await openFromStartMenu(page);
     await expect(editorWin(page).locator(".title-bar-text")).toHaveText("untitled.py - Python.exe");
     await expect(code(page)).toHaveValue(/Welcome to Python\.exe[\s\S]*Hello, World!/);
-    await expect(code(page)).toBeFocused();
+    await expect(code(page)).not.toBeFocused();
     expect(await caretState(page)).toEqual({ start: 0, end: 0, top: 0, left: 0 });
     // Taskbar button appears and is the active window
     const task = page.locator('.taskbar-task[data-for="pyedit"]');
@@ -235,7 +235,7 @@ test.describe("try me buttons", () => {
     await expect(page.locator("#content .tryme-btn")).toHaveCount(blocks);
   });
 
-  test("opens the editor with the snippet, cursor at top-left", async ({ page }) => {
+  test("opens the editor with the snippet without focusing the code field", async ({ page }) => {
     const snippet = await page
       .locator('#content pre > code[data-lang="python"]')
       .first()
@@ -245,7 +245,7 @@ test.describe("try me buttons", () => {
     await expect(code(page)).toHaveValue(snippet.replace(/\n$/, ""));
     await expect(editorWin(page).locator(".title-bar-text")).toHaveText("untitled.py - Python.exe");
     await expect(page.locator("#pyedit-output")).toHaveText("");
-    await expect(code(page)).toBeFocused();
+    await expect(code(page)).not.toBeFocused();
     expect(await caretState(page)).toEqual({ start: 0, end: 0, top: 0, left: 0 });
   });
 });
