@@ -634,6 +634,216 @@
     if (e.key === "Escape") cpClose(false);
   });
 
+  /* --- Apps: one interface to every window --- */
+  /* The desktop knows what is open, what it is called and what is in
+     it; until now nothing could ask. So every window answers the same
+     four questions:
+
+       id         which window this is
+       title()    what its title bar says
+       state()    "open" | "minimized" | "closed"
+       content()  what is inside it, as plain data
+
+     Title and state are read off the markup, so a window that
+     registers nothing at all - the blog folder sitting behind a post -
+     still answers truthfully. A lazy app fills in a content() of its
+     own as it loads (editor.js, browser.js, winamp.js, find.js), and
+     the main window's content is the document itself, surveyed below.
+
+     The Office Assistant is the only consumer, and the reason any of
+     this exists: a paperclip that recommends the Run button on a post
+     with no code in it, or offers to launch a Winamp that is already
+     playing, isn't helping - it's guessing. Nothing here costs anything
+     until it's asked: the survey is taken once, lazily, and the
+     observer that reports changes is only created if someone
+     subscribes. */
+
+  var contentEl = document.getElementById("content");
+
+  /* Runnable snippets. The survey below hands the first one to the
+     Assistant and the "Try me" buttons are wired to all of them, so the
+     question "is there Python on this page" has exactly one answer. */
+  var pyBlocks = Array.prototype.slice.call(
+    document.querySelectorAll(
+      '#content pre > code[data-lang="python"], #content pre > code[data-lang="py"]'
+    )
+  );
+
+  var registry = {}; /* id -> the parts an app answers for itself */
+  var listeners = {}; /* event name -> handlers */
+
+  function windowState(w) {
+    if (w.classList.contains("closed")) return "closed";
+    if (w.classList.contains("minimized")) return "minimized";
+    return "open";
+  }
+
+  function app(id) {
+    var custom = registry[id];
+    var w = winById(id);
+    var btn = btnFor(id);
+    if (!custom && !w && !btn) return null;
+
+    function state() {
+      if (custom && custom.state) return custom.state();
+      if (w) return windowState(w);
+      /* Webamp draws its own window, so its taskbar button is the only
+         honest signal left. */
+      return btn && !btn.hidden ? "open" : "closed";
+    }
+
+    return {
+      id: id,
+      state: state,
+      open: function () { return state() === "open"; },
+      front: function () {
+        return state() === "open" && !!btn && btn.classList.contains("active");
+      },
+      title: function () {
+        if (custom && custom.title) return custom.title();
+        var t = w && w.querySelector(".title-bar-text");
+        if (t) return t.textContent.trim();
+        var label = btn && btn.querySelector(".taskbar-task-label");
+        return label ? label.textContent.trim() : id;
+      },
+      content: function () {
+        return custom && custom.content ? custom.content() : null;
+      },
+    };
+  }
+
+  function apps() {
+    var ids = {};
+    windows.forEach(function (w) { ids[w.dataset.win] = true; });
+    taskBtns.forEach(function (b) { ids[b.dataset.for] = true; });
+    Object.keys(registry).forEach(function (id) { ids[id] = true; });
+    return Object.keys(ids).map(app).filter(Boolean);
+  }
+
+  function on(name, fn) {
+    (listeners[name] || (listeners[name] = [])).push(fn);
+    if (name === "app") watchApps();
+  }
+
+  function emit(name, detail) {
+    (listeners[name] || []).forEach(function (fn) {
+      /* A listener that throws is the listener's problem; the desktop
+         carries on. */
+      try { fn(detail); } catch (e) { /* nothing sensible to do */ }
+    });
+  }
+
+  /* An app whose insides changed without its window changing - a script
+     that finished running, a search that came back empty - says so. */
+  function notify(id) {
+    var a = app(id);
+    if (a) emit("app", { id: id, state: a.state() });
+  }
+
+  var watching = false;
+  function watchApps() {
+    if (watching || !window.MutationObserver) return;
+    watching = true;
+    /* Every open, close and minimize on this desktop is a class on a
+       window or a hidden taskbar button, whoever set it - here,
+       winamp.js, find.js, editor.js. Watching the furniture beats
+       asking a dozen call sites to remember to announce themselves. */
+    var last = {};
+    apps().forEach(function (a) { last[a.id] = a.state(); });
+    var obs = new MutationObserver(function () {
+      apps().forEach(function (a) {
+        var now = a.state();
+        if (now === last[a.id]) return;
+        last[a.id] = now;
+        emit("app", { id: a.id, state: now });
+      });
+    });
+    windows.forEach(function (w) {
+      obs.observe(w, { attributes: true, attributeFilter: ["class"] });
+    });
+    taskBtns.forEach(function (b) {
+      obs.observe(b, { attributes: true, attributeFilter: ["hidden"] });
+    });
+  }
+
+  /* --- The main window's content is the page itself --- */
+  /* What the document *is* never changes, so it's surveyed once. Where
+     the reader has got to in it, and what they have highlighted, is
+     answered fresh every time - that's the whole point of asking. */
+
+  var survey = null;
+  function surveyed() {
+    if (survey) return survey;
+    var article = contentEl && contentEl.querySelector("article");
+    var meta = article && article.querySelector(".post-meta");
+    var heading = contentEl && contentEl.querySelector("h1");
+    var prose = article ? article.textContent : contentEl ? contentEl.textContent : "";
+    survey = {
+      /* A post is a page with a date on it; a folder is one with a list
+         of them. Both are read off the markup rather than the URL,
+         which is a guess about a routing table. */
+      kind: meta
+        ? "post"
+        : contentEl && contentEl.querySelector(".post-list a, .post-table a")
+          ? "index"
+          : "page",
+      title: heading ? heading.textContent.trim() : document.title,
+      minutes: meta ? Number((meta.textContent.match(/(\d+)\s*min/) || [])[1]) || 0 : 0,
+      code: article ? article.querySelectorAll("pre").length : 0,
+      python: pyBlocks.length ? pyBlocks[0].textContent.replace(/\n$/, "") : null,
+      math: !!(contentEl && contentEl.querySelector("math")),
+      comments: !!(contentEl && contentEl.querySelector(".comments")),
+      feed: !!document.querySelector('link[rel="alternate"]'),
+      /* What the page is about, to the extent a regex can tell. */
+      topic: /\b(machine learning|neural net|gradient|embedding|regression|classifier|transformer)/i.test(prose)
+        ? "machine learning"
+        : null,
+    };
+    return survey;
+  }
+
+  /* The window body scrolls, not the page - except on phones, where it
+     can be either, so ask whichever is actually moving. */
+  function scroller() {
+    if (contentEl && contentEl.scrollHeight - contentEl.clientHeight > 4) return contentEl;
+    return document.scrollingElement || document.documentElement;
+  }
+
+  function progress() {
+    var s = scroller();
+    var max = s.scrollHeight - s.clientHeight;
+    /* null, not 1: a page that doesn't scroll hasn't been read to the
+       end, it just fits. */
+    if (max <= 4) return null;
+    return Math.min(1, Math.max(0, s.scrollTop / max));
+  }
+
+  function selectedText() {
+    var sel = window.getSelection && window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.anchorNode) return "";
+    if (!contentEl || !contentEl.contains(sel.anchorNode)) return "";
+    return String(sel).replace(/\s+/g, " ").trim();
+  }
+
+  registry.main = {
+    content: function () {
+      var s = surveyed();
+      return {
+        kind: s.kind,
+        title: s.title,
+        minutes: s.minutes,
+        code: s.code,
+        python: s.python,
+        math: s.math,
+        comments: s.comments,
+        feed: s.feed,
+        topic: s.topic,
+        progress: progress(),
+        selection: selectedText(),
+      };
+    },
+  };
+
   /* --- Python editor (lazy-loaded) --- */
   /* The editor's code (syntax highlighting, virtual FS, Pyodide glue)
      lives in editor.js and is only fetched the first time it's opened. */
@@ -643,6 +853,15 @@
     btnFor: btnFor,
     loadScript: loadScript,
     winampError: function (message) { winampError(message); },
+    /* The app registry above: who's running, and what's in them. */
+    app: app,
+    apps: apps,
+    register: function (id, api) {
+      registry[id] = api || {};
+      notify(id);
+    },
+    notify: notify,
+    on: on,
     /* Bridge for the lazy apps (clippy.js) - settings live here, and
        the launchers are function declarations, so hoisting makes them
        safe to reference from this earlier assignment. */
@@ -833,24 +1052,22 @@
   });
 
   /* "Try me" buttons on Python code blocks */
-  document
-    .querySelectorAll('#content pre > code[data-lang="python"], #content pre > code[data-lang="py"]')
-    .forEach(function (code) {
-      var pre = code.parentElement;
-      var wrap = document.createElement("div");
-      wrap.className = "tryme-wrap";
-      pre.parentNode.insertBefore(wrap, pre);
-      wrap.appendChild(pre);
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "tryme-btn";
-      btn.innerHTML = "&#9654; Try me";
-      btn.setAttribute("aria-label", "Open this code in the Python editor");
-      btn.addEventListener("click", function () {
-        openPyEditor(code.textContent.replace(/\n$/, ""));
-      });
-      wrap.appendChild(btn);
+  pyBlocks.forEach(function (code) {
+    var pre = code.parentElement;
+    var wrap = document.createElement("div");
+    wrap.className = "tryme-wrap";
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.appendChild(pre);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tryme-btn";
+    btn.innerHTML = "&#9654; Try me";
+    btn.setAttribute("aria-label", "Open this code in the Python editor");
+    btn.addEventListener("click", function () {
+      openPyEditor(code.textContent.replace(/\n$/, ""));
     });
+    wrap.appendChild(btn);
+  });
 
   /* --- Screen saver (lazy-loaded) --- */
   /* The canvas savers live in screensaver.js and are only fetched when

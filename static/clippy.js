@@ -11,6 +11,15 @@
    the compositor's problem, and there is no runtime. That stylesheet is
    ~55 kB, so it is fetched on the first show() and never before.
 
+   What it says is drawn from what is actually there. Every window on the
+   desktop - the document included - answers the same questions through
+   the app registry in main.js, so a tip about the Run button only exists
+   on a page with code on it, nothing offers to launch an app that is
+   already running, and a situation the reader is visibly in (a post just
+   opened, a phrase highlighted, a traceback in Python.exe) is answered
+   while it's still true, rather than waiting its turn behind a remark
+   about RSS.
+
    The one thing here that isn't a joke is reading a post out loud. It
    is offered, never started on its own, and it is careful not to fight
    a screen reader that's already doing the job. All appearance is in
@@ -33,6 +42,14 @@
   var IDLE_MS = 45000;
   var IDLE_ANIM_MS = 20000;
   var BALLOON_MS = 14000;
+  /* Situations run on a much shorter fuse than small talk: they are
+     answers to something that just happened, and an answer that arrives
+     forty-five seconds later isn't one. FIRST_MS is the pause after
+     arriving somewhere - long enough to look like the clip read the
+     page, short enough that it's still the page you're on. */
+  var FIRST_MS = 7000;
+  var TRIGGER_MS = 1500;
+  var RETRY_MS = 3000; /* the balloon was busy; wait for a gap */
   /* An exit is a flourish, not a delay: GoodBye runs four and a half
      seconds, and nobody who just clicked the X should have to watch all
      of it. Whichever comes first, animationend or this, ends the wave.
@@ -50,7 +67,9 @@
   var balloonOpen = false;
   var unsolicited = 0;
   var seen = {}; /* tip id -> true, so a session doesn't repeat itself */
+  var volunteered = {}; /* said unprompted: never a second time */
   var idleTimer = null, idleAnimTimer = null, balloonTimer = null, hideTimer = null;
+  var promptTimer = null; /* a situation waiting to be looked at */
   var focusOnOpen = false; /* set only for explicitly requested balloons */
 
   function pick(list) {
@@ -185,12 +204,78 @@
 
   var NO_THANKS = action("No thanks", null); /* null handler = just close */
 
-  /* --- Tips --- */
-  /* Pools are keyed off the URL so the clip can pretend to have read the
-     page. Text stays to a sentence or two; the joke dies at three. */
+  /* --- Knowing what's going on --- */
+  /* Every window on this desktop answers the same questions - see the
+     app registry in main.js - so the clip can look at the page, and at
+     what's running on it, instead of pattern-matching the URL and
+     hoping. That's the difference between "code blocks on this page
+     have a Run button" and knowing whether this page has any code on it
+     at all.
 
-  function tip(id, text, actions, anim) {
-    return { id: id, text: text, actions: actions || null, anim: anim || null };
+     The bridge stays optional, like every other call into main.js:
+     without it desk() finds nothing, every condition below is false,
+     and the clip falls back to small talk it can't get wrong. */
+
+  var EMPTY = {};
+
+  function desk(id) {
+    if (!window.MF || typeof window.MF.app !== "function") return null;
+    return window.MF.app(id);
+  }
+
+  /* What's inside a window right now. */
+  function inside(id) {
+    var a = desk(id);
+    return (a && a.content()) || EMPTY;
+  }
+
+  function isOpen(id) {
+    var a = desk(id);
+    return !!a && a.open();
+  }
+
+  /* The main window's content is the document - and the document is the
+     one thing worth working out for ourselves if the bridge is missing,
+     because reading a post aloud shouldn't depend on a registry. */
+  function here() {
+    var c = inside("main");
+    if (c !== EMPTY) return c;
+    return { kind: /^\/blog\/[^/]+\/?$/.test(location.pathname) ? "post" : "page" };
+  }
+
+  function isPost() {
+    return here().kind === "post";
+  }
+
+  /* Offering to launch something that is already running is precisely
+     the kind of help this thing is famous for. */
+  function closed(id) {
+    return function () { return !isOpen(id); };
+  }
+
+  /* Quoting the reader back at themselves, without quoting a paragraph. */
+  function shorten(s) {
+    return s.length > 40 ? s.slice(0, 37).replace(/\s+\S*$/, "") + "\u2026" : s;
+  }
+
+  /* --- Tips --- */
+  /* Text stays to a sentence or two; the joke dies at three. `when` is
+     what keeps a tip honest - it only enters the draw if the page bears
+     it out - and `text` can be a function for the ones that quote what
+     they found. */
+
+  function tip(id, text, actions, anim, when) {
+    return {
+      id: id,
+      text: text,
+      actions: actions || null,
+      anim: anim || null,
+      when: when || null,
+    };
+  }
+
+  function fits(t) {
+    return !t.when || t.when();
   }
 
   /* An offer to actually do the thing, plus the way out. */
@@ -209,41 +294,48 @@
 
   var GENERAL = [
     tip("winamp", "There's a Winamp in the Start menu, and it really does whip the llama's ass.",
-      offer("Play something", "openWinamp")),
+      offer("Play something", "openWinamp"), null, closed("winamp")),
     tip("internet", "You can dial up The Internet from the Start menu. It's 1998 in there, so bring patience.",
-      offer("Connect", "openBrowser")),
+      offer("Connect", "openBrowser"), null, closed("browser")),
     tip("python", "There's a Python interpreter in here. It runs in your browser, which in 1998 would have been witchcraft.",
-      offer("Open Python.exe", "openPyEditor", null)),
+      offer("Open Python.exe", "openPyEditor", null), null, closed("pyedit")),
     tip("screensaver", "Would you like to watch some pipes instead of reading? I won't tell anyone.",
       offer("Start screensaver", "startScreensaver")),
     tip("find", "It looks like you're looking for something. Start > Find searches every page on this drive - or just press F3.",
-      offer("Find files", "openFind")),
+      offer("Find files", "openFind"), null, closed("find")),
     tip("controlpanel", "Control Panel changes the wallpaper and the reading width. Your taste, your consequences."),
     tip("meta", "I'm a homage, not a product. Close me with the X and I'll stay closed - I learned that much."),
     tip("idle", "Nothing on this page needs your attention. I just have very little else to do."),
+    /* Things that are only true while something is running. */
+    tip("winamp-playing", function () {
+      return "\u201c" + inside("winamp").track + "\u201d. Excellent choice, and I say that with no ears.";
+    }, null, "GetArtsy", function () { return !!inside("winamp").track; }),
+    tip("browser-online", "You're on The Internet. Everything you see there has been dead for twenty-five years.",
+      null, null, function () { return !!inside("browser").connected; }),
   ];
 
   var POST = [
-    tip("post-help", "It looks like you're reading about machine learning. Would you like help?",
-      offer("Open Python.exe", "openPyEditor", null)),
-    tip("post-run", "Code blocks on this page have a Run button. The paperclip strongly recommends pressing them."),
+    tip("post-help", function () {
+      return "It looks like you're reading about " + here().topic + ". Would you like help?";
+    }, offer("Open Python.exe", "openPyEditor", null), null, function () {
+      return !!here().topic && !isOpen("pyedit");
+    }),
+    tip("post-run", "There's Python on this page, and a Run button under every block of it. The paperclip strongly recommends pressing them.",
+      function () {
+        return [
+          action("Run the first one", function () { call("openPyEditor", here().python); }),
+          NO_THANKS,
+        ];
+      }, null, function () { return !!here().python && !isOpen("pyedit"); }),
     tip("post-letter", "It looks like you're writing a lett- sorry, reading a post. The formula is hard to shake."),
-    tip("post-math", "If the gradients stop making sense, that's normal. They stopped making sense to the author too."),
+    tip("post-math", "If the gradients stop making sense, that's normal. They stopped making sense to the author too.",
+      null, null, function () { return !!here().math; }),
   ];
-
-  /* Only ever an offer. Reading starts when someone says it should. */
-  var READ_OFFER = tip(
-    "post-read",
-    "It looks like you're reading a post. Would you like me to read it out loud?",
-    function () {
-      return [action("Read it to me", function () { startReading(); }), NO_THANKS];
-    },
-    pick(["Alert", "GetAttention"])
-  );
 
   var INDEX = [
     tip("index-list", "It looks like you're looking for something to read. The list is newest first, as tradition demands."),
-    tip("index-rss", "This blog has an RSS feed, which is the most 1998 thing you'll do today."),
+    tip("index-rss", "This blog has an RSS feed, which is the most 1998 thing you'll do today.",
+      null, null, function () { return !!here().feed; }),
   ];
 
   var ABOUT = [
@@ -251,37 +343,120 @@
     tip("about-effort", "This is a person who built an entire Windows 98 desktop to publish a handful of posts a year."),
   ];
 
-  function isPost() {
-    return /^\/blog\/[^/]+\/?$/.test(location.pathname);
+  /* --- Situations --- */
+  /* Small talk waits for a lull. These don't: each one exists because
+     something just happened, and answering it is worth more than a
+     remark about RSS. They're checked in order and before the pool,
+     both when the clip is asked for a tip and when it decides to
+     volunteer one - which is how the offer to read a post out loud
+     became the first thing you hear on a post rather than the twelfth. */
+
+  /* Only ever an offer. Reading starts when someone says it should. */
+  var READ_OFFER = tip(
+    "post-read",
+    function () {
+      var m = here().minutes;
+      if (!m) return "It looks like you're reading a post. Would you like me to read it out loud?";
+      return "It looks like you're reading a post - about " +
+        (m === 1 ? "a minute" : m + " minutes") +
+        " of it. Would you like me to read it out loud?";
+    },
+    function () {
+      return [action("Read it to me", function () { startReading(); }), NO_THANKS];
+    },
+    pick(["Alert", "GetAttention"]),
+    /* Somewhere with something to read, something to read it with, and
+       no read already running. */
+    function () { return !reading && canRead(); }
+  );
+
+  var SITUATIONS = [
+    /* A traceback is the most interesting thing on the screen, and the
+       only honest tip about it is the one admitting it can't help. */
+    tip("py-error", function () {
+      return "It looks like that didn't run: " + shorten(inside("pyedit").error) +
+        ". In 1998 we'd have blamed the disk.";
+    }, null, "Alert", function () {
+      var py = inside("pyedit");
+      return isOpen("pyedit") && !!py.error;
+    }),
+
+    tip("find-empty", function () {
+      return "Nothing on this drive matches \u201c" + shorten(inside("find").text) +
+        "\u201d. Fewer words usually helps.";
+    }, null, "Searching", function () {
+      var f = inside("find");
+      return isOpen("find") && !!f.text && f.results === 0;
+    }),
+
+    /* Highlighting a phrase is the clearest signal anyone gives this
+       desktop that they're looking for something - and Find really can
+       search every page on the drive for it. */
+    tip("select-find", function () {
+      return "It looks like you're looking for something. Shall I search every page for \u201c" +
+        shorten(here().selection) + "\u201d?";
+    }, function () {
+      var q = here().selection;
+      return [action("Find it", function () { call("openFind", { text: q }); }), NO_THANKS];
+    }, "Searching", function () {
+      var s = here().selection || "";
+      return !reading && s.length >= 4 && s.length <= 120 && !isOpen("find");
+    }),
+
+    /* The bottom of a post: they read the whole thing, so say something
+       about that rather than about the Start menu. */
+    tip("post-end", function () {
+      return here().comments
+        ? "You made it to the end. There's a comment box down there, if you have opinions."
+        : "That's the end of the post. The blog folder behind this window has the rest of them.";
+    }, null, "Congratulate", function () {
+      var c = here();
+      return c.kind === "post" && c.progress > 0.92;
+    }),
+
+    READ_OFFER,
+  ];
+
+  /* Volunteering never repeats itself; being asked is allowed to, which
+     is why these are two maps rather than one. Stopping a read, for
+     instance, makes the offer honest again the next time someone asks
+     what the clip can do - without licensing it to nag. */
+  function situation(skip) {
+    for (var i = 0; i < SITUATIONS.length; i++) {
+      var t = SITUATIONS[i];
+      if (seen[t.id] || (skip && skip[t.id])) continue;
+      if (fits(t)) return t;
+    }
+    return null;
   }
 
   function pool() {
-    var path = location.pathname;
-    if (isPost()) {
-      var posts = GENERAL.concat(POST);
-      /* Offered only where there is something to read and something to
-         read it with; suppressed while a read is already running. */
-      return !reading && canRead() ? posts.concat([READ_OFFER]) : posts;
-    }
-    if (/^\/blog\/?$/.test(path)) return GENERAL.concat(INDEX);
-    if (/^\/about\/?$/.test(path)) return GENERAL.concat(ABOUT);
-    return GENERAL;
+    var kind = here().kind;
+    var list = GENERAL;
+    if (kind === "post") list = list.concat(POST);
+    else if (kind === "index") list = list.concat(INDEX);
+    if (/^\/about\/?$/.test(location.pathname)) list = list.concat(ABOUT);
+    return list.filter(fits);
   }
 
   function pickTip() {
-    var all = pool();
-    var fresh = all.filter(function (t) { return !seen[t.id]; });
-    if (!fresh.length) { seen = {}; fresh = all; } /* exhausted: start over */
-    var tip = fresh[Math.floor(Math.random() * fresh.length)];
-    seen[tip.id] = true;
-    return tip;
+    /* Whatever the page is actually doing wins. */
+    var t = situation(null);
+    if (!t) {
+      var all = pool();
+      var fresh = all.filter(function (x) { return !seen[x.id]; });
+      if (!fresh.length) { seen = {}; fresh = all; } /* exhausted: start over */
+      t = fresh[Math.floor(Math.random() * fresh.length)];
+    }
+    seen[t.id] = true;
+    return t;
   }
 
-  function speak(tip) {
-    say(tip.text, tip.actions ? tip.actions() : null);
+  function speak(t) {
+    say(typeof t.text === "function" ? t.text() : t.text, t.actions ? t.actions() : null);
     /* The entrance owns the sprite until it's done; a tip that lands
        mid-Show would cut the clip off halfway out of the box. */
-    if (!intro) play(tip.anim || pick(TIP_ANIMS), false);
+    if (!intro) play(t.anim || pick(TIP_ANIMS), false);
   }
 
   /* --- Balloon --- */
@@ -542,7 +717,13 @@
     paused = false;
     clearMark();
     rest();
-    if (announceIt) announce("Stopped.");
+    if (announceIt) {
+      announce("Stopped.");
+      /* Stopping a read isn't refusing one: the offer is honest again
+         the next time someone asks the clip what it can do. It stays in
+         `volunteered`, though - being asked is not a licence to nag. */
+      delete seen[READ_OFFER.id];
+    }
   }
 
   function finishReading() {
@@ -572,18 +753,43 @@
     }, { passive: true });
   }
 
-  /* --- Idling --- */
+  /* --- Idling and volunteering --- */
 
   function scheduleIdle() {
     if (idleTimer) clearTimeout(idleTimer);
     if (!shown || unsolicited >= MAX_UNSOLICITED) return;
     idleTimer = setTimeout(function () {
       idleTimer = null;
-      if (!shown || balloonOpen) return; /* never talk over an open balloon */
+      if (!shown) return;
+      /* Never talk over an open balloon - but don't drop the thought
+         either, or the one tip that had a reason to exist is the one
+         that never gets said. */
+      if (balloonOpen) { scheduleIdle(); return; }
       unsolicited++;
       speak(pickTip());
       scheduleIdle();
     }, IDLE_MS);
+  }
+
+  /* The idle timer waits for the reader to stop moving, which is right
+     for filler and wrong for anything that answers a situation: someone
+     who has just opened a post is *busy* reading it, and a scroll every
+     two seconds would postpone the offer to read it out loud forever.
+     So situations keep their own clock, and the mouse can't reset it. */
+  function considerSoon(ms) {
+    if (promptTimer || !shown || unsolicited >= MAX_UNSOLICITED) return;
+    promptTimer = setTimeout(function () {
+      promptTimer = null;
+      if (!shown || unsolicited >= MAX_UNSOLICITED) return;
+      if (balloonOpen) { considerSoon(RETRY_MS); return; }
+      var t = situation(volunteered);
+      if (!t) return;
+      seen[t.id] = true;
+      volunteered[t.id] = true;
+      unsolicited++;
+      speak(t);
+      scheduleIdle(); /* small talk starts its clock again */
+    }, ms);
   }
 
   function scheduleIdleAnim() {
@@ -606,9 +812,16 @@
     scheduleIdleAnim();
   }
 
-  function stopTimers() {
+  /* The clocks that make the clip talk. The balloon's own expiry isn't
+     one of them - a balloon already on screen should still go away. */
+  function stopChatter() {
     if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
     if (idleAnimTimer) { clearTimeout(idleAnimTimer); idleAnimTimer = null; }
+    if (promptTimer) { clearTimeout(promptTimer); promptTimer = null; }
+  }
+
+  function stopTimers() {
+    stopChatter();
     if (balloonTimer) { clearTimeout(balloonTimer); balloonTimer = null; }
   }
 
@@ -619,10 +832,55 @@
 
   document.addEventListener("mousemove", activity);
   document.addEventListener("click", activity);
-  document.addEventListener("scroll", activity, { passive: true });
   document.addEventListener("keydown", function (e) {
     activity();
     if (e.key === "Escape" && balloonOpen) closeBalloon();
+  });
+
+  /* Capture, and on window: the thing that scrolls here is the window
+     body, and scroll events from an element don't bubble - so the plain
+     document listener this used to have never saw a reader scrolling a
+     post, which is the one bit of activity that matters most. */
+  var lookedAt = 0;
+  window.addEventListener("scroll", function () {
+    activity();
+    if (!shown || reading) return;
+    /* Scrolling fires in floods and here() measures the document, so
+       look at most twice a second. */
+    var now = Date.now();
+    if (now - lookedAt < 500) return;
+    lookedAt = now;
+    if (here().progress > 0.92) considerSoon(TRIGGER_MS);
+  }, { passive: true, capture: true });
+
+  /* Highlighting a phrase is a question about it. Check the selection
+     itself rather than the page (cheap, and no layout): a plain click
+     also fires this, and a click is not a question. */
+  document.addEventListener("selectionchange", function () {
+    if (!shown || reading) return;
+    var sel = window.getSelection && window.getSelection();
+    if (!sel || sel.isCollapsed) return;
+    considerSoon(TRIGGER_MS);
+  });
+
+  /* Something opened, closed, or finished doing whatever it was doing -
+     a script that raised, a search that found nothing. That's the most
+     interesting moment there is, so look while it's still true. */
+  if (window.MF && typeof window.MF.on === "function") {
+    window.MF.on("app", function () {
+      if (shown && !reading) considerSoon(TRIGGER_MS);
+    });
+  }
+
+  /* Nobody is reading a hidden tab: stop the clocks rather than spend
+     the tip budget on an empty room. */
+  document.addEventListener("visibilitychange", function () {
+    if (!shown) return;
+    if (document.hidden) stopChatter();
+    else {
+      activity();
+      considerSoon(FIRST_MS);
+    }
   });
 
   clip.addEventListener("click", function () {
@@ -653,6 +911,10 @@
     playThen("Show", "Greeting");
     activity();
     if (greet) speak(GREETING);
+    /* Arriving somewhere is itself a situation. On a post that means
+       the offer to read it out loud turns up while you're still at the
+       top of it, which is the only moment the offer is worth anything. */
+    considerSoon(FIRST_MS);
   }
 
   function show(opts) {

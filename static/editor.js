@@ -379,9 +379,11 @@
   }
 
   var pyRunning = false;
+  var pyFailed = false; /* the last run raised something */
   function runPython() {
     if (pyRunning) return;
     pyRunning = true;
+    pyFailed = false;
     pyRunBtn.disabled = true;
     var source = pyCode.value;
     loadRuntimeOnce()
@@ -403,6 +405,7 @@
             } else if (d.kind === "error") {
               pyAppend(d.message + "\n");
               pyStatus("Error \u2014 see output");
+              pyFailed = true;
               cleanup();
             }
           }
@@ -418,12 +421,16 @@
       .then(function () {
         pyRunning = false;
         pyRunBtn.disabled = false;
+        /* The window didn't change, but what's in it did - and a
+           traceback is the most interesting thing on the desktop. */
+        window.MF.notify("pyedit");
       });
   }
 
   pyRunBtn.addEventListener("click", runPython);
   document.getElementById("pyedit-clear").addEventListener("click", function () {
     pyOut.textContent = "";
+    pyFailed = false;
     pyStatus("Ready");
   });
 
@@ -444,6 +451,24 @@
       pyCode.setRangeText("    ", pyCode.selectionStart, pyCode.selectionEnd, "end");
       pyRefresh(); /* setRangeText fires no input event */
     }
+  });
+
+  /* What Python.exe will tell anyone who asks (main.js's app registry).
+     Facts only - the last line of a traceback is a fact; whether it's
+     worth interrupting somebody over is the Assistant's problem. */
+  window.MF.register("pyedit", {
+    content: function () {
+      var out = pyOut.textContent;
+      return {
+        file: pyCurrentFile,
+        code: pyCode.value,
+        running: pyRunning,
+        status: pyStatusField.textContent,
+        failed: pyFailed,
+        /* Tracebacks end on the line that matters. */
+        error: pyFailed ? out.trim().split("\n").pop() : null,
+      };
+    },
   });
 
   window.MFEditor = { open: openPyEditor };

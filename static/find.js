@@ -214,6 +214,7 @@
   var sortKey = "name";
   var sortAsc = true;
   var lastResults = [];
+  var searched = false; /* a search has been run and has settled */
 
   function sortValue(f, key) {
     if (key === "size") return f.size == null ? -1 : f.size;
@@ -363,6 +364,8 @@
   function done(count, stopped) {
     setBusy(false);
     setStatus((stopped ? "Search stopped. " : "") + count + " file(s) found");
+    searched = true;
+    window.MF.notify("find"); /* a search that found nothing is worth knowing */
   }
 
   function collect(scores) {
@@ -436,6 +439,7 @@
     sortAsc = true;
     markSortHeaders();
     lastResults = [];
+    searched = false;
     rowsEl.textContent = "";
     resultsEl.hidden = true;
     setBusy(false);
@@ -501,16 +505,43 @@
     win.querySelector('[aria-label="Close"]').click();
   });
 
+  /* A string is a file name, the way the Start menu and F3 ask. An
+     object can also fill in "Containing text" and run the search, which
+     is how the Assistant hands over a phrase someone highlighted on the
+     page - that one wants the full-text index, not a filename glob. */
   function open(query) {
     win.classList.remove("closed");
     win.classList.remove("minimized");
     var b = window.MF.btnFor("find");
     if (b) b.hidden = false;
     window.MF.activate("find");
-    if (typeof query === "string" && query) namedEl.value = query;
+    var named = typeof query === "string" ? query : (query && query.named) || "";
+    var text = (query && typeof query === "object" && query.text) || "";
+    if (named) namedEl.value = named;
+    if (text) {
+      textEl.value = text;
+      searched = false;
+      search();
+      textEl.focus();
+      textEl.select();
+      return;
+    }
     namedEl.focus();
     namedEl.select();
   }
+
+  /* What Find will tell anyone who asks (main.js's app registry). */
+  window.MF.register("find", {
+    content: function () {
+      return {
+        named: namedEl.value.trim(),
+        text: textEl.value.trim(),
+        /* null until a search has actually been run: "no results yet"
+           and "no results" are different answers. */
+        results: searched ? lastResults.length : null,
+      };
+    },
+  });
 
   markSortHeaders();
 

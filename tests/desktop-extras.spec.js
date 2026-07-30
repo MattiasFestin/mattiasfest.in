@@ -398,6 +398,171 @@ test.describe("reading a post aloud", () => {
     for (let i = 0; i < 30; i++) await page.locator("#assistant-clip").click();
     await expect(page.getByRole("button", { name: "Read it to me" })).toHaveCount(0);
   });
+
+  /* The whole point of the offer is that it turns up while you are
+     still at the top of the post. Nothing is clicked here: an opted-in
+     reader opens a post and the assistant works out the rest. */
+  test("the offer arrives on its own when a post is opened", async ({ page }) => {
+    test.setTimeout(30_000 * SLOW);
+    await page.addInitScript(SPEECH_STUB);
+    await page.addInitScript(() =>
+      localStorage.setItem("mf-settings", JSON.stringify({ assistant: true }))
+    );
+    await page.goto("/blog/hello-world/");
+    await expect(page.locator("#assistant")).toBeVisible();
+
+    const offer = page.getByRole("button", { name: "Read it to me" });
+    await expect(offer).toBeVisible({ timeout: 15_000 * SLOW });
+    /* It knows how long the post is, and it still hasn't said a word
+       out loud. */
+    await expect(page.locator("#assistant-text")).toContainText(/(a minute|\d+ minutes) of it/);
+    expect(await page.evaluate(() => window.__spoken.length)).toBe(0);
+  });
+
+  /* ...and nowhere else: the index has no article to read. */
+  test("it doesn't volunteer the offer on a folder of posts", async ({ page }) => {
+    test.setTimeout(30_000 * SLOW);
+    await page.addInitScript(SPEECH_STUB);
+    await page.addInitScript(() =>
+      localStorage.setItem("mf-settings", JSON.stringify({ assistant: true }))
+    );
+    await page.goto("/blog/");
+    await expect(page.locator("#assistant")).toBeVisible();
+    await page.waitForTimeout(12_000 * SLOW);
+    await expect(page.getByRole("button", { name: "Read it to me" })).toHaveCount(0);
+  });
+});
+
+/* The assistant's tips are drawn from what the page and the desktop
+   actually contain - see the app registry in main.js. */
+test.describe("the assistant reads the room", () => {
+  test("every window answers the same questions", async ({ page }) => {
+    await page.goto("/blog/hello-world/");
+    const desk = await page.evaluate(() => ({
+      page: window.MF.app("main").content(),
+      pyedit: window.MF.app("pyedit").state(),
+      /* Answered from the markup, before editor.js has ever loaded. */
+      pyeditTitle: window.MF.app("pyedit").title(),
+      unknown: window.MF.app("solitaire"),
+    }));
+
+    expect(desk.page.kind).toBe("post");
+    expect(desk.page.title).toBe("Hello, World");
+    expect(desk.page.minutes).toBeGreaterThan(0);
+    expect(desk.page.code).toBeGreaterThan(0);
+    expect(desk.page.python).toContain("fizzbuzz");
+    expect(desk.pyedit).toBe("closed");
+    expect(desk.pyeditTitle).toContain("Python");
+    expect(desk.unknown).toBeNull();
+  });
+
+  test("the blog index is a folder of posts, not a post", async ({ page }) => {
+    await page.goto("/blog/");
+    const content = await page.evaluate(() => window.MF.app("main").content());
+    expect(content.kind).toBe("index");
+    expect(content.minutes).toBe(0);
+    expect(content.python).toBeNull();
+  });
+
+  test("opening an app is noticed by whoever subscribed", async ({ page }) => {
+    await page.goto("/");
+    const seen = await page.evaluate(async () => {
+      const events = [];
+      window.MF.on("app", (e) => events.push(e));
+      window.MF.openFind();
+      await new Promise((r) => setTimeout(r, 1000));
+      return { events: events, state: window.MF.app("find").state() };
+    });
+    expect(seen.state).toBe("open");
+    expect(seen.events.some((e) => e.id === "find" && e.state === "open")).toBe(true);
+  });
+
+  test("it never offers to open an app that is already open", async ({ page }) => {
+    await page.goto("/");
+    await page.keyboard.press("F3");
+    await expect(page.locator('[data-win="find"]')).toBeVisible();
+
+    await page.locator("#start-button").click();
+    await page.getByRole("menuitem", { name: "Help" }).click();
+    await expect(page.locator("#assistant")).toBeVisible();
+
+    /* A tip is never repeated until the pool is exhausted, so twenty
+       tips is every tip this page has, twice over. */
+    const said = [];
+    for (let i = 0; i < 40; i++) {
+      await page.locator("#assistant-clip").click();
+      const text = await page.locator("#assistant-text").textContent();
+      if (text) said.push(text);
+    }
+    expect(said.some((t) => t.includes("Control Panel"))).toBe(true);
+    expect(said.some((t) => t.includes("Start > Find"))).toBe(false);
+  });
+
+  /* Highlighting a phrase is the clearest signal anyone gives this
+     desktop that they are looking for something. */
+  test("a highlighted phrase becomes a full-text search", async ({ page }) => {
+    test.setTimeout(30_000 * SLOW);
+    await page.addInitScript(() =>
+      localStorage.setItem("mf-settings", JSON.stringify({ assistant: true }))
+    );
+    await page.goto("/blog/hello-world/");
+    await expect(page.locator("#assistant")).toBeVisible();
+
+    await page.evaluate(() => {
+      const el = document.querySelector("#content article h2");
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+
+    const findIt = page.getByRole("button", { name: "Find it" });
+    await expect(findIt).toBeVisible({ timeout: 15_000 * SLOW });
+    await expect(page.locator("#assistant-text")).toContainText("Why this stack");
+
+    await findIt.click();
+    await expect(page.locator('[data-win="find"]')).toBeVisible();
+    /* Into "Containing text", not the filename box: a sentence is not a
+       file name, and the full-text index is what can answer it. */
+    await expect(page.locator("#find-text")).toHaveValue("Why this stack?");
+    await expect(page.locator("#find-status")).toHaveText(/file\(s\) found/, {
+      timeout: 6_000 * SLOW,
+    });
+  });
+
+  /* Across windows: what Python.exe knows about its last run is a fact
+     the assistant can be unhelpful about. The runtime is stubbed, so
+     this stays offline and instant. */
+  test("it notices when a script in Python.exe blows up", async ({ page }) => {
+    test.setTimeout(30_000 * SLOW);
+    await page.route("**/pyworker.js", (route) =>
+      route.fulfill({
+        contentType: "text/javascript",
+        body: `self.addEventListener("message", function (e) {
+          if (e.data && e.data.kind === "run") {
+            self.postMessage({ kind: "error", message: "NameError: name 'fizz' is not defined" });
+          }
+        });
+        self.postMessage({ kind: "ready" });`,
+      })
+    );
+    await page.addInitScript(() =>
+      localStorage.setItem("mf-settings", JSON.stringify({ assistant: true }))
+    );
+    await page.goto("/");
+    await expect(page.locator("#assistant")).toBeVisible();
+
+    await page.locator("#start-button").click();
+    await page.getByRole("menuitem", { name: "Python.exe" }).click();
+    await page.locator("#pyedit-run").click();
+    await expect(page.locator("#pyedit-output")).toContainText("NameError");
+
+    await expect(page.locator("#assistant-text")).toContainText("didn't run", {
+      timeout: 15_000 * SLOW,
+    });
+    await expect(page.locator("#assistant-text")).toContainText("NameError");
+  });
 });
 
 test.describe("lazy loading", () => {

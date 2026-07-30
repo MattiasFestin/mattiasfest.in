@@ -82,13 +82,29 @@
       hide();
       state = "min";
       window.MF.activateTopmost();
+      window.MF.notify("winamp");
     });
     webamp.onClose(function () {
       hide();
       state = "closed";
       taskBtn.hidden = true;
       window.MF.activateTopmost();
+      window.MF.notify("winamp");
     });
+
+    /* Who's playing, for anyone on the desktop who asks. Webamp only
+       announces this to whoever subscribes, so keep the last one. */
+    if (typeof webamp.onTrackDidChange === "function") {
+      webamp.onTrackDidChange(function (t) {
+        var meta = (t && t.metaData) || null;
+        track = meta
+          ? meta.artist
+            ? meta.artist + " - " + meta.title
+            : meta.title || null
+          : null;
+        window.MF.notify("winamp");
+      });
+    }
 
     /* Webamp centers its window group within the node it renders
        into; .winamp-host covers exactly the desktop (viewport minus
@@ -125,6 +141,7 @@
       state = "open";
       taskBtn.hidden = false;
       window.MF.activate("winamp");
+      window.MF.notify("winamp");
       return;
     }
     taskBtn.hidden = false;
@@ -132,6 +149,7 @@
       function () {
         state = "open";
         window.MF.activate("winamp");
+        window.MF.notify("winamp");
       },
       function (err) {
         taskBtn.hidden = true;
@@ -158,6 +176,22 @@
     } else {
       window.MF.activate("winamp");
     }
+  });
+
+  /* What Winamp will tell anyone who asks (main.js's app registry).
+     Webamp draws its own window outside the desktop's window system, so
+     it has to answer for its own state as well - nothing else can. */
+  var track = null;
+  window.MF.register("winamp", {
+    state: function () {
+      return state === "min" ? "minimized" : state;
+    },
+    title: function () {
+      return track ? track + " - Winamp" : "Winamp";
+    },
+    content: function () {
+      return { track: track, playing: state !== "closed" && !!track };
+    },
   });
 
   window.MFWinamp = { open: open };

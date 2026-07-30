@@ -230,6 +230,7 @@
     fwdBtn.disabled = true;
 
     navigate(HOME);
+    window.MF.notify("browser"); /* we're online now, and that's news */
   }
 
   /* --- Navigation (always via the Wayback Machine, year 1998) --- */
@@ -466,7 +467,22 @@
     if (b) b.hidden = false;
     window.MF.activate("browser");
     if (!connected && !dialing) connect();
+    window.MF.notify("browser");
   }
+
+  /* What The Internet will tell anyone who asks (main.js's app
+     registry). The address bar is the truth about where you are; the
+     iframe's own document is somebody else's origin and none of our
+     business. */
+  window.MF.register("browser", {
+    content: function () {
+      return {
+        url: (addressEl.value || "").trim(),
+        dialing: dialing,
+        connected: connected,
+      };
+    },
+  });
 
   window.MFBrowser = { open: open };
 })();
