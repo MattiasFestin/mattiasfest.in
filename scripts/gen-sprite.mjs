@@ -214,7 +214,16 @@ for (const p of placements) {
   PNG.bitblt(p.png, sprite, 0, 0, p.png.width, p.png.height, p.x, p.y);
 }
 
-writeFileSync(SPRITE_OUT, PNG.sync.write(sprite));
+/* The sprite is mostly transparent runs and flat-color pixel art. pngjs's
+   default adaptive filters use a Huffman-only DEFLATE strategy, which makes
+   this image substantially larger. Filter 0 + full DEFLATE is lossless and
+   compresses this specific layout much more effectively. */
+const spriteBuffer = PNG.sync.write(sprite, {
+  deflateLevel: 9,
+  deflateStrategy: 0,
+  filterType: 0,
+});
+writeFileSync(SPRITE_OUT, spriteBuffer);
 writeFileSync(FAVICON_OUT, readFileSync(join(SRC_DIR, ICONS_LARGE.computer)));
 
 /* --- PWA app icons --- */
