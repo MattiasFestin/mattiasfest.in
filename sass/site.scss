@@ -828,6 +828,15 @@ html.start-maximized .main-window:not(.dialog-window) {
   }
 }
 
+/* The service worker's "a new version is installed" prompt arrives
+   unannounced, over whatever the user happens to have open - including
+   another alert dialog. Sharing z-index 41 with those meant DOM order
+   decided the winner, and this one sits earlier in the markup, so it
+   lost. It's a system notification: it outranks every other popup. */
+.system-dialog {
+  z-index: 60;
+}
+
 /* --- Keyboard focus visibility --- */
 /* 98.css removes the focus outline from title-bar buttons and range
    inputs entirely; restore a visible indicator for keyboard users
