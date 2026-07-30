@@ -46,7 +46,7 @@ And then the final layer. Deep breath:
 
 That is [Part 3](@/blog/0007-logistic-regression.md)'s softmax regression, character for character. `$W$` has one row per vocabulary entry, and **every word in the dictionary gets its own score line**, Part 3's "every class gets its own line" scaled from 4 email folders to 50,257 tokens. The loss is the one you know: cross-entropy, `$-\log$` of the probability assigned to the token that actually came next. The gradient at the head is the one you know: `$g = p - y$`, the entire learning signal, three characters wide, with `$y$` a one-hot vector 50,257 entries long. It flows backward through the stack exactly as Part 4's bookkeeping prescribed, all the way down into the embedding table's rows. **The head of GPT is Part 3 with a bigger K.** Nothing in the training objective of a frontier language model requires math this series hasn't already derived.
 
-Two production-flavored footnotes on that head, because K ≈ 50,000 is not free. First, size: `$W$` is `$K \times d$`, so with GPT-2's `$d = 768$` the head alone is ~38.6 million parameters, a third of the whole 124M-parameter model spent on the final vote. Second, the standard trick: notice that `$W$` (one vector per token, for scoring) and the embedding table `$E$` (one vector per token, for reading) have the same shape transposed, so GPT-2 **ties** them, using `$E^\top$` as the head. The map you read tokens off of and the map you score tokens against become the same map.
+One production-flavored note on that head, because K ≈ 50,000 is not free. `$W$` is `$K \times d$`, so at GPT-2's `$d = 768$` a dedicated head would be `$50{,}257 \times 768 \approx$` **38.6 million parameters**, more than five of the model's twelve transformer blocks put together. Nobody pays that twice. Notice that `$W$` (one vector per token, for scoring) and the embedding table `$E$` (one vector per token, for reading) have the same shape transposed, so GPT-2 **ties** them and uses `$E^\top$` as the head. That single matrix is then 38.6M of GPT-2's 124.4M parameters, close to a third of the model, working two jobs: it is the dictionary tokens are read through *and* the set of score lines they are ranked against. Untie them and the same model would carry 163M parameters instead of 124M. The map you read tokens off of and the map you score tokens against become the same map.
 
 ## The labels write themselves
 
@@ -110,6 +110,11 @@ for step in range(1, 401):
     g = p - I[Y]                                # the entire learning signal
     np.add.at(W, X, -20.0 * g / len(Y))         # Part 1's downhill walk
 
+for ctx in " tha":                              # the classifier's verdicts, one context at a time
+    z = W[stoi[ctx]]; p = np.exp(z - z.max()); p /= p.sum()
+    top = np.argsort(p)[::-1][:3]
+    print(f"after {ctx!r}: " + "   ".join(f"{vocab[i]!r} {p[i]:.2f}" for i in top))
+
 cur, out = stoi[" "], []                        # classify, sample, append, repeat
 for _ in range(200):
     z = W[cur] - W[cur].max()
@@ -119,7 +124,7 @@ for _ in range(200):
 print("\ngenerated:\n" + "".join(out))
 ```
 
-Watch two things. First, the loss: it starts at `$\log 19 \approx 2.94$` (perplexity 19, the full-vocabulary die, a model that knows nothing) and falls as gradient descent carves the score lines, the die shrinking to about three effective sides (this tiny corpus really is that predictable). Second, the generated text. It's garbled, of course, but it is *not* noise. Words are word-shaped. Vowels follow consonants. Spaces arrive at plausible intervals, and fragments like "the" and "sat" surface whole, because those transitions dominate the training bill. That structure is everything one character of context can buy, purchased entirely by softmax + cross-entropy + `$g = p - y$`. The distance from this to GPT is not a different kind of machine; it's a better `$h$` and a bigger K.
+Watch three things. First, the loss: it starts at `$\log 19 \approx 2.94$` (perplexity 19, the full-vocabulary die, a model that knows nothing) and falls as gradient descent carves the score lines, the die shrinking to about three effective sides (this tiny corpus really is that predictable). Second, the verdicts, which are this post's thesis made visible: after `'h'` the model is certain (`'e'` at 1.00), after `'a'` it is torn three ways, and after `'t'` it is almost exactly a coin, `'h'` at 0.56 against `' '` at 0.43. That last row is the perplexity-2 case from two sections ago, printed. Every row is one multiple-choice question with 19 options and an opinion about all of them. Third, the generated text. It's garbled, of course, but it is *not* noise. Words are word-shaped. Vowels follow consonants. Spaces arrive at plausible intervals, and fragments like "the" and "sat" surface whole, because those transitions dominate the training bill. That structure is everything one character of context can buy, purchased entirely by softmax + cross-entropy + `$g = p - y$`. The distance from this to GPT is not a different kind of machine; it's a better `$h$` and a bigger K.
 
 ## Temperature: the same knob, moved to decoding time
 
