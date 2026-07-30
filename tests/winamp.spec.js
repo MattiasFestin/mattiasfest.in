@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { launchApp } from "./helpers.js";
+import { launchApp, SLOW } from "./helpers.js";
 
 /* Winamp is triple-lazy: nothing on page load, winamp.js on first open,
    which in turn pulls the ~900 KB Webamp bundle. These tests pin both
@@ -10,7 +10,7 @@ const openWinamp = async (page) => {
   // #webamp itself is a zero-size wrapper; assert on the player window.
   // Webamp's main window renders once the skin has loaded. Boot fetches
   // and evaluates the ~900 KB bundle, so allow a bit more than default.
-  await expect(page.locator("#webamp #main-window")).toBeVisible({ timeout: 5_000 });
+  await expect(page.locator("#webamp #main-window")).toBeVisible({ timeout: 5_000 * SLOW });
 };
 
 test.describe("winamp", () => {

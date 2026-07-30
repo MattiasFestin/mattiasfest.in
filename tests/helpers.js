@@ -5,6 +5,10 @@ import { test } from "@playwright/test";
 
 export const isMobile = () => test.info().project.name.includes("mobile");
 
+/* Matches the CI multiplier in playwright.config.js for the few
+   explicit per-assertion timeouts in the specs. */
+export const SLOW = process.env.CI ? 3 : 1;
+
 /* On phones the main window starts maximized and covers the desktop
    icons; minimize it first, the way a real user reaches the desktop. */
 export const showDesktop = async (page) => {

@@ -6,21 +6,25 @@ import { defineConfig, devices } from "@playwright/test";
    you may already have running on 1111. */
 const PORT = 1112;
 
+/* The site is static and served locally; everything should be
+   near-instant, so local timeouts are short and regressions fail
+   fast. Shared CI runners are slower and noisier - give them 3x. */
+const CI = !!process.env.CI;
+const SLOW = CI ? 3 : 1;
+
 export default defineConfig({
   testDir: "tests",
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
-  /* The site is static and served locally; everything should be
-     near-instant. Keep timeouts short so regressions fail fast. */
-  timeout: 10_000,
-  expect: { timeout: 2_000 },
+  forbidOnly: CI,
+  retries: CI ? 2 : 0,
+  reporter: CI ? [["list"], ["html", { open: "never" }]] : "list",
+  timeout: 10_000 * SLOW,
+  expect: { timeout: 2_000 * SLOW },
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     viewport: { width: 1280, height: 800 },
-    actionTimeout: 2_000,
-    navigationTimeout: 5_000,
+    actionTimeout: 2_000 * SLOW,
+    navigationTimeout: 5_000 * SLOW,
     /* main.js already skips SW registration on 127.0.0.1, but block it
        outright so tests always exercise the network, never a cache. */
     serviceWorkers: "block",
@@ -39,7 +43,7 @@ export default defineConfig({
     command: "node scripts/dev.mjs",
     env: { PORT: String(PORT) },
     url: `http://127.0.0.1:${PORT}/`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
+    reuseExistingServer: !CI,
+    timeout: 60_000 * SLOW,
   },
 });

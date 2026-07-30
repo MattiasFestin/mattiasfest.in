@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { launchApp } from "./helpers.js";
+import { launchApp, SLOW } from "./helpers.js";
 
 /* "The Internet": lazy-loaded browser.js, dial-up theater, then the web
    of 1998 via the Wayback Machine in a sandboxed iframe. Tests disable
@@ -27,7 +27,7 @@ test.describe("the internet", () => {
     await openInternet(page);
     await expect(win(page)).toBeVisible();
     // Silent dial takes 1.5 s; wait for the theater to finish
-    await expect(page.locator("#dialup")).toBeHidden({ timeout: 4_000 });
+    await expect(page.locator("#dialup")).toBeHidden({ timeout: 4_000 * SLOW });
   };
 
   test("browser.js is lazy: fetched on first open, not on page load", async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe("the internet", () => {
     // The dialing dialog runs its little theater
     await expect(page.locator("#dialup")).toBeVisible();
     await expect(page.locator("#dialup-status")).toHaveText(/Dialing 555-1998/);
-    await expect(page.locator("#dialup")).toBeHidden({ timeout: 4_000 });
+    await expect(page.locator("#dialup")).toBeHidden({ timeout: 4_000 * SLOW });
 
     // Connected: home page is Slashdot via the Wayback Machine
     await expect(page.locator("#browser-address")).toHaveValue("slashdot.org");
