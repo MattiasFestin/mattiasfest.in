@@ -52,8 +52,12 @@ def run_block(index, code, env):
 def format_error(exc):
     """Format a traceback showing the snippet's frames, not this driver's."""
     tb = exc.__traceback__
-    while tb is not None and tb.tb_frame.f_code.co_filename == __file__:
+    while tb is not None and not tb.tb_frame.f_code.co_filename.startswith("<snippet"):
         tb = tb.tb_next
+    if tb is None:
+        # Nothing of the snippet ran: a syntax error, whose own message
+        # already carries the file, line and caret.
+        return "".join(traceback.format_exception_only(type(exc), exc))
     return "".join(traceback.format_exception(type(exc), exc, tb))
 
 
@@ -65,7 +69,7 @@ def main():
     sys.argv = ["snippet.py"]
 
     outputs = []
-    result = {"outputs": outputs}
+    result = {"outputs": outputs, "python": sys.executable}
 
     for index, code in enumerate(blocks):
         try:

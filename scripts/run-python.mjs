@@ -49,11 +49,13 @@ const CACHE_VERSION = 1;
 /* A runaway loop shouldn't be able to inline a megabyte into a post. */
 const MAX_OUTPUT = 20_000;
 
-/* A python code block immediately followed by an <!-- output --> marker.
-   Group 1 is the whole <pre>, group 2 the (highlighted) source. */
-const MARKED_RE =
-  /(<pre[^>]*>\s*<code[^>]*data-lang="(?:python|py)"[^>]*>([\s\S]*?)<\/code>\s*<\/pre>)\s*<!--\s*output\s*-->/g;
-const ORPHAN_RE = /<!--\s*output\s*-->/;
+/* A python code block, and the marker that opts it in. Kept as two
+   patterns on purpose: one regex spanning both would happily backtrack
+   across every unmarked block in between and swallow them whole. */
+const PY_BLOCK_RE =
+  /<pre[^>]*>\s*<code[^>]*data-lang="(?:python|py)"[^>]*>([\s\S]*?)<\/code>\s*<\/pre>/g;
+const MARKER_RE = /^\s*<!--\s*output\s*-->/;
+const ANY_MARKER_RE = /<!--\s*output\s*-->/;
 
 const entities = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", "#39": "'", "#x27": "'" };
 function decode(html) {
@@ -88,6 +90,22 @@ function* htmlFiles(dir) {
     if (entry.isDirectory()) yield* htmlFiles(path);
     else if (entry.name.endsWith(".html")) yield path;
   }
+}
+
+/** The python blocks a page opted in, with the span each one replaces. */
+function markedBlocks(html) {
+  const blocks = [];
+  for (const match of html.matchAll(PY_BLOCK_RE)) {
+    const marker = html.slice(match.index + match[0].length).match(MARKER_RE);
+    if (!marker) continue; /* no marker: not ours to run */
+    blocks.push({
+      start: match.index,
+      end: match.index + match[0].length + marker[0].length,
+      pre: match[0],
+      code: sourceOf(match[1]),
+    });
+  }
+  return blocks;
 }
 
 /* --- Cache: page fingerprint -> the outputs its blocks produced --- */
@@ -132,7 +150,18 @@ function runBlocks(blocks, file) {
   const result = JSON.parse(proc.stdout);
   if (result.error) {
     const { index, traceback } = result.error;
-    fail(`Python error in ${relative(ROOT, file)} (snippet ${index + 1}):\n${indent(traceback)}`);
+    /* By far the likeliest failure: right interpreter, wrong packages -
+       or the right packages in an interpreter that isn't on PATH today. */
+    const hint = /ModuleNotFoundError/.test(traceback)
+      ? `\n  Interpreter: ${result.python ?? PYTHON}\n` +
+        "  Install what the snippets import with `pip install -r requirements.txt`,\n" +
+        "  or point PYTHON at the interpreter that already has them."
+      : "";
+    fail(
+      `Python error in ${relative(ROOT, file)} (snippet ${index + 1}):\n` +
+        indent(traceback) +
+        hint
+    );
     return null;
   }
   return result.outputs;
@@ -145,22 +174,27 @@ function fail(message) {
   process.exitCode = 1;
 }
 
+const stray = (file) =>
+  fail(
+    `Stray <!-- output --> in ${relative(ROOT, file)}: the marker must directly\n` +
+      "  follow a ```python code block."
+  );
+
 let pages = 0;
 let snippets = 0;
 let cached = 0;
 
 for (const file of htmlFiles(PUBLIC_DIR)) {
   const original = readFileSync(file, "utf8");
-  if (!ORPHAN_RE.test(original)) continue;
+  if (!ANY_MARKER_RE.test(original)) continue;
 
-  const matches = [...original.matchAll(MARKED_RE)];
-  if (matches.length === 0) {
-    fail(`Stray <!-- output --> in ${relative(ROOT, file)}: the marker must directly\n` +
-      `  follow a \`\`\`python code block.`);
+  const marked = markedBlocks(original);
+  if (marked.length === 0) {
+    stray(file);
     continue;
   }
 
-  const blocks = matches.map((m) => sourceOf(m[2]));
+  const blocks = marked.map((block) => block.code);
   const key = fingerprint(blocks);
   let outputs = cache[key];
   if (outputs) cached += outputs.length;
@@ -169,27 +203,29 @@ for (const file of htmlFiles(PUBLIC_DIR)) {
 
   fresh[key] = outputs;
 
-  let index = 0;
-  const out = original.replace(MARKED_RE, (_match, pre) => {
-    let text = outputs[index++] ?? "";
+  let out = "";
+  let cursor = 0;
+  marked.forEach((block, index) => {
+    let text = outputs[index] ?? "";
     if (text.length > MAX_OUTPUT) {
       text = `${text.slice(0, MAX_OUTPUT)}\n… output truncated …`;
     }
     text = text.replace(/\s+$/, "");
+    out += original.slice(cursor, block.start);
     /* Nothing printed: the block only existed to set up the session. */
-    if (!text) return pre;
-    return `<div class="code-run">${pre}${outputPane(text)}</div>`;
+    out += text ? `<div class="code-run">${block.pre}${outputPane(text)}</div>` : block.pre;
+    cursor = block.end;
   });
+  out += original.slice(cursor);
 
-  if (ORPHAN_RE.test(out)) {
-    fail(`Stray <!-- output --> in ${relative(ROOT, file)}: the marker must directly\n` +
-      `  follow a \`\`\`python code block.`);
+  if (ANY_MARKER_RE.test(out)) {
+    stray(file);
     continue;
   }
 
   writeFileSync(file, out);
   pages++;
-  snippets += matches.length;
+  snippets += marked.length;
 }
 
 mkdirSync(dirname(CACHE_FILE), { recursive: true });
