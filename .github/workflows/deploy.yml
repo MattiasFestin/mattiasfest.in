@@ -123,8 +123,42 @@ jobs:
         continue-on-error: true
         run: npm run test:external
 
+      # Final video rendering and VP9 transcoding dominate cold builds. Cache
+      # every delivery pair independently, so an unrelated site change restores
+      # all three and a missing pair is the only one that gets rendered.
+      #
+      # All scenes currently share one source module, so a scene/helper change
+      # deliberately invalidates every video; splitting that module can make
+      # invalidation finer-grained later. Bump v1 for a render/encoder change.
+      - name: Cache nearest-neighbor video
+        id: manim-nearest-neighbor
+        uses: actions/cache@v4
+        with:
+          path: |
+            static/videos/0001-nearest-neighbor-is-a-decision.mp4
+            static/videos/0001-nearest-neighbor-is-a-decision.webm
+          key: manim-video-v1-0001-nearest-neighbor-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/mfblog/**/*.py') }}
+
+      - name: Cache unit-balls video
+        id: manim-unit-balls
+        uses: actions/cache@v4
+        with:
+          path: |
+            static/videos/0001-unit-balls-and-sparsity.mp4
+            static/videos/0001-unit-balls-and-sparsity.webm
+          key: manim-video-v1-0001-unit-balls-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/mfblog/**/*.py') }}
+
+      - name: Cache high-dimensions video
+        id: manim-high-dimensions
+        uses: actions/cache@v4
+        with:
+          path: |
+            static/videos/0001-high-dimensions-are-weird.mp4
+            static/videos/0001-high-dimensions-are-weird.webm
+          key: manim-video-v1-0001-high-dimensions-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/mfblog/**/*.py') }}
+
       - name: Build site (prune scheduled posts, Zola + math rendering)
-        run: npm run build:ci
+        run: npm run build:ci:cached
 
       - uses: actions/configure-pages@v5
 

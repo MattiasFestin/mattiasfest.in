@@ -7,8 +7,9 @@
 #   .venv-manim/bin/pip install manim
 #
 # Usage from the repository root:
-#   manim/render.sh 0001          # fast, 854×480 review render
-#   manim/render.sh 0001 --final  # 1920×1080 delivery render
+#   manim/render.sh 0001                       # fast, 854×480 review render
+#   manim/render.sh 0001 --final               # 1920×1080 delivery render
+#   manim/render.sh 0001 --final --if-missing  # render only absent delivery pairs
 #
 # The source MP4s are copied to static/videos/ alongside WebM (VP9), so
 # browsers select the smaller format first and Safari still has a native
@@ -18,14 +19,36 @@
 set -eu
 
 post=${1:-}
-quality=${2:-}
+shift || true
+quality=""
+skip_existing=false
+
 if [ "$post" != "0001" ]; then
-  echo "Usage: manim/render.sh 0001 [--final]" >&2
+  echo "Usage: manim/render.sh 0001 [--final] [--if-missing] [scene ...]" >&2
   exit 2
 fi
-if [ "$quality" != "" ] && [ "$quality" != "--final" ]; then
-  echo "Unknown option: $quality" >&2
-  exit 2
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --final)
+      quality="--final"
+      ;;
+    --if-missing)
+      skip_existing=true
+      ;;
+    NearestNeighborIsADecision|UnitBallsAndSparsity|HighDimensionsAreWeird)
+      break
+      ;;
+    *)
+      echo "Unknown option or scene: $1" >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
+
+if [ "$#" -eq 0 ]; then
+  set -- NearestNeighborIsADecision UnitBallsAndSparsity HighDimensionsAreWeird
 fi
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
@@ -49,15 +72,25 @@ else
   folder="720p30"
 fi
 
-for scene in NearestNeighborIsADecision UnitBallsAndSparsity HighDimensionsAreWeird; do
-  "$python" $render_args --disable_caching --media_dir "$media" "$source" "$scene"
-  input="$media/videos/p0001_linear_vector_spaces/$folder/$scene.mp4"
+for scene do
   case "$scene" in
     NearestNeighborIsADecision) stem="nearest-neighbor-is-a-decision" ;;
     UnitBallsAndSparsity) stem="unit-balls-and-sparsity" ;;
     HighDimensionsAreWeird) stem="high-dimensions-are-weird" ;;
+    *)
+      echo "Unknown scene: $scene" >&2
+      exit 2
+      ;;
   esac
+
   destination="$output/0001-$stem"
+  if [ "$skip_existing" = true ] && [ -s "$destination.mp4" ] && [ -s "$destination.webm" ]; then
+    echo "Using cached delivery video: $destination"
+    continue
+  fi
+
+  "$python" $render_args --disable_caching --media_dir "$media" "$source" "$scene"
+  input="$media/videos/p0001_linear_vector_spaces/$folder/$scene.mp4"
   cp "$input" "$destination.mp4"
   ffmpeg -y -i "$input" \
     -c:v libvpx-vp9 -crf 32 -b:v 0 -row-mt 1 -tile-columns 2 -an \
