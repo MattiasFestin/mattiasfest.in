@@ -35,11 +35,17 @@ test.describe("winamp", () => {
     // ...and at most a metadata preload of the *current* track: the
     // browser's media element preloads track 1 when Webamp renders, but
     // the other 11 must not be touched until someone actually plays.
-    const audio = requests.filter((u) => u.includes("archive.org"));
-    const distinct = [...new Set(audio)];
-    expect(distinct.length).toBeLessThanOrEqual(1);
-    if (distinct.length) {
-      expect(distinct[0]).toContain("Monstrous_Turtles"); // track 1 only
+    // Count distinct *tracks*, not URLs: archive.org redirects
+    // /download/... to a node host (ia*.us.archive.org), so one track
+    // legitimately shows up as two request URLs.
+    const tracks = new Set(
+      requests
+        .filter((u) => /\.mp3(\?|$)/i.test(u))
+        .map((u) => decodeURIComponent(u.split("?")[0].split("/").pop()))
+    );
+    expect(tracks.size).toBeLessThanOrEqual(1);
+    if (tracks.size) {
+      expect([...tracks][0]).toContain("Monstrous_Turtles"); // track 1 only
     }
 
     // Taskbar button appears and is active
