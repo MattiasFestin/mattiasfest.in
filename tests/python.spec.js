@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { SLOW } from "./helpers.js";
 
 /* Python.exe: lazy-loaded editor (editor.js) + Pyodide runtime in a
    worker (pyworker.js → jsDelivr CDN). UI tests stub the worker so they
@@ -264,20 +265,27 @@ test("runs real Python via Pyodide", async ({ page }) => {
     test.info().project.name !== "chromium",
     "the runtime is engine-independent; once is enough"
   );
-  test.setTimeout(120_000); // Pyodide is a genuine ~10 MB CDN download
+  /* The only test that leaves the machine: it downloads a genuine
+     ~10 MB runtime from a CDN and boots it while the other browser
+     projects run in parallel, so it gets its own generous budget
+     (scaled again on slower, busier CI runners). */
+  test.setTimeout(180_000 * SLOW);
+  const boot = 120_000 * SLOW;
+  const run = 60_000 * SLOW;
+
   await page.goto("/");
   await page.locator("#start-button").click();
   await page.getByRole("menuitem", { name: "Python.exe" }).click();
-  await expect(page.locator("#pyedit-status")).toHaveText("Ready", { timeout: 90_000 });
+  await expect(page.locator("#pyedit-status")).toHaveText("Ready", { timeout: boot });
 
   // Run the welcome program with F5
   await code(page).press("F5");
-  await expect(page.locator("#pyedit-output")).toContainText("Hello, World!", { timeout: 30_000 });
-  await expect(page.locator("#pyedit-status")).toHaveText(/Done in \d+ ms/);
+  await expect(page.locator("#pyedit-output")).toContainText("Hello, World!", { timeout: run });
+  await expect(page.locator("#pyedit-status")).toHaveText(/Done in \d+ ms/, { timeout: run });
 
   // Errors surface as tracebacks, not silence
   await code(page).fill("boom(");
   await page.locator("#pyedit-run").click();
-  await expect(page.locator("#pyedit-output")).toContainText("SyntaxError", { timeout: 30_000 });
-  await expect(page.locator("#pyedit-status")).toHaveText("Error — see output");
+  await expect(page.locator("#pyedit-output")).toContainText("SyntaxError", { timeout: run });
+  await expect(page.locator("#pyedit-status")).toHaveText("Error — see output", { timeout: run });
 });
