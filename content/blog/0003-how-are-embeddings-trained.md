@@ -67,10 +67,7 @@ print(f"InfoNCE       = {info_nce:.6f}")
 print(f"cross-entropy = {cross_entropy:.6f}")
 ```
 
-```
-InfoNCE       = 5.903709
-cross-entropy = 5.903709
-```
+<!-- output -->
 
 An eight-way multiple-choice exam (one positive, seven decoys), graded exactly like a classifier.
 
@@ -146,10 +143,7 @@ print("max similarity change:", np.abs(cos_matrix(X) - cos_matrix(XQ)).max())
 print("max coordinate change:", np.abs(X - XQ).max())
 ```
 
-```
-max similarity change: 2.220446049250313e-16
-max coordinate change: 5.5408964772579825
-```
+<!-- output -->
 
 Every pairwise similarity preserved to machine precision; every individual coordinate scrambled beyond recognition. Both maps are, to the training objective, *the same model*.
 
@@ -167,9 +161,7 @@ Qy1, Qy2 = a * y1 + b * y2, c * y1 + d * y2
 prove(Implies(orthogonal, Qx1 * Qy1 + Qx2 * Qy2 == x1 * y1 + x2 * y2))
 ```
 
-```
-proved
-```
+<!-- output -->
 
 For every orthogonal `$Q$` and every pair of vectors, with no exceptions to find. The training objective is provably blind to orientation.
 

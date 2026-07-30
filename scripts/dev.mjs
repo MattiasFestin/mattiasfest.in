@@ -6,9 +6,10 @@
  * can never touch its output. Instead this script:
  *
  *   1. runs `zola build` (with drafts) into public/
- *   2. runs scripts/render-math.mjs over it
- *   3. serves public/ on http://127.0.0.1:1111
- *   4. watches content/templates/sass/static/syntaxes/zola.toml
+ *   2. runs scripts/run-python.mjs (executes marked snippets)
+ *   3. runs scripts/render-math.mjs over it
+ *   4. serves public/ on http://127.0.0.1:1111
+ *   5. watches content/templates/sass/static/syntaxes/zola.toml
  *      and rebuilds on change (refresh the browser to see it)
  */
 
@@ -33,6 +34,14 @@ function build() {
   });
   if (zola.status !== 0) {
     console.error("✗ zola build failed");
+    return;
+  }
+  const python = spawnSync(process.execPath, [join(ROOT, "scripts/run-python.mjs")], {
+    cwd: ROOT,
+    stdio: ["ignore", "ignore", "inherit"],
+  });
+  if (python.status !== 0) {
+    console.error("✗ running Python snippets failed (see above)");
     return;
   }
   const math = spawnSync(process.execPath, [join(ROOT, "scripts/render-math.mjs")], {

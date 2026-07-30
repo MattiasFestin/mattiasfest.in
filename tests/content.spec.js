@@ -35,6 +35,18 @@ test("code blocks are syntax highlighted at build time", async ({ page }) => {
   expect(await block.locator("span").count()).toBeGreaterThan(0);
 });
 
+test("marked Python snippets are executed at build time, output inlined", async ({ page }) => {
+  await page.goto("/blog/0001-linear-vector-spaces/");
+  const run = page.locator("#content .code-run").first();
+  await expect(run.locator('pre > code[data-lang="python"]')).toBeVisible();
+  // The Z3 snippet above it printed this; nothing ran in the browser
+  await expect(run.locator(".code-output pre")).toHaveText(/^sat\n\[/);
+  // Later blocks share one session, so all four panes have content
+  const panes = page.locator("#content .code-output pre");
+  expect(await panes.count()).toBe(4);
+  for (const text of await panes.allTextContents()) expect(text.trim()).not.toBe("");
+});
+
 test("posts have a giscus comments section", async ({ page }) => {
   await page.goto("/blog/hello-world/");
   const comments = page.locator("fieldset.comments");

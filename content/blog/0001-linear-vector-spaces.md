@@ -132,10 +132,7 @@ print(s.check())
 print(s.model())
 ```
 
-```
-sat
-[vy = 0.8660254037?, vx = 1/2]
-```
+<!-- output -->
 
 `sat` means "such a vector exists," and the model is Z3's exact answer: `$v = (1/2, \sqrt{3}/2)$`, the 60-degree point (the `?` marks a decimal rendering of an exact algebraic number). Check it: `$d(u,v) + d(v,w) = 0.5 + 0.134 = 0.634 < 1 = d(u,w)$`. Going through `$v$` is a shortcut, which a true metric never allows.
 
@@ -229,10 +226,7 @@ for name, norm in [("L2", np.linalg.norm), ("L1", lambda x: np.abs(x).sum())]:
     print(f"{name}: lhs = {lhs:.1f}, rhs = {rhs:.1f}, holds = {bool(np.isclose(lhs, rhs))}")
 ```
 
-```
-L2: lhs = 4.0, rhs = 4.0, holds = True
-L1: lhs = 8.0, rhs = 4.0, holds = False
-```
+<!-- output -->
 
 Notice the asymmetry in what these two lines establish. The L1 line is a *disproof*: one failing example settles it forever. The L2 line is merely one passing example, and no number of examples proves a law that quantifies over all vectors. For that, hand the whole claim to Z3 and let it reason about every pair of vectors in `$\mathbb{R}^2$` at once:
 
@@ -244,9 +238,7 @@ sq = lambda a, b: a * a + b * b   # squared L2 norm
 prove(sq(u1 + w1, u2 + w2) + sq(u1 - w1, u2 - w2) == 2 * sq(u1, u2) + 2 * sq(w1, w2))
 ```
 
-```
-proved
-```
+<!-- output -->
 
 One counterexample kills L1's claim to angles; one `proved` settles L2's, for all vectors, not just the ones we tried.
 
@@ -285,11 +277,7 @@ for name, norm in norms.items():
     print(f"{name}:  {pretty}  ->  nearest: {nearest}")
 ```
 
-```
-L1:  a=3.00, b=4.00, c=5.40  ->  nearest: a
-L2:  a=3.00, b=2.83, c=3.12  ->  nearest: b
-Linf:  a=3.00, b=2.00, c=1.80  ->  nearest: c
-```
+<!-- output -->
 
 "Which point is nearest?" is not a question about the points. It's a question about **what you decide distance should mean**. Every k-NN classifier, every clustering run, every retrieval system has this decision baked in, made deliberately or by default.
 

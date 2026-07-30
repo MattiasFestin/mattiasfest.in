@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/optimize-png.mjs && zola build && node scripts/render-math.mjs && node scripts/optimize.mjs && node scripts/fingerprint.mjs",
+    "build": "node scripts/optimize-png.mjs && zola build && node scripts/run-python.mjs && node scripts/render-math.mjs && node scripts/optimize.mjs && node scripts/fingerprint.mjs",
     "build:ci": "node scripts/prune-scheduled.mjs && npm run build",
     "dev": "node scripts/dev.mjs",
     "test": "playwright test",

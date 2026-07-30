@@ -117,11 +117,7 @@ for i in range(100):
 print(f"stability@10:       {np.mean(overlaps):.3f}")
 ```
 
-```
-anchor cosine:      -0.077
-second-order corr:  0.976
-stability@10:       0.731
-```
+<!-- output -->
 
 Anchor cosine reads near zero, as if the models were unrelated. The rotation-proof metrics tell the real story: the two models agree almost entirely about which things are similar, and about 7 of every top-10 neighbors survive the upgrade. Trust the wrong metric and you'd either panic over nothing or, in the mirror-image case, ship a break that anchor cosine happened to miss.
 
@@ -182,11 +178,7 @@ for i in range(100):
 print(f"stability@10 via bridge:  {np.mean(bridged):.3f}")
 ```
 
-```
-stability@10, no bridge:  0.003
-cosine after bridge:      0.987
-stability@10 via bridge:  0.813
-```
+<!-- output -->
 
 Without the bridge, cross-space search returns essentially random results (0.003 is what "mixing maps" looks like in numbers). One SVD later, old vectors land within a whisker of their new-space positions and recover most of the retrieval behavior. The gap that remains, from 0.813 to a perfect 1.0, is the genuine disagreement the noise term injected; that's the part no rotation can undo.
 

@@ -156,6 +156,14 @@ a {
   z-index: 1;
 }
 
+/* Opening a page swaps one window's contents instead of reloading the
+   desktop (see main.js), so there's no browser spinner to tell anyone
+   something is happening. The hourglass is the whole answer. */
+body.navigating,
+body.navigating * {
+  @include cursor-win98(wait, 5, 6, wait);
+}
+
 .app-window {
   position: relative;
   z-index: 1;
@@ -895,6 +903,47 @@ input[type="range"]:focus-visible {
     min-height: 0;
     padding: 3px 10px;
     font-size: 11px;
+  }
+}
+
+/* --- Pre-computed output under a Python code block ---
+   scripts/run-python.mjs runs snippets marked with <!-- output --> at
+   build time and wraps code + result in .code-run, so the pair sits
+   together the way the editor's two panes do. */
+.code-run {
+  margin: 12px 0;
+
+  /* The pair owns the spacing; the parts hug each other. */
+  > pre,
+  > .tryme-wrap {
+    margin: 0;
+  }
+}
+
+.code-output {
+  margin-top: 6px;
+
+  .code-output-label {
+    font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+    font-size: 11px;
+    -webkit-font-smoothing: none;
+    color: #595959;
+    padding-bottom: 2px;
+  }
+
+  /* MS-DOS output pane, same palette as Python.exe's */
+  pre {
+    margin: 0;
+    padding: 8px 10px;
+    background: #000;
+    color: #c0c0c0;
+    white-space: pre-wrap;
+    word-break: break-word;
+
+    code {
+      color: inherit;
+      line-height: 1.4;
+    }
   }
 }
 

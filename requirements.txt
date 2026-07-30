@@ -1,0 +1,12 @@
+# Python packages the blog's snippets import.
+#
+# scripts/run-python.mjs executes every code block marked with
+# <!-- output --> at build time, so these need to be installed wherever
+# the site is built:
+#
+#     pip install -r requirements.txt
+#
+# Pinned on purpose: the printed output ends up in the published post, so
+# a formatting change in a dependency is a content change.
+numpy==2.5.0
+z3-solver==4.15.4.0

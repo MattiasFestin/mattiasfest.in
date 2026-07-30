@@ -106,9 +106,7 @@ by_euclid = np.argsort(np.linalg.norm(docs - q, axis=1))  # smallest distance fi
 print("identical rankings:", np.array_equal(by_cosine, by_euclid))
 ```
 
-```
-identical rankings: True
-```
+<!-- output -->
 
 All one thousand positions, not just the top hit. And if a thousand random documents feel anecdotal, the claim is small enough to *prove*. The Z3 theorem prover (`pip install z3-solver`) can verify it for every possible query and pair of documents on the unit sphere in `$\mathbb{R}^3$`: whenever `$x$` beats `$y$` on cosine, `$x$` beats `$y$` on Euclidean distance too.
 
@@ -125,9 +123,7 @@ prove(Implies(And(unit(q1, q2, q3), unit(x1, x2, x3), unit(y1, y2, y3),
               sqd(q1, q2, q3, x1, x2, x3) < sqd(q1, q2, q3, y1, y2, y3)))
 ```
 
-```
-proved
-```
+<!-- output -->
 
 No counterexample exists. On normalized vectors, the two rankings cannot disagree, ever.
 
