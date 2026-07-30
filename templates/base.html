@@ -14,12 +14,24 @@
   <link rel="icon" href="{{ get_url(path='favicon.png') }}" type="image/png">
   <link rel="manifest" href="{{ get_url(path='site.webmanifest') }}">
   <script>
-    /* Pre-paint settings: apply saved reading width and the "start
-       maximized" state before first render to avoid layout shifts.
-       main.js takes over once it loads (deferred). */
+    /* Pre-paint settings: apply saved reading width, the "start
+       maximized" state, and the Faithful '98 look before first render
+       to avoid layout shifts. main.js takes over once it loads
+       (deferred).
+
+       Faithful '98 (the original 16x14 title-bar buttons) is the
+       default. Screen readers can't be detected (browsers hide them on
+       purpose), so we use the closest proxies for a visually impaired
+       user: an enlarged default font size (OS/browser text scaling),
+       Windows High Contrast (forced-colors), or a contrast preference.
+       Any of those switches to the 2x accessible buttons instead. An
+       explicit Control Panel choice always wins over the detection. */
     (function () {
+      var s = {};
       try {
-        var s = JSON.parse(localStorage.getItem("mf-settings")) || {};
+        s = JSON.parse(localStorage.getItem("mf-settings")) || {};
+      } catch (e) { /* private browsing etc. */ }
+      try {
         if (s.readingWidth) {
           document.documentElement.style.setProperty("--reading-width", s.readingWidth + "ch");
         }
@@ -27,8 +39,25 @@
           ? s.startMaximized
           : matchMedia("(max-width: 600px)").matches;
         if (max) document.documentElement.classList.add("start-maximized");
-        if (s.faithful98) document.documentElement.classList.add("faithful-98");
-      } catch (e) { /* private browsing etc. */ }
+
+        /* font-size: medium computes to the user's browser/OS default
+           text size; anything above the stock 16px means scaled text. */
+        var bigFont = false;
+        try {
+          var probe = document.createElement("div");
+          probe.style.cssText = "position:absolute;visibility:hidden;font-size:medium";
+          document.documentElement.appendChild(probe);
+          bigFont = parseFloat(getComputedStyle(probe).fontSize) > 16;
+          probe.parentNode.removeChild(probe);
+        } catch (e2) { /* leave detection at false */ }
+        window.MFFaithfulDefault = !(
+          bigFont ||
+          matchMedia("(forced-colors: active)").matches ||
+          matchMedia("(prefers-contrast: more)").matches
+        );
+        var faithful = typeof s.faithful98 === "boolean" ? s.faithful98 : window.MFFaithfulDefault;
+        if (faithful) document.documentElement.classList.add("faithful-98");
+      } catch (e) { /* no matchMedia? accessible buttons it is */ }
     })();
   </script>
   <!-- Source stylesheets, so plain `zola serve` works. The production

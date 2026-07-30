@@ -92,6 +92,16 @@
     pyRefresh();
   }
 
+  /* A freshly loaded buffer reads from the top: caret at 1:1 and view
+     scrolled to the top-left corner (assigning .value parks the caret
+     at the end in most browsers). */
+  function pyCaretHome() {
+    pyCode.setSelectionRange(0, 0);
+    pyCode.scrollTop = 0;
+    pyCode.scrollLeft = 0;
+    pySyncScroll();
+  }
+
   pyCode.addEventListener("input", pyRefresh);
   pyCode.addEventListener("scroll", pySyncScroll);
 
@@ -245,6 +255,7 @@
     pyStatus("Opened C:\\" + name);
     pyOpenDlg.hidden = true;
     pyCode.focus();
+    pyCaretHome();
   }
 
   document.getElementById("pyedit-open-ok").addEventListener("click", pyOpenDo);
@@ -345,14 +356,17 @@
   }
 
   function openPyEditor(code) {
+    var fresh = false;
     if (code != null) {
       /* Opened from a "Try me" button: load that snippet as a new file */
       setPyCode(code);
       pyCurrentFile = null;
       pyOut.textContent = "";
+      fresh = true;
     } else if (!pyCode.value) {
       /* Opened from the Start menu with an empty buffer */
       setPyCode(PY_DEFAULT);
+      fresh = true;
     }
     setPyTitle();
     pyWin.classList.remove("closed");
@@ -362,6 +376,7 @@
     window.MF.activate("pyedit");
     loadRuntimeOnce().catch(function () {});
     pyCode.focus();
+    if (fresh) pyCaretHome();
   }
 
   var pyRunning = false;

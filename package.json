@@ -5,9 +5,11 @@
   "scripts": {
     "build": "zola build && node scripts/render-math.mjs && node scripts/optimize.mjs && node scripts/fingerprint.mjs",
     "build:ci": "node scripts/prune-scheduled.mjs && npm run build",
-    "dev": "node scripts/dev.mjs"
+    "dev": "node scripts/dev.mjs",
+    "test": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "esbuild": "^0.28.1",
     "pngjs": "^7.0.0",
     "temml": "^0.13.3",

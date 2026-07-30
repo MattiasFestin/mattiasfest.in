@@ -418,8 +418,17 @@
   var cpModem = document.getElementById("cp-modem");
   var cpFaithful = document.getElementById("cp-faithful");
 
+  /* Faithful '98 defaults to on; the pre-paint head script turns the
+     default off when it detects a likely visually impaired user (see
+     base.html). A saved boolean is an explicit user choice and wins. */
+  function faithfulDefault() {
+    return window.MFFaithfulDefault !== false;
+  }
+  function faithfulOn() {
+    return typeof settings.faithful98 === "boolean" ? settings.faithful98 : faithfulDefault();
+  }
   function applyFaithful() {
-    document.documentElement.classList.toggle("faithful-98", settings.faithful98 === true);
+    document.documentElement.classList.toggle("faithful-98", faithfulOn());
   }
 
   function cpSyncControls() {
@@ -427,7 +436,7 @@
     cpWidthValue.textContent = cpWidth.value;
     cpMaximized.checked = wantsStartMaximized();
     cpModem.checked = settings.modemSound !== false;
-    cpFaithful.checked = settings.faithful98 === true;
+    cpFaithful.checked = faithfulOn();
   }
 
   function cpOpen() {
@@ -467,7 +476,7 @@
     cpWidthValue.textContent = "80";
     cpMaximized.checked = false;
     cpModem.checked = true;
-    cpFaithful.checked = false;
+    cpFaithful.checked = faithfulDefault();
     document.documentElement.style.setProperty("--reading-width", "80ch");
   });
 

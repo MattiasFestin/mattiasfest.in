@@ -235,13 +235,15 @@ a {
   white-space: nowrap;
 }
 
-/* Accessible by default: the authentic 16x14 title-bar buttons sit
-   below the 24px touch-target guideline (WCAG 2.5.8; Lighthouse
-   target-size flags them on desktop and mobile alike), so they render
-   at 2x - the same pixel art with chunkier pixels. The glyphs are
-   pixel-grid SVGs, so background-size scales them crisply;
-   image-rendering covers any raster. Control Panel > Accessibility >
-   "Faithful '98 experience" opts back into the originals. */
+/* Two button sizes. Accessible: the same pixel art at 2x - chunkier
+   pixels, and comfortably above the 24px touch-target guideline
+   (WCAG 2.5.8). The glyphs are pixel-grid SVGs, so background-size
+   scales them crisply; image-rendering covers any raster. This is the
+   *fallback*: the inline head script applies .faithful-98 below by
+   default, and only leaves these in place when it detects signs of a
+   visually impaired user (scaled text, forced colors, contrast
+   preference) or when the user unchecks Control Panel >
+   Accessibility > "Faithful '98 experience". */
 .title-bar-controls button[aria-label] {
   min-width: 28px;
   min-height: 24px;
@@ -263,26 +265,24 @@ a {
   }
 }
 
-/* The faithful experience restores 98.css's original metrics, but only
-   for precise pointers: fingers keep comfortable targets regardless. */
+/* The faithful experience: 98.css's original 16x14 metrics, on every
+   device - a phone deserves the real thing too. */
 html.faithful-98 {
-  @media (pointer: fine) {
-    .title-bar-controls button[aria-label] {
-      min-width: 16px;
-      min-height: 14px;
-      background-size: auto;
-      image-rendering: auto;
-    }
-    .title-bar-controls button[aria-label="Minimize"] {
-      background-position: bottom 3px left 4px;
-    }
-    .title-bar-controls button[aria-label="Maximize"],
-    .title-bar-controls button[aria-label="Restore"] {
-      background-position: top 2px left 3px;
-    }
-    .title-bar-controls button[aria-label="Close"] {
-      background-position: top 3px left 4px;
-    }
+  .title-bar-controls button[aria-label] {
+    min-width: 16px;
+    min-height: 14px;
+    background-size: auto;
+    image-rendering: auto;
+  }
+  .title-bar-controls button[aria-label="Minimize"] {
+    background-position: bottom 3px left 4px;
+  }
+  .title-bar-controls button[aria-label="Maximize"],
+  .title-bar-controls button[aria-label="Restore"] {
+    background-position: top 2px left 3px;
+  }
+  .title-bar-controls button[aria-label="Close"] {
+    background-position: top 3px left 4px;
   }
 }
 

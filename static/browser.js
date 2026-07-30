@@ -395,10 +395,16 @@
     var vis = typeof show === "boolean" ? show : favMenu.hidden;
     if (vis) {
       renderFavs();
-      /* drop the menu under the Favorites button */
-      favMenu.style.left = Math.max(2, favBtn.offsetLeft) + "px";
+      /* drop the menu under the Favorites button - but clamp it to the
+         window, or on narrow (phone) screens the right edge (and its
+         remove buttons) would land off-screen */
+      favMenu.hidden = false;
+      var host = favMenu.offsetParent || favMenu.parentElement;
+      var max = host ? host.clientWidth - favMenu.offsetWidth - 2 : favBtn.offsetLeft;
+      favMenu.style.left = Math.max(2, Math.min(favBtn.offsetLeft, max)) + "px";
+    } else {
+      favMenu.hidden = true;
     }
-    favMenu.hidden = !vis;
     favBtn.setAttribute("aria-expanded", String(vis));
   }
 
