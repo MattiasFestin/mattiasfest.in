@@ -124,6 +124,8 @@ for _ in range(200):
 print("\ngenerated:\n" + "".join(out))
 ```
 
+<!-- output -->
+
 Watch three things. First, the loss: it starts at `$\log 19 \approx 2.94$` (perplexity 19, the full-vocabulary die, a model that knows nothing) and falls as gradient descent carves the score lines, the die shrinking to about three effective sides (this tiny corpus really is that predictable). Second, the verdicts, which are this post's thesis made visible: after `'h'` the model is certain (`'e'` at 1.00), after `'a'` it is torn three ways, and after `'t'` it is almost exactly a coin, `'h'` at 0.56 against `' '` at 0.43. That last row is the perplexity-2 case from two sections ago, printed. Every row is one multiple-choice question with 19 options and an opinion about all of them. Third, the generated text. It's garbled, of course, but it is *not* noise. Words are word-shaped. Vowels follow consonants. Spaces arrive at plausible intervals, and fragments like "the" and "sat" surface whole, because those transitions dominate the training bill. That structure is everything one character of context can buy, purchased entirely by softmax + cross-entropy + `$g = p - y$`. The distance from this to GPT is not a different kind of machine; it's a better `$h$` and a bigger K.
 
 ## Temperature: the same knob, moved to decoding time
@@ -164,6 +166,8 @@ def generate(T, n=150):
 for T in (0.2, 1.0, 2.0):
     print(f"T = {T}:\n  {generate(T)}\n")
 ```
+
+<!-- output -->
 
 At `$T = 0.2$` the model plays it safe and loops through its favorite transitions: coherent-ish and repetitive. At `$T = 1.0$` you get the full distribution, structured babble with variety. At `$T = 2.0$` the die flattens and the letters approach soup. And notice that **nothing about the model changed between those three outputs.** The trained weights are identical; so are the probabilities. Temperature is applied at decoding time, downstream of the classifier, which makes it [Part 2](@/blog/0006-classification-vs-regression.md)'s lesson wearing new clothes: the model ships probabilities; how boldly to sample from them is a **product decision, not a truth knob.** Low temperature for code completion, higher for brainstorming. That's the same conversation as choosing a spam threshold, and it belongs to the same people: the ones who own the consequences.
 

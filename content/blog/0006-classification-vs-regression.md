@@ -48,6 +48,8 @@ for _ in range(200):                             # L1, via Part 1's reweighting 
 print(f"L1 : boundary at x = {(0.5 - w[1]) / w[0]:5.2f},  borderline spam at x=7 scores {w[0]*7 + w[1]:.2f}")
 ```
 
+<!-- output -->
+
 L1 pushes the boundary out to 25 and drops the borderline spam from 0.38 to 0.14. Huber splits the difference, which is exactly what splitting the difference between two wrong answers is worth. Every regression loss bills you for overshoot; they only disagree about the tariff. What this problem needs is a loss that gives overshoot away free, because being *more* right than the label should never cost anything, and no regression loss does that. Reaching for a better loss inside the same family is the tell that you are solving the wrong problem rather than solving it badly.
 
 **TL;DR**
@@ -85,6 +87,8 @@ print(f"after:  w = {w:.3f}, b = {b:.3f}, boundary at x = {(0.5 - b) / w:.1f}")
 for xi in (6, 7, 8, 50):
     print(f"  x = {xi}: score = {w * xi + b:.2f}  ->  {'SPAM' if w * xi + b > 0.5 else 'ham'}")
 ```
+
+<!-- output -->
 
 Watch the boundary jump from 4 to ~15 and the three real spam emails flip to ham, while the email with 50 trigger words scores 1.05: the model gets *charged* for that 0.05 of overshoot on a label it nailed. The loss is minimizing distances; you wanted it to minimize mistakes. Those are different objectives, and the rest of this post is about the gap.
 
@@ -151,6 +155,8 @@ report("threshold 2.0", (scores > 2.0).astype(float))
 report("threshold 0.5", (scores > 0.5).astype(float))
 ```
 
+<!-- output -->
+
 The always-ham "model" posts the *best accuracy of the three* while doing literally nothing. The genuinely useful scorer looks worse on accuracy because it dares to flag things and pays for its false positives. This is why classification people talk in precision and recall: **precision** prices the cost of crying wolf, **recall** prices the cost of sleeping through one, and the confusion matrix keeps the receipts. On imbalanced problems, accuracy is a vanity metric; report it alone and you're telling a 99%-true lie.
 
 ## The threshold is a product decision
@@ -172,6 +178,8 @@ for t in np.arange(0.5, 4.0, 0.5):
     fp = (pred & (y == 0)).sum()
     print(f"   {t:.1f}     {(pred == y).mean():.3f}      {tp / max(tp + fp, 1):.3f}     {tp / 10:.3f}")
 ```
+
+<!-- output -->
 
 One scorer, seven products. Precision climbs from 0.03 to 1.00 while recall falls from 1.00 to 0.20, and choosing where on that trade to live is the actual job. Watch the accuracy column do nothing useful the whole way down: it is *highest* at the far end, where the filter has all but given up and is catching two spam emails in ten. A sweep like this traces the ROC and precision-recall curves that classification people use to compare models, which is how you argue about scorers without first having to agree on a cutoff.
 

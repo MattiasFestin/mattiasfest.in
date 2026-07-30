@@ -55,6 +55,8 @@ for rule, loss in [("MSE", (r**2).mean(-1)), ("MAE", abs(r).mean(-1)), ("worst",
     print(f"best line under {rule:>5}: y = {m[i,0,0]:.3f}x {c[0,j,0]:+.3f}")
 ```
 
+<!-- output -->
+
 So this is not a podium, with A taking gold and B a respectable silver. Under absolute error, A is *the* answer and B is simply wrong. Under squared error, B is *the* answer and A is simply wrong. The five points never moved. If that rhymes with the puzzle that opened [the vector-spaces post](@/blog/0001-linear-vector-spaces.md), where three norms crowned three different nearest neighbors, it should. It's the *same lesson* wearing a regression costume: **"best fit" is not a property of the data. It's a property of how you decide to measure badness.**
 
 **TL;DR**
@@ -138,6 +140,8 @@ print(f"residual . x-column = {r @ x:.2e}   (perpendicular, as promised)")
 print(f"residual . 1-column = {r.sum():.2e}   (residuals sum to ~zero)")
 ```
 
+<!-- output -->
+
 Fifty noisy points, and the recovered `$w, b$` land within a hair of the truth. The two dot products at the end are the normal equations, verified numerically: the residual really is orthogonal to every column.
 
 One caveat to carry out of here, because it is the difference between the blackboard and production: forming `$X^T X$` squares the condition number of `$X$`. Fit a degree-7 polynomial on `$[0, 1]$` and `$X$` comes in around `$10^5$`, which is survivable, while `$X^T X$` comes in around `$10^{10}$`, which eats half your double-precision digits before the solver has done any work. Serious libraries never form it. They factor `$X$` directly with QR or SVD, which in numpy is `np.linalg.lstsq`. Use the normal equations to *understand* least squares, and `lstsq` to *compute* it.
@@ -176,6 +180,8 @@ for step in range(1, 1001):
         print(f"step {step:5d}   loss = {(err**2).mean():9.4f}   w = {w:.3f}   b = {b:.3f}")
 ```
 
+<!-- output -->
+
 Watch the loss collapse and `$w, b$` crawl to the *same* values the normal equations produced instantly. So why bother? Because gradient descent never asked whether the loss was quadratic, whether a closed form existed, or whether `$X^T X$` fit in memory. It only asked for a gradient. That humility is why it scales to every model in the rest of this series, where closed forms are a distant memory.
 
 ## Mini-batches: the loop that survives real data
@@ -204,6 +210,8 @@ for epoch in range(1, 101):
 
 print("all 50 rows at once:  loss =  0.9934   w = 2.052   b = 0.757")
 ```
+
+<!-- output -->
 
 A hundred epochs, five rows per step, and it arrives at the `$w, b$` the normal equations computed from all fifty at once. Now look at the loss between epoch 5 and epoch 20: it goes *up*. That is a mini-batch that happened to disagree, and that texture, a downward trend assembled from noisy steps that sometimes climb, is what every real training curve looks like.
 
@@ -238,6 +246,8 @@ print(f"true : slope = 2.00, intercept = 1.00")
 print(f"L2   : slope = {w_l2[0]:.2f}, intercept = {w_l2[1]:.2f}   <- dragged by one point")
 print(f"L1   : slope = {w_l1[0]:.2f}, intercept = {w_l1[1]:.2f}   <- barely notices")
 ```
+
+<!-- output -->
 
 Ten points, one corrupted. The L2 slope gets yanked well past 3; the L1 slope stays glued near the true 2. One bad row, ten percent of the dataset, and the two losses tell you two different stories about the same data.
 

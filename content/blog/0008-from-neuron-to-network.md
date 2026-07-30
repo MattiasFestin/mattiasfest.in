@@ -80,7 +80,9 @@ print("\nin (h1, h2) space the four points sit at ~(0,0), (1,0), (1,0), (1,1)")
 print("and the line h1 - h2 = 0.5 separates them. XOR is now LINEAR.")
 ```
 
-Run it and read the hidden columns, because that's where the whole post lives. The four inputs land at roughly `$(0,0)$`, `$(1,0)$`, `$(1,0)$`, `$(1,1)$` in `$(h_1, h_2)$` coordinates. The two positive examples got **folded onto the same point**, and the line `$h_1 - h_2 = 0.5$` now separates the classes trivially. The output neuron is a plain Part 3 voter; it just votes in better coordinates.
+<!-- output -->
+
+Read the hidden columns, because that's where the whole post lives. The four inputs land at roughly `$(0,0)$`, `$(1,0)$`, `$(1,0)$`, `$(1,1)$` in `$(h_1, h_2)$` coordinates. The two positive examples got **folded onto the same point**, and the line `$h_1 - h_2 = 0.5$` now separates the classes trivially. The output neuron is a plain Part 3 voter; it just votes in better coordinates.
 
 **The hidden layer redraws the map.** And you have met this machine before: this is exactly what the mail-sorting machine in [the embeddings post](@/blog/0002-what-are-embeddings.md) does. Hidden layers are *learned coordinates in which the problem becomes easy*. An embedding model is a stack of these layers with the classifier head snapped off: you keep the redrawn map and throw away the final vote.
 
@@ -155,6 +157,8 @@ for name, (phi, dphi) in activations.items():
           + f"     layer 8 / layer 1 = {norms[8] / norms[1]:8.1f}x")
 ```
 
+<!-- output -->
+
 Read the sigmoid row. The gradient arriving at layer 8 is over a thousand times larger than the gradient arriving at layer 1, because eight `$\sigma'$` factors have gated it on the way down. The early layers, the ones meant to be building the primitive features everything above them reuses, are close to frozen. tanh and ReLU keep the signal roughly the same size the whole way. That is the entire case for the modern default, and note that it is a *depth* argument: at the two-layer scale of this post's demos any of the three works fine, which is why the code here uses tanh and doesn't apologize for it.
 
 And note what backprop is *not*: it is not a learning rule. It never decides how to change a weight; it only delivers gradients, efficiently, by caching forward and reusing backward. The learner is still gradient descent: Part 1's loop with its stride length `$\eta$`, character for character unchanged. Backprop is the accountant; gradient descent is still the one walking downhill.
@@ -189,6 +193,8 @@ for step in range(1, 3001):
 print(f"\ntargets       = {y}")
 print(f"final verdict = {(p > 0.5).astype(int)}")
 ```
+
+<!-- output -->
 
 Ten lines of learning. The backward pass is two lines (`g`, `dh`), and `g = p - y` is still doing all the moral philosophy. Everything after it is reweighting and gating. Try shrinking to 2 hidden units and rerunning with different seeds: seeds 0, 1 and 2 stall at loss `$\approx 0.347$` forever, while 3 through 7 solve it cleanly. That's your first meeting with **non-convexity**. Part 3's one-valley guarantee is officially gone, the landscape has plateaus and bad basins, and the practical remedy is unglamorous: more units than strictly necessary, so *some* random subset starts pointed the right way. Overparameterization is insurance.
 
@@ -230,6 +236,8 @@ for name, f in [("one voter", score_lr), ("committee of 8", score_mlp)]:
     print(f"{name:16s}  train = {((f(X[tr]) > 0.5) == y[tr]).mean():.3f}   "
           f"held out = {((f(X[te]) > 0.5) == y[te]).mean():.3f}")
 ```
+
+<!-- output -->
 
 The single voter does what a hyperplane can (respectably, on the parts of the moons that don't interleave) and then hits its representational ceiling. The committee bends. Same engine, same loss, same `$g = p - y$`; the only difference is eight learned features between the input and the vote.
 

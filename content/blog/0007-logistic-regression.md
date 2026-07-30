@@ -57,6 +57,8 @@ print(f"\nsigma(2.3) + sigma(-2.3) = {sigmoid(2.3) + sigmoid(-2.3):.6f}   (mirro
 print(f"sigma(40)  = {sigmoid(40):.16f}   (saturated flat)")
 ```
 
+<!-- output -->
+
 Read the odds column: it's literally `$e^s$` (check `$s = 1$`: odds of `$e \approx 2.718$` to 1). And there's the boss's answer: a score of 2.3 is `$e^{2.3} \approx 10$` to 1, `$\sigma(2.3) \approx 0.909$`. **91% spam**, by unit conversion rather than vibe.
 
 ## The model, and where the line went
@@ -134,6 +136,8 @@ for x2 in np.linspace(3, -3, 9):
                   for x1 in np.linspace(-3, 3, 31)))
 ```
 
+<!-- output -->
+
 Step 1 starts at loss `$\log 2 \approx 0.693$` (the price of a shrug, which is what all-zero weights are) and slides monotonically down one valley. The training loop's entire learning signal is the line `g = p - y`: the gradient we derived, three characters wide. And the ASCII sketch shows the boundary for what it is: a straight line through feature space, tilted to put the clusters on opposite sides. A hyperplane that votes.
 
 One valley, though, does not guarantee that valley has a floor. If the data is **linearly separable**, meaning some hyperplane classifies every training point correctly, logistic regression has no finite optimum. Scaling the weights up makes every prediction more confident, and when you are right about everything, more confidence is always cheaper. So the loss slides toward zero while the weights walk toward infinity, never arriving.
@@ -156,6 +160,8 @@ for lam in (0.0, 0.01):                        # lam = 0 is plain logistic regre
             loss = -(y * np.log(p) + (1 - y) * np.log(1 - p)).mean()
             print(f"lambda = {lam:<5}  step {step:6d}   loss = {loss:.6f}   |w| = {np.linalg.norm(w):7.4f}")
 ```
+
+<!-- output -->
 
 Twenty thousand steps in and the weights are still growing, the loss still falling, and both would continue for as long as you were willing to pay the electricity bill. Convexity promised there was nowhere bad to end up. It never promised there was somewhere to end up. The fix is Part 1's ridge penalty, which charges for large weights and puts a floor back in the valley: with `$\lambda = 0.01$` the same run settles at `$\|w\| = 2.90$` by step 1000 and never moves again. This is why every logistic regression implementation you are likely to use regularizes by default, scikit-learn included, and why "my weights exploded" is more often a story about separable data than a bug in the code.
 
@@ -191,6 +197,8 @@ for s in (-3.0, 0.0, 2.3):
     print(f"  sigmoid({s:+.1f}) = {sigmoid(s):.10f}   "
           f"softmax([s, 0])[0] = {softmax(np.array([s, 0.0]))[0]:.10f}")
 ```
+
+<!-- output -->
 
 One line in that demo deserves an explanation rather than a shrug: `s - s.max()`. Exponentiating raw scores overflows, `np.exp(1000)` is `inf`, and `inf/inf` is `nan`. Subtracting the largest score changes nothing mathematically, since it is the same constant-cancels-in-the-ratio fact we just used to turn softmax into sigmoid, and it changes everything numerically. The sigmoid has the matching trap: `$\sigma(50)$` rounds to exactly 1.0 in float64, so the `$\log(1 - p)$` in the loss becomes `$\log 0$`, and the run dies at the precise moment the model got confident. This is why frameworks hand you a `cross_entropy` that consumes **scores** rather than probabilities: it folds the squash and the log into one expression that never builds the dangerous intermediate. Compute the probability and then take its log, and you have already lost.
 

@@ -86,6 +86,8 @@ print("  unscaled :", np.round(softmax(s), 3))
 print("  / sqrt(d):", np.round(softmax(s / np.sqrt(d)), 3))
 ```
 
+<!-- output -->
+
 The raw variance tracks `$d$` almost exactly (4, 64, 1024), while the scaled version pins it near 1 at every dimension. Then the punchline rows: unscaled softmax at `$d = 1024$` zeroes out six of the eight envelopes to three decimals and lets the survivors split the poll 89/11, most candidates dead by accident of dimension, while the scaled version keeps all eight alive. That single `$\sqrt{d_k}$` is the difference between a poll and a coronation.
 
 ## Causal masking: no peeking
@@ -161,6 +163,8 @@ for t, o in zip(tokens, A @ V):
     print(f"{t:>7} -> {np.round(o, 2)}")
 ```
 
+<!-- output -->
+
 Two things to read off the printout. The zeros above the diagonal are the causal mask: no row spends a single percent on its future. And the last row is the payoff: "it" puts ~100% of its poll on "cat" (score `$16/\sqrt{4} = 8$`, and `$e^8$` buries the competition), so its mixed output *is* the cat vector. The context vector at "it" now knows it's about a cat, which is what Part 5's head needs to put probability on "purred" rather than "photosynthesis."
 
 ## Attention is a bag, and order gets bolted on
@@ -199,6 +203,8 @@ for label, pos in [("without positional information", False),
     print(f"  {' '.join(b):24s} -> {np.round(ob, 3)}")
     print(f"  same? {np.allclose(oa, ob)}\n")
 ```
+
+<!-- output -->
 
 Two different sentences, the same four words ahead of "it", and an output that agrees to every decimal it prints. The causal mask does buy *some* order information, since a position can only see its own prefix and therefore knows how many tokens precede it, but among the tokens it can see, order is invisible: "dog bites man" and "man bites dog" hand position 3 the same bag of envelopes.
 
