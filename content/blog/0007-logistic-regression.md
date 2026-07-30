@@ -23,7 +23,7 @@ There is exactly one translation with a defensible pedigree, and it turns 2.3 in
 - The model is `$P(y{=}1 \mid x) = \sigma(w \cdot x + b)$`. The decision boundary `$\sigma = 0.5$` is exactly `$w \cdot x + b = 0$`, a hyperplane. The sigmoid changes what the model reports, not where the boundary sits.
 - Maximum likelihood on Bernoulli labels produces **cross-entropy**: `$-\log$` of the probability you gave the truth. Honest uncertainty costs little; confident wrongness costs `$-\log p \to \infty$`.
 - The punchline: cross-entropy's gradient is `$(\sigma(s) - y)\,x$`, which is **Part 1's `$(\hat{y} - y)\,x$` with the prediction renamed**. The `$\sigma'$` that strangled Part 2's gradient cancels against the log's derivative, so nothing vanishes anywhere.
-- The loss is **convex** in `$w$`: one global optimum, and gradient descent just works. But there is no closed form, so Part 1's normal-equations luxury is officially over.
+- The loss is **convex** in `$w$`: one valley, so gradient descent just works. There is no closed form, so Part 1's normal-equations luxury is officially over, and on perfectly separable data the valley has no floor at all.
 - **Softmax** is the K-class ending: K score lines, exponentiate-and-normalize, and sigmoid is literally softmax with two classes. Softmax + cross-entropy is the machine to remember; the rest of this series is built out of it.
 
 ## The score was a log-odds all along
@@ -104,7 +104,7 @@ File this pairing away as a design pattern, not a coincidence. Gaussian noise + 
 
 ## Convexity: one valley, no shortcut
 
-Cross-entropy composed with sigmoid composed with a linear score is **convex in `$w$` and `$b$`** (the squash-then-square loss from Part 2 was not, which was its other problem). Convex means the loss surface is one valley: no local minima to get trapped in and no plateaus to stall on, so any downhill path reaches *the* global optimum. Part 1's unkillable engine, gradient descent with its stride-length `$\eta$`, just works. What we lose is the luxury of a closed form: the optimum no longer satisfies anything as tidy as the normal equations, because `$\sigma$` is not linear, so there is **no closed form** for logistic regression's weights. Part 1 warned that `np.linalg.solve` was a privilege of quadratic losses; this is the moment the privilege expires. (Statisticians iterate Newton's method, rebranded as *iteratively reweighted least squares*; we'll just walk downhill.)
+Cross-entropy composed with sigmoid composed with a linear score is **convex in `$w$` and `$b$`** (the squash-then-square loss from Part 2 was not, which was its other problem). Convex means the loss surface is one valley: no local minima to get trapped in, no bad basin to land in by starting in the wrong place, so downhill is always the right direction. Part 1's unkillable engine, gradient descent with its stride-length `$\eta$`, just works. What we lose is the luxury of a closed form: the optimum no longer satisfies anything as tidy as the normal equations, because `$\sigma$` is not linear, so there is **no closed form** for logistic regression's weights. Part 1 warned that `np.linalg.solve` was a privilege of quadratic losses; this is the moment the privilege expires. (Statisticians iterate Newton's method, rebranded as *iteratively reweighted least squares*; we'll just walk downhill.)
 
 ```python
 import numpy as np
@@ -135,6 +135,29 @@ for x2 in np.linspace(3, -3, 9):
 ```
 
 Step 1 starts at loss `$\log 2 \approx 0.693$` (the price of a shrug, which is what all-zero weights are) and slides monotonically down one valley. The training loop's entire learning signal is the line `g = p - y`: the gradient we derived, three characters wide. And the ASCII sketch shows the boundary for what it is: a straight line through feature space, tilted to put the clusters on opposite sides. A hyperplane that votes.
+
+One valley, though, does not guarantee that valley has a floor. If the data is **linearly separable**, meaning some hyperplane classifies every training point correctly, logistic regression has no finite optimum. Scaling the weights up makes every prediction more confident, and when you are right about everything, more confidence is always cheaper. So the loss slides toward zero while the weights walk toward infinity, never arriving.
+
+```python
+import numpy as np
+sigmoid = lambda s: 1 / (1 + np.exp(-s))
+
+X = np.array([[-2.], [-1.], [1.], [2.]])       # separable: 0s on the left, 1s on the right
+y = np.array([0., 0, 1, 1])
+
+for lam in (0.0, 0.01):                        # lam = 0 is plain logistic regression
+    w, b = np.zeros(1), 0.0
+    for step in range(1, 20001):
+        p = sigmoid(X @ w + b)
+        g = p - y
+        w -= 0.5 * ((X * g[:, None]).mean(axis=0) + lam * w)   # ridge, from Part 1
+        b -= 0.5 * g.mean()
+        if step in (100, 1000, 20000):
+            loss = -(y * np.log(p) + (1 - y) * np.log(1 - p)).mean()
+            print(f"lambda = {lam:<5}  step {step:6d}   loss = {loss:.6f}   |w| = {np.linalg.norm(w):7.4f}")
+```
+
+Twenty thousand steps in and the weights are still growing, the loss still falling, and both would continue for as long as you were willing to pay the electricity bill. Convexity promised there was nowhere bad to end up. It never promised there was somewhere to end up. The fix is Part 1's ridge penalty, which charges for large weights and puts a floor back in the valley: with `$\lambda = 0.01$` the same run settles at `$\|w\| = 2.90$` by step 1000 and never moves again. This is why every logistic regression implementation you are likely to use regularizes by default, scikit-learn included, and why "my weights exploded" is more often a story about separable data than a bug in the code.
 
 ## Softmax: the vote goes multiclass
 
@@ -169,15 +192,17 @@ for s in (-3.0, 0.0, 2.3):
           f"softmax([s, 0])[0] = {softmax(np.array([s, 0.0]))[0]:.10f}")
 ```
 
+One line in that demo deserves an explanation rather than a shrug: `s - s.max()`. Exponentiating raw scores overflows, `np.exp(1000)` is `inf`, and `inf/inf` is `nan`. Subtracting the largest score changes nothing mathematically, since it is the same constant-cancels-in-the-ratio fact we just used to turn softmax into sigmoid, and it changes everything numerically. The sigmoid has the matching trap: `$\sigma(50)$` rounds to exactly 1.0 in float64, so the `$\log(1 - p)$` in the loss becomes `$\log 0$`, and the run dies at the precise moment the model got confident. This is why frameworks hand you a `cross_entropy` that consumes **scores** rather than probabilities: it folds the squash and the log into one expression that never builds the dangerous intermediate. Compute the probability and then take its log, and you have already lost.
+
 And now the callback this series has been saving. You have seen this machine before: **InfoNCE in [the embeddings series](@/blog/0003-how-are-embeddings-trained.md) is softmax cross-entropy with a temperature knob**, where the "classes" are candidate passages and the "score lines" are similarity scores. Training an embedding model is running a K-way logistic regression whose exam changes every batch. Back then it was already this exact formula. Plant the flag here: **softmax + cross-entropy is the machine to remember. The rest of this series is built out of it.** The same exponentiate-and-normalize vote keeps reappearing with grander inputs.
 
 ## A number between 0 and 1 is not automatically a probability
 
-One production aside before closing. The sigmoid guarantees the output lives in `$(0, 1)$`; it does *not* guarantee the output is **calibrated**: among everything scored 0.9, about 90% is actually positive. Plain logistic regression is usually well-calibrated (the maximum-likelihood fit even forces average predicted probability to equal the base rate), but regularization, class rebalancing, and the bigger models coming later in this series all bend outputs away from honesty, famously toward overconfidence (Guo et al. 2017, further reading). Check it the boring way: bucket predictions by score, compare each bucket's mean prediction to its actual positive rate, and if they disagree, fix it with a post-hoc recalibration step rather than by trusting the pretty decimals. This is Part 2's threshold discipline extended one level: the threshold was a product decision calibrated against a specific model's scores, and the probabilities feeding it deserve the same paranoia. Retrain the model, re-audit the calibration, and version them together.
+One last piece of discipline before closing. The sigmoid guarantees the output lives in `$(0, 1)$`; it does *not* guarantee the output is **calibrated**: among everything scored 0.9, about 90% is actually positive. Plain logistic regression is usually well-calibrated (the maximum-likelihood fit even forces average predicted probability to equal the base rate), but regularization, class rebalancing, and the bigger models coming later in this series all bend outputs away from honesty, famously toward overconfidence (Guo et al. 2017, further reading). Check it the boring way: bucket predictions by score, compare each bucket's mean prediction to its actual positive rate, and if they disagree, fix it with a post-hoc recalibration step rather than by trusting the pretty decimals. This is Part 2's threshold discipline extended one level: the threshold was a product decision calibrated against a specific model's scores, and the probabilities feeding it deserve the same paranoia. Retrain the model, re-audit the calibration, and version them together.
 
 ## Closing thoughts
 
-The wish list from Part 2, item by item: keep the linear score (kept: it's the log-odds now, and the decision boundary is still a hyperplane), squash it into a probability (the sigmoid, *derived* from the log-odds reading rather than picked from a catalog), and train against a loss that prices honesty (cross-entropy from maximum likelihood, charging `$-\log$` of the probability given to the truth, unbounded for confident wrongness, nearly free for confident correctness). And the reward for choosing the matched loss: the gradient collapses to `$(\sigma(s) - y)\,x$`, Part 1's gradient with the prediction renamed, pushing hardest exactly where Part 2's patched-up loss went numb. That leaves one convex valley and no closed form. The K-class generalization, softmax, turns out to be a machine we'd already met grading embeddings.
+The wish list from Part 2, item by item: keep the linear score (kept: it's the log-odds now, and the decision boundary is still a hyperplane), squash it into a probability (the sigmoid, *derived* from the log-odds reading rather than picked from a catalog), and train against a loss that prices honesty (cross-entropy from maximum likelihood, charging `$-\log$` of the probability given to the truth, unbounded for confident wrongness, nearly free for confident correctness). And the reward for choosing the matched loss: the gradient collapses to `$(\sigma(s) - y)\,x$`, Part 1's gradient with the prediction renamed, pushing hardest exactly where Part 2's patched-up loss went numb. That leaves one convex valley, no closed form, and a floor that regularization has to supply. The K-class generalization, softmax, turns out to be a machine we'd already met grading embeddings.
 
 But every classifier in this post draws a *flat* boundary. One line, however well it votes, cannot carve a spiral, an XOR, or "spam unless it's from my bank, unless the bank email is forwarded." Part 1 planted the question: what if the features themselves were learned instead of designed? Next up: what happens when one line isn't enough. We stack these voters on top of each other, feed each layer's opinions to the next as features, and let gradient descent design the features nobody handcrafted.
 

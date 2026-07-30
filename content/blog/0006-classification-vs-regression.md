@@ -27,6 +27,29 @@ The three original spam emails, the ones the filter used to catch cleanly, now s
 
 The autopsy is short. Before the update, extrapolating the old line to `$x = 60$` gives `$\hat{y} \approx 9.1$` on an email labeled 1: a residual of 8.1, which MSE squares into a scream of 65. The model wasn't wrong about that email, it was *emphatically right*, but squared loss doesn't score decisions, it scores distances to the label. So the fit flattens the line to hush the scream, and the borderline spam pays the bill. **MSE fines the model for being confidently right.** That's not a bug in least squares; it's least squares doing exactly its job on a problem that was never a regression.
 
+Before you reach for the obvious fix: this is not a rerun of Part 1's outlier problem, and robustness will not save you. The point that dragged Part 1's line was *corrupted*, and L1 was right to shrug at it. The three points dragging this line are the most unambiguously *correct* data in the set. Swap in L1 and the filter gets worse.
+
+```python
+import numpy as np
+
+x = np.array([0., 0, 1, 1, 2, 2, 6, 7, 8, 40, 50, 60])
+y = np.array([0., 0, 0, 0, 0, 0, 1, 1, 1,  1,  1,  1])
+X = np.column_stack([x, np.ones_like(x)])
+
+def fit(weights):                                # weighted least squares, from Part 1
+    Xw = X.T * weights
+    return np.linalg.solve(Xw @ X, Xw @ y)
+
+w = fit(np.ones_like(y))                         # plain L2
+print(f"L2 : boundary at x = {(0.5 - w[1]) / w[0]:5.2f},  borderline spam at x=7 scores {w[0]*7 + w[1]:.2f}")
+
+for _ in range(200):                             # L1, via Part 1's reweighting loop
+    w = fit(1.0 / np.abs(y - X @ w).clip(1e-9))
+print(f"L1 : boundary at x = {(0.5 - w[1]) / w[0]:5.2f},  borderline spam at x=7 scores {w[0]*7 + w[1]:.2f}")
+```
+
+L1 pushes the boundary out to 25 and drops the borderline spam from 0.38 to 0.14. Huber splits the difference, which is exactly what splitting the difference between two wrong answers is worth. Every regression loss bills you for overshoot; they only disagree about the tariff. What this problem needs is a loss that gives overshoot away free, because being *more* right than the label should never cost anything, and no regression loss does that. Reaching for a better loss inside the same family is the tell that you are solving the wrong problem rather than solving it badly.
+
 **TL;DR**
 
 - **Regression predicts a quantity, classification predicts a decision.** Different target, different error accounting, different metrics culture.
@@ -77,7 +100,7 @@ Two things, and they cascade into everything else.
 
 **Error is counted differently.** In regression, residuals have sizes. In classification, a miss is a miss: predicting "ham" for spam is one unit of wrong whether the score was 0.49 or 0.01. Magnitude of wrongness only re-enters when *you* define it, as costs: a spam email in the inbox is mildly annoying; a job offer in the spam folder is a small catastrophe. Nothing in the labels encodes that asymmetry. You have to put it in.
 
-**The right output object is a probability.** If a miss is a miss but misses have different prices, the most useful thing a model can hand downstream is not a verdict but a **calibrated probability**: "this is spam with probability 0.93." A probability lets every consumer apply their *own* costs and choose their own cutoff; a hard verdict bakes one particular cost assumption into the model forever. This is the same interface discipline as returning data instead of formatted strings. Verdicts are for the last possible moment.
+**The right output object is a probability.** If a miss is a miss but misses have different prices, the most useful thing a model can hand downstream is not a verdict but a **calibrated probability**: "this is spam with probability 0.93." "Calibrated" is doing real work in that sentence: the number has to mean what it says, so that the mail scored 0.9 really does turn out to be about nine-tenths spam. That property has to be earned and audited, never assumed, and Part 3 builds the loss that teaches a model to mean it. A probability lets every consumer apply their *own* costs and choose their own cutoff; a hard verdict bakes one particular cost assumption into the model forever. This is the same interface discipline as returning data instead of formatted strings. Verdicts are for the last possible moment.
 
 Which raises the obvious follow-up: our linear score `$wx + b$` outputs 9.1 and −0.13. It has the right shape (bigger score, spammier email) and the wrong range. We'll need to squash it into `$[0, 1]$`, and, crucially, pick a loss that treats the squashed value *as* a probability. Squared error is not that loss, and here's the intuition for why.
 
@@ -89,7 +112,7 @@ The hook showed failure mode one: on raw scores, MSE punishes confident correctn
 \frac{\partial}{\partial s} \bigl(\sigma(s) - y\bigr)^2 \;=\; 2\,\bigl(\sigma(s) - y\bigr)\; \sigma'(s)
 ```
 
-That `$\sigma'(s)$` factor is the slope of the squashing function, and it's near zero on both flat ends. So picture the worst case: the model says "definitely ham," `$\sigma(s) \approx 0$`, and the email is spam, `$y = 1$`. The error factor is maximal, but `$\sigma'(s) \approx 0$` strangles the product. **The gradient vanishes exactly where the model is most wrong**, gradient descent (our unkillable engine from Part 1) takes its stride-length steps on flat ground and barely moves, and the composed loss isn't convex anymore, so there are bad plateaus to get stuck on. Squared error plus squashing is a loss that stops teaching precisely when there's the most to learn. What we want instead is a loss whose gradient *grows* with confident wrongness. It exists, and building it is Part 3's job.
+That `$\sigma'(s)$` factor is the slope of the squashing function, and it's near zero on both flat ends. So picture the worst case: the model says "definitely ham," `$\sigma(s) \approx 0$`, and the email is spam, `$y = 1$`. The error factor is maximal, but `$\sigma'(s) \approx 0$` strangles the product. **The gradient vanishes exactly where the model is most wrong**, gradient descent (our unkillable engine from Part 1) takes its stride-length steps on flat ground and barely moves, and the composed loss isn't convex anymore, so there are bad plateaus to get stuck on. Squared error plus squashing is a loss that stops teaching precisely when there's the most to learn. What we want instead is a loss that bills confident wrongness without any upper limit, and whose gradient stays at full strength while it does. It exists, and building it is Part 3's job.
 
 ## Two metrics cultures
 
@@ -132,7 +155,25 @@ The always-ham "model" posts the *best accuracy of the three* while doing litera
 
 ## The threshold is a product decision
 
-Notice what the second demo also shows: the *same* scorer at threshold 2.0 versus 0.5 is two different products. High threshold: high precision, modest recall, the spam-filter posture, where a false positive (real mail buried) is the expensive mistake. Low threshold: high recall, poor precision, the medical-screening posture, where a false negative (a missed case) is the catastrophe and follow-up tests exist to mop up the false alarms. Same weights, same scores, opposite souls.
+Notice what the imbalance demo also shows: the *same* scorer at threshold 2.0 versus 0.5 is two different products. High threshold: high precision, modest recall, the spam-filter posture, where a false positive (real mail buried) is the expensive mistake. Low threshold: high recall, poor precision, the medical-screening posture, where a false negative (a missed case) is the catastrophe and follow-up tests exist to mop up the false alarms. Same weights, same scores, opposite souls. Sweep the cutoff and you can watch the same scorer become every product in between:
+
+```python
+import numpy as np
+rng = np.random.default_rng(0)
+
+y = np.concatenate([np.zeros(990), np.ones(10)])          # 1% spam
+s = np.concatenate([rng.normal(0.0, 1.0, 990),            # one scorer, fixed
+                    rng.normal(2.5, 1.0, 10)])            # for the whole sweep
+
+print(" cutoff  accuracy  precision  recall")
+for t in np.arange(0.5, 4.0, 0.5):
+    pred = s > t
+    tp = (pred & (y == 1)).sum()
+    fp = (pred & (y == 0)).sum()
+    print(f"   {t:.1f}     {(pred == y).mean():.3f}      {tp / max(tp + fp, 1):.3f}     {tp / 10:.3f}")
+```
+
+One scorer, seven products. Precision climbs from 0.03 to 1.00 while recall falls from 1.00 to 0.20, and choosing where on that trade to live is the actual job. Watch the accuracy column do nothing useful the whole way down: it is *highest* at the far end, where the filter has all but given up and is catching two spam emails in ten. A sweep like this traces the ROC and precision-recall curves that classification people use to compare models, which is how you argue about scorers without first having to agree on a cutoff.
 
 Nothing in the mathematics chooses between them. The loss trains the scorer; the threshold encodes *your* costs, and those come from the business, the regulator, or the oncologist, not from `argmin`. This is also a production landmine with a familiar shape: [the drift post](@/blog/0004-what-are-drift.md) learned that hardcoded similarity thresholds don't survive a model swap, and classification thresholds are the same species. Retrain the scorer, and yesterday's 0.5 is not today's 0.5: the score distribution moved under the cutoff. A threshold is calibrated *against a specific model's scores*; version them together, and recalibrate on every retrain, or your precision/recall trade drifts while the accuracy dashboard stays green.
 
