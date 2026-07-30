@@ -1,0 +1,6 @@
+# Render-only dependencies for Manim figures in CI and local delivery builds.
+#
+# Kept separate from requirements.txt because the blog's executable Python
+# snippets do not need a graphics stack. Pinning makes rendered video a
+# reproducible build artifact rather than a workstation-specific asset.
+manim==0.20.1

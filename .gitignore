@@ -4,3 +4,9 @@ node_modules/
 .playwright-mcp/
 test-results/
 playwright-report/
+manim/__pycache__/
+manim/mfblog/__pycache__/
+manim/.cache/
+.venv-manim/
+# Generated from Manim source by `npm run render:manim` in CI.
+static/videos/

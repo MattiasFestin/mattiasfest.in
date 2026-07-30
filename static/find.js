@@ -303,7 +303,11 @@
 
   rowsEl.addEventListener("dblclick", function (e) {
     var tr = e.target.closest("tr");
-    if (tr && tr.dataset.href) location.href = tr.dataset.href;
+    if (!tr || !tr.dataset.href) return;
+    /* Opening a result shouldn't close Find, or anything else on this
+       desktop; main.js swaps the page under us. */
+    if (window.MF && window.MF.open) window.MF.open(tr.dataset.href);
+    else location.href = tr.dataset.href;
   });
 
   /* --- Running a search --- */

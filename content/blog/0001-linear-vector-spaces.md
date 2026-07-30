@@ -17,6 +17,8 @@ a = (3, 0, 0), \qquad b = (2, 2, 0), \qquad c = (1.8,\, 1.8,\, 1.8)
 
 Which one is closest to the origin?
 
+{{ manim(file="0001-nearest-neighbor-is-a-decision", title="Three points in 3D as L1, L2, and L-infinity balls grow from the origin", step_one="The red L1 octahedron, blue L2 sphere, and green L∞ cube all grow outward from the same origin at the same rate.", step_two="The first point the shape touches is the nearest point under that norm: a for L1, b for L2, and c for L∞.", step_three="Only the definition of distance changes; the three points never move.", caption="Growing the same-size L1, L2, and L∞ balls finds a different first point each time. The ball's shape — the chosen norm — decides what ‘nearest’ means.") }}
+
 The honest answer: **it depends on how you measure**, and not in a hand-wavy way. Under one perfectly standard distance the answer is `$a$`, under another it's `$b$`, and under a third it's `$c$`. Same three points, three different nearest neighbors. We'll compute all of it below.
 
 If that surprises you, this post is for you. If it doesn't, stick around anyway. We'll get to why cosine distance isn't really a distance, what the parallelogram law secretly tests, and why "nearest neighbor" starts to lose meaning in high dimensions.
@@ -186,11 +188,13 @@ Everything about a norm is encoded in one picture: its **unit ball** `$\{\, v : 
 <figcaption>The 2D unit balls: L1 is the red diamond, L2 the blue circle, L∞ the green square. Same "radius one", three different ideas of which points qualify.</figcaption>
 </figure>
 
+{{ manim(file="0001-unit-balls-and-sparsity", title="Unit balls morphing from L2 to L1 and L-infinity, then a lasso-versus-ridge contour picture", step_one="As p falls from 2 to 1, the unit circle develops corners and becomes the red L1 diamond; as p grows, it becomes the green L∞ square.", step_two="When p falls below 1 the boundary caves inward. That shape is not convex, so it cannot satisfy the triangle inequality and is not a norm.", step_three="The gold loss contours grow toward the constraint. A diamond can be first touched at a corner, forcing one coordinate to zero; a circle has no corner to do that.", caption="The Lp family turns circle → diamond → square. Below p = 1 it caves inward and stops being a norm. The same diamond corner explains why lasso can set a weight exactly to zero while ridge only shrinks it.") }}
+
 Reading the picture:
 
 - The **shape tells you which directions are cheap**. The L1 diamond reaches its corners only on the axes: moving along one coordinate at a time is efficient; diagonal moves are expensive. The L∞ square is the opposite: diagonals are free rides.
 - **This is why L1 regularization gives sparsity.** Constraining a model's weights to an L1 ball and minimizing a loss means finding where the loss's contours first touch the ball. A diamond gets touched at its *corners*, where coordinates are exactly zero. The smooth L2 circle has no corners, so L2 regularization shrinks weights without zeroing them. A one-picture explanation of lasso vs. ridge.
-- **Convexity is the triangle inequality in disguise.** For `$0 < p < 1$` the `$L^p$` "ball" caves inward (non-convex), and correspondingly `$\|\cdot\|_p$` fails the triangle inequality. Not a norm.
+- **Convexity is the triangle inequality in disguise.** For `$0 < p < 1$` the `$L^p$` "ball" caves inward (non-convex), and correspondingly `$\|x\|_p$` fails the triangle inequality. Not a norm.
 - The correspondence runs both ways: *any* convex body that's symmetric about the origin (and bounded, with nonempty interior) defines a norm, via how much you must inflate it to swallow a point. Norms and symmetric convex bodies are the same data. Design a shape, get a geometry.
 
 ### Inner products: where angles live
@@ -301,6 +305,8 @@ A warning label for anyone doing nearest-neighbor work in hundreds of dimensions
 - Almost all of a high-dimensional ball's volume huddles near its surface; the "center" is essentially empty.
 - Under broad conditions, pairwise distances **concentrate**: the gap between the nearest and farthest neighbor shrinks *relative to* the distances themselves as dimension grows. "Nearest" becomes a photo finish, and metrics lose contrast. (See Beyer et al., below.)
 - The norms drift apart in scale (`$\|x\|_1$` can exceed `$\|x\|_2$` by a factor of `$\sqrt{n}$`), so thresholds tuned under one norm don't transfer to another.
+
+{{ manim(file="0001-high-dimensions-are-weird", title="A high-dimensional volume shell and the concentration of pairwise distances", step_one="On the left, the yellow ring is only the outer 10% of a ball's radius. The curve shows that its share of the volume races toward 100% as dimension grows.", step_two="In the lower panel, the visible two-coordinate scatterplot never changes; the calculation quietly adds more coordinates behind the scenes.", step_three="Watch the blue distance histogram collapse into a narrow spike and the farthest/nearest ratio approach 1. In high dimensions, every point starts to look similarly far away.", caption="The outer 10% of a ball's radius takes nearly all its volume in high dimensions. In a fixed random point cloud, normalized distances also bunch together as dimensions are added — so nearest and farthest become hard to distinguish.") }}
 
 None of this makes high-dimensional retrieval hopeless. Real data lives near much lower-dimensional structure, which is why [embeddings](@/blog/0002-what-are-embeddings.md) work at all. But it explains why distance choices, normalization, and evaluation matter *more* up there, not less.
 

@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/optimize-png.mjs && zola build && node scripts/run-python.mjs && node scripts/render-math.mjs && node scripts/optimize.mjs && node scripts/fingerprint.mjs",
-    "build:ci": "node scripts/prune-scheduled.mjs && npm run build",
+    "render:manim": "sh manim/render.sh 0001 --final",
+    "build:ci": "node scripts/prune-scheduled.mjs && npm run render:manim && npm run build",
     "dev": "node scripts/dev.mjs",
     "test": "playwright test",
     "test:ci": "playwright test --grep-invert @external",

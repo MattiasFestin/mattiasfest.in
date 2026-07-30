@@ -16,6 +16,7 @@ concurrency:
 
 env:
   ZOLA_VERSION: 0.22.1
+  TYPST_VERSION: 0.14.2
 
 jobs:
   build:
@@ -34,15 +35,56 @@ jobs:
           node-version: 22
           cache: npm
 
-      # The build executes the blog's Python snippets and inlines their
-      # output (scripts/run-python.mjs), so the toolchain needs Python too.
+      # Manim 0.20's rendering stack is tested on Python 3.11. Keep its
+      # isolated environment as the Python on PATH for the rest of the build:
+      # scripts/run-python.mjs then executes snippets with the same pinned
+      # interpreter that rendered the figures.
       - uses: actions/setup-python@v5
+        id: python
         with:
-          python-version: "3.13"
+          python-version: "3.11"
+          # Caches pip's downloaded wheels/source archives. The complete
+          # virtualenv is cached separately below, so a warm build skips both
+          # download and installation work.
           cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-manim.txt
 
-      - name: Install Python snippet dependencies
-        run: pip install -r requirements.txt
+      - name: Install Manim system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg libcairo2-dev libpango1.0-dev pkg-config
+
+      - name: Install Typst
+        run: |
+          curl --fail --silent --show-error --location \
+            "https://github.com/typst/typst/releases/download/v${TYPST_VERSION}/typst-x86_64-unknown-linux-musl.tar.xz" \
+            --output /tmp/typst.tar.xz
+          tar --extract --xz --file /tmp/typst.tar.xz --directory /tmp
+          sudo install --mode=0755 /tmp/typst-x86_64-unknown-linux-musl/typst /usr/local/bin/typst
+          typst --version
+
+      # A venv contains native Manim dependencies too (pycairo/manimpango),
+      # so restoring it avoids considerably more than reusing pip downloads.
+      # Exact Python patch version is part of the key because venv scripts and
+      # compiled wheels are tied to its interpreter location/ABI.
+      - name: Cache Manim build environment
+        id: manim-venv
+        uses: actions/cache@v4
+        with:
+          path: .venv-manim
+          key: manim-venv-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt') }}
+
+      - name: Create Manim build environment
+        run: |
+          if [ ! -x .venv-manim/bin/manim ]; then
+            python -m venv .venv-manim
+            .venv-manim/bin/pip install --upgrade pip
+            .venv-manim/bin/pip install -r requirements.txt -r requirements-manim.txt
+          fi
+          echo "$GITHUB_WORKSPACE/.venv-manim/bin" >> "$GITHUB_PATH"
+          .venv-manim/bin/manim --version
 
       - name: Install dependencies
         run: npm ci

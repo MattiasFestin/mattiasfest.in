@@ -90,22 +90,26 @@ test.describe("winamp", () => {
     await expect(page.locator('.taskbar-task[data-for="winamp"]')).toBeHidden();
   });
 
-  test("navigating away with winamp open leaves the next page intact", async ({ page }) => {
-    // Regression guard: open Winamp, then go to About Me. The player is
-    // gone after the full page load (expected — static site), and the
-    // about page must lay out cleanly.
+  test("opening another page keeps winamp playing and the desktop intact", async ({ page }) => {
+    // Regression guard: open Winamp, then go to About Me. Pages open in
+    // the main window without reloading the desktop, so the player is
+    // still running afterwards — and the about page must lay out cleanly.
     await page.goto("/");
     await openWinamp(page);
+    await page.evaluate(() => {
+      window.__stillHere = true;
+    });
     await launchApp(page, "About Me", 'a[role="menuitem"][href*="about"]');
     await expect(page).toHaveURL(/\/about\/?$/);
 
     await expect(page.getByRole("heading", { name: "About Me" })).toBeVisible();
     await expect(page.locator("main.main-window")).toBeVisible();
     await expect(page.locator(".desktop-icon")).toHaveCount(5);
-    // No leftover winamp artifacts
-    await expect(page.locator("#webamp")).toHaveCount(0);
-    await expect(page.locator(".winamp-host")).toHaveCount(0);
-    await expect(page.locator('.taskbar-task[data-for="winamp"]')).toBeHidden();
+    // Same document, same player: nothing was reloaded
+    expect(await page.evaluate(() => window.__stillHere)).toBe(true);
+    await expect(page.locator("#webamp #main-window")).toBeVisible();
+    await expect(page.locator(".winamp-host")).toHaveCount(1);
+    await expect(page.locator('.taskbar-task[data-for="winamp"]')).toBeVisible();
     // No layout breakage: nothing overflows the viewport horizontally
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth

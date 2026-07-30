@@ -57,6 +57,25 @@ test("a page can mix pre-run and press-Run-yourself snippets", async ({ page }) 
   await expect(page.locator("#content .code-output pre")).toContainText("Floppy disks:");
 });
 
+test("math posts can embed accessible, muted Manim figures", async ({ page }) => {
+  await page.goto("/blog/0001-linear-vector-spaces/");
+  const figures = page.locator("figure.manim-figure");
+  await expect(figures).toHaveCount(3);
+
+  const videos = figures.locator("video.manim-video");
+  const explainers = figures.locator("aside.manim-explainer[role=note]");
+  await expect(videos).toHaveCount(3);
+  await expect(explainers).toHaveCount(3);
+  for (let i = 0; i < 3; i++) {
+    await expect(videos.nth(i)).toHaveAttribute("autoplay", "");
+    await expect(videos.nth(i)).toHaveAttribute("muted", "");
+    await expect(videos.nth(i)).toHaveAttribute("playsinline", "");
+    await expect(videos.nth(i).locator('source[type="video/webm"]')).toHaveCount(1);
+    await expect(videos.nth(i).locator('source[type="video/mp4"]')).toHaveCount(1);
+    await expect(explainers.nth(i).locator("ol > li")).toHaveCount(3);
+  }
+});
+
 test("posts have a giscus comments section", async ({ page }) => {
   await page.goto("/blog/hello-world/");
   const comments = page.locator("fieldset.comments");

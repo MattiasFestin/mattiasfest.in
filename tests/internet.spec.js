@@ -117,6 +117,77 @@ test.describe("the internet", () => {
     await expect(page.locator("#browser-status")).toHaveText("Disconnected.");
   });
 
+  test("Back and Forward walk the browser's own trail", async ({ page }) => {
+    await connect(page);
+    const back = page.locator("#browser-back");
+    const fwd = page.locator("#browser-fwd");
+    const address = page.locator("#browser-address");
+    const visit = async (url) => {
+      await address.fill(url);
+      await address.press("Enter");
+      await expect(address).toHaveValue(url);
+    };
+
+    // Freshly connected: nowhere to go but forward
+    await expect(back).toBeDisabled();
+    await expect(fwd).toBeDisabled();
+
+    await visit("geocities.com");
+    await expect(back).toBeEnabled();
+    await expect(fwd).toBeDisabled();
+    await visit("w3.org");
+
+    await back.click();
+    await expect(address).toHaveValue("geocities.com");
+    await expect(fwd).toBeEnabled();
+    await back.click();
+    await expect(address).toHaveValue("slashdot.org");
+    await expect(back).toBeDisabled();
+
+    await fwd.click();
+    await expect(address).toHaveValue("geocities.com");
+    await expect(back).toBeEnabled();
+    await expect(fwd).toBeEnabled();
+
+    // Typing a new address ends the future you'd walked back from
+    await visit("php.net");
+    await expect(fwd).toBeDisabled();
+    await back.click();
+    await expect(address).toHaveValue("geocities.com");
+  });
+
+  test("every stop gets one iframe, and only one", async ({ page }) => {
+    await connect(page);
+    const frames = win(page).locator("iframe.browser-frame");
+    await expect(frames).toHaveCount(1);
+    await page.locator("#browser-address").fill("geocities.com");
+    await page.locator("#browser-address").press("Enter");
+    await expect(frames).toHaveCount(1);
+    await expect(frames).toHaveAttribute("src", /geocities\.com/);
+  });
+
+  test("its Back button steps the frame, never the desktop", async ({ page }) => {
+    await connect(page);
+    await page.locator("#browser-address").fill("geocities.com");
+    await page.locator("#browser-address").press("Enter");
+    await expect(page.locator("#browser-back")).toBeEnabled();
+
+    // Open a page in the main window: that's a real history entry now
+    await page.evaluate(() => {
+      window.__desktopAlive = true;
+      window.MF.open("/about/");
+    });
+    await expect(page).toHaveURL(/\/about\/?$/);
+
+    // The post came up in front of it; bring The Internet back up
+    await page.locator('.taskbar-task[data-for="browser"]').click();
+    await page.locator("#browser-back").click();
+    await expect(page.locator("#browser-address")).toHaveValue("slashdot.org");
+    // The desktop stayed exactly where it was
+    await expect(page).toHaveURL(/\/about\/?$/);
+    expect(await page.evaluate(() => window.__desktopAlive === true)).toBe(true);
+  });
+
   test("the connection survives close and reopen (session keeps state)", async ({ page }) => {
     await connect(page);
     await page.locator("#browser-address").fill("geocities.com");

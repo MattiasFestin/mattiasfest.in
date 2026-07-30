@@ -449,6 +449,64 @@ html.start-maximized .main-window:not(.dialog-window) {
     }
   }
 
+  /* Manim figures are deliberately self-contained: no browser controls,
+     sound, or autoplay surprises. The site script pauses them when offscreen
+     (or when the reader asks for reduced motion), so a long post does not
+     quietly decode several videos at once. */
+  .manim-figure {
+    margin-top: 22px;
+    margin-bottom: 22px;
+    text-align: center;
+
+    .manim-video {
+      display: block;
+      width: min(100%, 900px);
+      margin: 0 auto;
+      background: #0d1016;
+      border: 1px solid #808080;
+      box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #dfdfdf;
+    }
+
+    /* This is intentionally a yellow Win98-style announcement, not a
+       subtitle. A loop is much easier to learn from when the reader knows
+       which transition in it carries the point. */
+    .manim-explainer {
+      margin: 9px auto 0;
+      max-width: min(100%, 740px);
+      padding: 8px 12px;
+      color: #000;
+      background: #ffffcc;
+      border: 2px solid;
+      border-color: #fff #404040 #404040 #fff;
+      box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #808080;
+      text-align: left;
+
+      .manim-explainer-title {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 13px;
+      }
+
+      ol {
+        margin: 0;
+        padding-left: 22px;
+      }
+
+      li {
+        margin: 2px 0;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+    }
+
+    figcaption {
+      margin-top: 7px;
+      color: #404040;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+  }
+
   blockquote {
     margin: 12px 0;
     padding: 8px 12px;

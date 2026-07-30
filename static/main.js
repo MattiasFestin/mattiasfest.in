@@ -50,6 +50,9 @@
   setInterval(tick, 10000);
 
   /* --- Multi-window management --- */
+  /* Both lists grow and shrink at runtime: opening a post brings the
+     blog folder along as a background window, and leaving the post
+     takes it away again (see "Opening pages" below). */
   var windows = Array.prototype.slice.call(document.querySelectorAll(".app-window"));
   var taskBtns = Array.prototype.slice.call(document.querySelectorAll(".taskbar-task"));
 
@@ -110,7 +113,7 @@
     (active || startBtn).focus();
   }
 
-  windows.forEach(function (w) {
+  function wireWindow(w) {
     var id = w.dataset.win;
     var titleBar = w.querySelector(".title-bar");
     var minBtn = w.querySelector('[aria-label="Minimize"]');
@@ -259,9 +262,10 @@
       activateTopmost();
       focusTaskbarFallback(null);
     });
-  });
+  }
+  windows.forEach(wireWindow);
 
-  taskBtns.forEach(function (b) {
+  function wireTask(b) {
     b.addEventListener("click", function () {
       var id = b.dataset.for;
       var w = winById(id);
@@ -276,7 +280,35 @@
         activate(id);
       }
     });
-  });
+  }
+  taskBtns.forEach(wireTask);
+
+  /* A window that arrives with a page joins the desktop on exactly the
+     same terms as the ones that shipped with the document: draggable,
+     resizable, minimizable, and visible to the app registry. */
+  function adoptWindow(w) {
+    windows.push(w);
+    wireWindow(w);
+    watchWindow(w);
+  }
+
+  function dropWindow(w) {
+    var i = windows.indexOf(w);
+    if (i >= 0) windows.splice(i, 1);
+    if (w.parentNode) w.parentNode.removeChild(w);
+  }
+
+  function adoptTask(b) {
+    taskBtns.push(b);
+    wireTask(b);
+    watchTask(b);
+  }
+
+  function dropTask(b) {
+    var i = taskBtns.indexOf(b);
+    if (i >= 0) taskBtns.splice(i, 1);
+    if (b.parentNode) b.parentNode.removeChild(b);
+  }
 
   /* Start maximized (after wiring, so button labels stay in sync).
      Small screens default to maximized; the Control Panel setting
@@ -325,7 +357,7 @@
   function launchIcon(icon) {
     if (icon.dataset.app === "browser") openBrowser();
     else if (icon.dataset.app === "winamp") openWinamp();
-    else location.href = icon.dataset.href;
+    else go(icon.dataset.href, true);
   }
 
   document.getElementById("desktop").addEventListener("click", function (e) {
@@ -456,11 +488,15 @@
   });
 
   /* --- Post table rows (any window) --- */
-  document.querySelectorAll("tr[data-href]").forEach(function (row) {
-    row.addEventListener("click", function (e) {
-      if (e.target.closest("a")) return;
-      location.href = row.dataset.href;
-    });
+  /* Delegated, because the rows come and go with the page: the blog
+     folder behind a post is fetched and inserted long after this runs.
+     Scoped to .post-table so Find's own result rows keep their Explorer
+     manners (single click selects, double click opens). */
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("a")) return;
+    var row = e.target.closest(".post-table tr[data-href]");
+    if (!row) return;
+    go(row.dataset.href, true);
   });
 
   /* --- Start menu --- */
@@ -662,12 +698,50 @@
 
   /* Runnable snippets. The survey below hands the first one to the
      Assistant and the "Try me" buttons are wired to all of them, so the
-     question "is there Python on this page" has exactly one answer. */
-  var pyBlocks = Array.prototype.slice.call(
-    document.querySelectorAll(
-      '#content pre > code[data-lang="python"], #content pre > code[data-lang="py"]'
-    )
-  );
+     question "is there Python on this page" has exactly one answer.
+     Recomputed whenever the main window opens a different document. */
+  var pyBlocks = [];
+  function findPyBlocks() {
+    pyBlocks = Array.prototype.slice.call(
+      document.querySelectorAll(
+        '#content pre > code[data-lang="python"], #content pre > code[data-lang="py"]'
+      )
+    );
+  }
+  findPyBlocks();
+
+  /* --- Animated math figures ---
+     Manim clips have no sound and start muted, but decoding three of them
+     below the fold would still be wasteful. Play only figures which are in
+     the reader's window, honour reduced-motion, and rerun the wiring after
+     client-side navigation swaps article content. */
+  var manimObserver = null;
+  function wireManimVideos() {
+    if (manimObserver) manimObserver.disconnect();
+    var videos = Array.prototype.slice.call(contentEl.querySelectorAll("video.manim-video"));
+    if (!videos.length) return;
+
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    videos.forEach(function (video) {
+      video.muted = true;
+      video.playsInline = true;
+      if (reduce) video.pause();
+    });
+    if (reduce || !("IntersectionObserver" in window)) {
+      if (!reduce) videos.forEach(function (video) { video.play().catch(function () {}); });
+      return;
+    }
+
+    manimObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        var video = entry.target;
+        if (entry.isIntersecting) video.play().catch(function () {});
+        else video.pause();
+      });
+    }, { threshold: 0.15 });
+    videos.forEach(function (video) { manimObserver.observe(video); });
+  }
+  wireManimVideos();
 
   var registry = {}; /* id -> the parts an app answers for itself */
   var listeners = {}; /* event name -> handlers */
@@ -741,6 +815,16 @@
   }
 
   var watching = false;
+  var obs = null;
+  var lastState = {};
+
+  function watchWindow(w) {
+    if (obs) obs.observe(w, { attributes: true, attributeFilter: ["class"] });
+  }
+  function watchTask(b) {
+    if (obs) obs.observe(b, { attributes: true, attributeFilter: ["hidden"] });
+  }
+
   function watchApps() {
     if (watching || !window.MutationObserver) return;
     watching = true;
@@ -748,22 +832,17 @@
        window or a hidden taskbar button, whoever set it - here,
        winamp.js, find.js, editor.js. Watching the furniture beats
        asking a dozen call sites to remember to announce themselves. */
-    var last = {};
-    apps().forEach(function (a) { last[a.id] = a.state(); });
-    var obs = new MutationObserver(function () {
+    apps().forEach(function (a) { lastState[a.id] = a.state(); });
+    obs = new MutationObserver(function () {
       apps().forEach(function (a) {
         var now = a.state();
-        if (now === last[a.id]) return;
-        last[a.id] = now;
+        if (now === lastState[a.id]) return;
+        lastState[a.id] = now;
         emit("app", { id: a.id, state: now });
       });
     });
-    windows.forEach(function (w) {
-      obs.observe(w, { attributes: true, attributeFilter: ["class"] });
-    });
-    taskBtns.forEach(function (b) {
-      obs.observe(b, { attributes: true, attributeFilter: ["hidden"] });
-    });
+    windows.forEach(watchWindow);
+    taskBtns.forEach(watchTask);
   }
 
   /* --- The main window's content is the page itself --- */
@@ -844,6 +923,296 @@
     },
   };
 
+  /* --- Opening pages, without rebooting the desktop --- */
+  /* A post is a document you open, not a machine you restart. A normal
+     link would throw away everything running here - Winamp mid-track, a
+     dialled-up Internet, a Python session with your variables still in
+     it - to change what one window shows. So links are followed the way
+     Explorer opened a folder: fetch the document, repaint the window
+     that owns it, and leave the rest of the desktop exactly as it was.
+
+     Everything is a fallback away from a plain navigation: the markup is
+     ordinary <a href>, and no fetch, no History API, an unroutable URL,
+     a failed request or any surprise in the response hands the click
+     straight back to the browser. */
+
+  var mainWindow = document.querySelector(".main-window");
+  var windowStack = document.querySelector(".window-stack");
+
+  var canRoute = !!(
+    window.fetch &&
+    window.DOMParser &&
+    window.history &&
+    history.pushState &&
+    mainWindow &&
+    windowStack &&
+    contentEl
+  );
+
+  /* Zola's page URLs are either extensionless (get_url) or end in a
+     slash (permalinks); anything carrying a file extension is a file,
+     not a window - the feed, the manifest, the scripts, every image. */
+  function routable(url) {
+    if (!canRoute) return null;
+    var a = document.createElement("a");
+    a.href = url;
+    if (a.protocol !== location.protocol || a.host !== location.host) return null;
+    var last = a.pathname.split("/").pop();
+    if (last && last.indexOf(".") !== -1 && !/\.html?$/.test(last)) return null;
+    return a;
+  }
+
+  /* Pages are immutable between deploys, so one fetch per URL is
+     plenty - Back and Forward come out of here for free. The HTML is
+     kept as text, not as a parsed document: a string costs a fraction
+     of the memory, and parsing it again is a millisecond. */
+  var pageCache = {};
+
+  function fetchPage(url) {
+    if (pageCache[url]) return pageCache[url];
+    var p = fetch(url, { credentials: "same-origin" })
+      .then(function (r) {
+        var type = r.headers.get("content-type") || "";
+        /* A 404 has its own window to show and a status code worth
+           keeping; let the browser navigate to it properly. */
+        if (!r.ok || type.indexOf("text/html") === -1) throw new Error("not a page");
+        /* Where we actually ended up: a host that redirects /about to
+           the canonical /about/ must be believed, because the address
+           bar - and giscus and the view counter, which key off the
+           path - all have to agree on one URL per page. */
+        var landed = r.url || url;
+        return r.text().then(function (html) {
+          return { url: landed, html: html };
+        });
+      });
+    /* A failure is this minute's problem, not this session's. */
+    p.catch(function () { delete pageCache[url]; });
+    pageCache[url] = p;
+    return p;
+  }
+
+  /* innerHTML parses <script> but never runs it; the page's own inline
+     scripts (the view counter, giscus) have to be re-created to fire. */
+  function runScripts(root) {
+    Array.prototype.slice.call(root.querySelectorAll("script")).forEach(function (old) {
+      var s = document.createElement("script");
+      Array.prototype.slice.call(old.attributes).forEach(function (at) {
+        s.setAttribute(at.name, at.value);
+      });
+      s.text = old.textContent;
+      old.parentNode.replaceChild(s, old);
+    });
+  }
+
+  function copyClass(from, to) {
+    if (from && to) to.className = from.className;
+  }
+
+  function copyText(from, to) {
+    if (from && to) to.textContent = from.textContent;
+  }
+
+  function swap(doc) {
+    var fresh = doc.querySelector('main[data-win="main"]');
+    var freshBody = fresh && fresh.querySelector("#content");
+    if (!freshBody) throw new Error("no main window in the response");
+
+    /* Head: the title bar of the browser we're pretending not to be, and
+       the tags a share sheet reads. */
+    document.title = doc.title;
+    [
+      'meta[name="description"]',
+      'meta[property="og:title"]',
+      'meta[property="og:description"]',
+      'meta[property="og:type"]',
+      'meta[property="og:url"]',
+    ].forEach(function (sel) {
+      var from = doc.head.querySelector(sel);
+      var to = document.head.querySelector(sel);
+      if (from && to) to.setAttribute("content", from.getAttribute("content"));
+    });
+
+    /* The main window keeps its identity - and with it everything the
+       reader has done to it: where they dragged it, how they sized it,
+       whether it's maximized. Only its contents change. */
+    copyClass(fresh.querySelector(".title-bar-icon"), mainWindow.querySelector(".title-bar-icon"));
+    copyText(fresh.querySelector(".title-bar-text"), mainWindow.querySelector(".title-bar-text"));
+    contentEl.innerHTML = freshBody.innerHTML;
+    var statusBar = mainWindow.querySelector(".status-bar");
+    var freshStatus = fresh.querySelector(".status-bar");
+    if (statusBar && freshStatus) statusBar.innerHTML = freshStatus.innerHTML;
+
+    /* Background windows (the blog folder behind a post) belong to the
+       page, so they arrive and leave with it. */
+    Array.prototype.slice.call(windowStack.querySelectorAll(".background-window")).forEach(
+      function (w) {
+        var b = btnFor(w.dataset.win);
+        if (b) dropTask(b);
+        dropWindow(w);
+      }
+    );
+    var after = mainWindow;
+    Array.prototype.slice.call(doc.querySelectorAll(".background-window")).forEach(function (w) {
+      var node = document.importNode(w, true);
+      after.parentNode.insertBefore(node, after.nextSibling);
+      after = node;
+      adoptWindow(node);
+      /* Its taskbar button sits ahead of the main window's, the way the
+         templates order them. The lazy apps' buttons are never touched:
+         they hold live state this page knows nothing about. */
+      var freshBtn = doc.querySelector('.taskbar-task[data-for="' + node.dataset.win + '"]');
+      var mainBtn = btnFor("main");
+      if (!freshBtn || !mainBtn) return;
+      var btn = document.importNode(freshBtn, true);
+      mainBtn.parentNode.insertBefore(btn, mainBtn);
+      adoptTask(btn);
+    });
+
+    var task = btnFor("main");
+    var freshTask = doc.querySelector('.taskbar-task[data-for="main"]');
+    if (task && freshTask) {
+      copyClass(freshTask.querySelector(".icon"), task.querySelector(".icon"));
+      copyText(freshTask.querySelector(".taskbar-task-label"), task.querySelector(".taskbar-task-label"));
+      task.hidden = false;
+    }
+
+    /* The Start menu marks where you are, and the fresh document has
+       already worked that out server-side. */
+    var freshItems = doc.querySelectorAll(".start-menu a[role=menuitem]");
+    var items = startMenu.querySelectorAll("a[role=menuitem]");
+    if (freshItems.length === items.length) {
+      for (var i = 0; i < items.length; i++) {
+        if (freshItems[i].hasAttribute("aria-current")) items[i].setAttribute("aria-current", "page");
+        else items[i].removeAttribute("aria-current");
+      }
+    }
+
+    /* Opening a file reopens its window, closed or minimized or not. */
+    mainWindow.classList.remove("closed", "minimized");
+    activate("main");
+
+    runScripts(contentEl);
+    if (statusBar) runScripts(statusBar);
+    findPyBlocks();
+    wireTryMe();
+    wireManimVideos();
+
+    /* What the main window holds is a different document now; the survey
+       was cached against the old one. */
+    survey = null;
+    notify("main");
+  }
+
+  var navSeq = 0;
+  var shownPath = location.pathname + location.search;
+
+  function setNavigating(on) {
+    document.body.classList.toggle("navigating", on);
+  }
+
+  function restoreScroll(target, top) {
+    var anchor = null;
+    if (target.hash.length > 1) {
+      try {
+        anchor = contentEl.querySelector(target.hash);
+      } catch (e) { /* not a selector - not our problem */ }
+    }
+    if (anchor && anchor.scrollIntoView) {
+      anchor.scrollIntoView();
+      return;
+    }
+    contentEl.scrollTop = top || 0;
+    var page = document.scrollingElement || document.documentElement;
+    if (page) page.scrollTop = top || 0;
+  }
+
+  function go(url, push, top) {
+    var target = routable(url);
+    if (!target) {
+      location.href = url;
+      return;
+    }
+
+    /* Whatever was on top of the desktop belongs to the click that just
+       happened, not to the page arriving. */
+    setStartMenu(false);
+    closeDeskMenu(false);
+    deselectIcons();
+    setNavigating(true);
+
+    var seq = ++navSeq;
+    fetchPage(target.href.split("#")[0]).then(
+      function (page) {
+        if (seq !== navSeq) return; /* a later click won the race */
+        setNavigating(false);
+        try {
+          if (push) {
+            /* Remember how far down the reader got, so Back puts them
+               back there instead of at the top. */
+            history.replaceState({ mfTop: contentEl.scrollTop }, "");
+            history.pushState({ mfTop: 0 }, "", page.url + target.hash);
+          }
+          swap(new DOMParser().parseFromString(page.html, "text/html"));
+        } catch (err) {
+          location.href = target.href;
+          return;
+        }
+        shownPath = location.pathname + location.search;
+        restoreScroll(target, top);
+        /* Screen readers and keyboards land in the new document rather
+           than wherever the old one left them. */
+        try {
+          contentEl.focus({ preventScroll: true });
+        } catch (err2) {
+          contentEl.focus();
+        }
+      },
+      function () {
+        /* Offline, a 404, a redirect to somewhere else entirely: the
+           browser does all of that better than we can. */
+        if (seq !== navSeq) return;
+        setNavigating(false);
+        location.href = target.href;
+      }
+    );
+  }
+
+  if (canRoute) {
+    document.addEventListener("click", function (e) {
+      if (e.defaultPrevented || e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest("a[href]");
+      if (!a || a.hasAttribute("download")) return;
+      if (a.target && a.target !== "_self") return;
+      var target = routable(a.href);
+      if (!target) return;
+      /* A jump inside the page we're already on is the browser's job. */
+      if (
+        target.hash &&
+        target.pathname === location.pathname &&
+        target.search === location.search
+      ) {
+        return;
+      }
+      e.preventDefault();
+      go(a.href, true);
+    });
+
+    window.addEventListener("popstate", function (e) {
+      /* The Internet's iframe shares this session history, and a hash
+         link moves through it too; neither changes which page the main
+         window is showing. */
+      if (location.pathname + location.search === shownPath) return;
+      go(location.href, false, e.state && e.state.mfTop);
+    });
+
+    /* The entry we started on gets a state object too, so coming Back to
+       it restores the scroll position like any other. */
+    try {
+      history.replaceState({ mfTop: 0 }, "");
+    } catch (e) { /* file:// and friends */ }
+  }
+
   /* --- Python editor (lazy-loaded) --- */
   /* The editor's code (syntax highlighting, virtual FS, Pyodide glue)
      lives in editor.js and is only fetched the first time it's opened. */
@@ -875,6 +1244,9 @@
     openWinamp: function () { openWinamp(); },
     openFind: function (query) { openFind(query); },
     startScreensaver: function () { startScreensaver(saverMode(true)); },
+    /* Open a page of this site in the main window, without reloading the
+       desktop (see "Opening pages" below). */
+    open: function (url) { go(url, true); },
   };
 
   var editorPromise = null;
@@ -1052,22 +1424,26 @@
   });
 
   /* "Try me" buttons on Python code blocks */
-  pyBlocks.forEach(function (code) {
-    var pre = code.parentElement;
-    var wrap = document.createElement("div");
-    wrap.className = "tryme-wrap";
-    pre.parentNode.insertBefore(wrap, pre);
-    wrap.appendChild(pre);
-    var btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "tryme-btn";
-    btn.innerHTML = "&#9654; Try me";
-    btn.setAttribute("aria-label", "Open this code in the Python editor");
-    btn.addEventListener("click", function () {
-      openPyEditor(code.textContent.replace(/\n$/, ""));
+  function wireTryMe() {
+    pyBlocks.forEach(function (code) {
+      var pre = code.parentElement;
+      if (!pre || pre.parentElement.classList.contains("tryme-wrap")) return;
+      var wrap = document.createElement("div");
+      wrap.className = "tryme-wrap";
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tryme-btn";
+      btn.innerHTML = "&#9654; Try me";
+      btn.setAttribute("aria-label", "Open this code in the Python editor");
+      btn.addEventListener("click", function () {
+        openPyEditor(code.textContent.replace(/\n$/, ""));
+      });
+      wrap.appendChild(btn);
     });
-    wrap.appendChild(btn);
-  });
+  }
+  wireTryMe();
 
   /* --- Screen saver (lazy-loaded) --- */
   /* The canvas savers live in screensaver.js and are only fetched when

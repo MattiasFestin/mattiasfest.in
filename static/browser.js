@@ -43,7 +43,33 @@
   var connected = false;
   var dialing = false;
   var frame = null;
-  var loads = 0; /* iframe navigations (incl. link clicks inside) */
+
+  /* --- The Internet's own history ---
+
+     Back and Forward used to be history.back()/forward(): a cross-origin
+     iframe navigation lands in the session history, so stepping the
+     session stepped the iframe. That trick died the day the desktop
+     learned to open pages in place - the session history is now the
+     *site's*, and pressing Back in here would yank the whole desktop
+     back to the previous blog post. Nobody's browser has ever done
+     that. So The Internet keeps its own trail instead.
+
+     Every stop we initiate gets a brand-new <iframe>, with src set
+     *before* the element is inserted. A browsing context whose only
+     entry is the initial about:blank navigates by replacing it, so
+     nothing we do writes to the session history at all. Throwing the
+     old iframe away discards its context too, which sweeps up any
+     entries a link click inside the page had pushed. The site's
+     history stays exactly as clean as main.js left it.
+
+     What we can't see is where the page went on its own: the frame is
+     somebody else's origin, and a link click in there is a load event
+     and nothing more. So we count that as "wandered", and Back brings
+     you home to the last address this browser can actually spell -
+     which is also the only address the address bar was ever showing. */
+  var trail = []; /* addresses we put in the frame, oldest first */
+  var here = -1; /* where in the trail we are */
+  var wandered = false; /* the page followed links of its own */
 
   /* --- Modem sound synthesis --- */
 
@@ -201,33 +227,7 @@
     setStatus("Connected!");
     dialup.hidden = true;
 
-    frame = document.createElement("iframe");
-    frame.className = "browser-frame";
-    frame.title = "The web of 1998, via the Internet Archive";
-    frame.setAttribute(
-      "sandbox",
-      /* No allow-scripts: the Wayback Machine injects its navigation
-         banner with JS, so blocking scripts keeps archived pages
-         banner-free even when links lose the if_ (iframe) flag. The
-         web of 1998 is static HTML anyway - and its popup ads and
-         <blink> scripts can stay buried. No allow-popups either. */
-      "allow-same-origin allow-forms"
-    );
-    frame.setAttribute("referrerpolicy", "no-referrer");
-    frame.addEventListener("load", function () {
-      loads++;
-      /* Back also covers link clicks inside the page: cross-origin
-         iframe navigations still land in the session history, so
-         history.back() steps the iframe, not the whole page. */
-      if (loads >= 2) backBtn.disabled = false;
-      setLoading(false);
-      barEl.textContent = "Done";
-    });
-    body.appendChild(frame);
-
     toolbarControls.forEach(function (el) { el.disabled = false; });
-    backBtn.disabled = true;
-    fwdBtn.disabled = true;
 
     navigate(HOME);
     window.MF.notify("browser"); /* we're online now, and that's news */
@@ -249,16 +249,63 @@
     win.classList.toggle("loading", on);
   }
 
-  function navigate(input) {
-    var url = normalize(input);
-    if (!url) return;
+  function syncButtons() {
+    backBtn.disabled = !(wandered || here > 0);
+    fwdBtn.disabled = here >= trail.length - 1;
+  }
+
+  /* Puts an address in the frame - no trail bookkeeping, that's
+     navigate()'s job. A fresh iframe every time; see the note above. */
+  function show(url) {
     var display = url.replace(/^https?:\/\//i, "");
     addressEl.value = display;
     titleEl.textContent = display + " - The Internet";
     barEl.textContent = "Opening page " + url + "...";
     setLoading(true);
-    frame.src = WAYBACK + url;
-    fwdBtn.disabled = true;
+    wandered = false;
+
+    var next = document.createElement("iframe");
+    next.className = "browser-frame";
+    next.title = "The web of 1998, via the Internet Archive";
+    next.setAttribute(
+      "sandbox",
+      /* No allow-scripts: the Wayback Machine injects its navigation
+         banner with JS, so blocking scripts keeps archived pages
+         banner-free even when links lose the if_ (iframe) flag. The
+         web of 1998 is static HTML anyway - and its popup ads and
+         <blink> scripts can stay buried. No allow-popups either. */
+      "allow-same-origin allow-forms"
+    );
+    next.setAttribute("referrerpolicy", "no-referrer");
+
+    var ours = true; /* the first load is the one we just asked for */
+    next.addEventListener("load", function () {
+      if (next !== frame) return; /* a discarded context, still twitching */
+      /* Browsers disagree about whether an iframe with src set before
+         insertion still announces its initial empty document. Ours is
+         same-origin, so if we can read about:blank back, it wasn't a
+         real page and doesn't count. */
+      var seen = "";
+      try {
+        seen = next.contentWindow.location.href;
+      } catch (e) {
+        /* cross-origin, i.e. an actual archived page */
+      }
+      if (seen === "about:blank") return;
+      if (ours) ours = false;
+      else wandered = true;
+      clearTimeout(doneTimer);
+      setLoading(false);
+      barEl.textContent = "Done";
+      syncButtons();
+    });
+
+    next.src = WAYBACK + url;
+    if (frame && frame.parentNode) frame.parentNode.removeChild(frame);
+    frame = next;
+    body.appendChild(next);
+
+    syncButtons();
     /* 1998 pages love resources that never finish loading; don't let
        a hung ad banner keep the status bar spinning forever */
     clearTimeout(doneTimer);
@@ -266,6 +313,15 @@
       setLoading(false);
       if (barEl.textContent.indexOf("Opening") === 0) barEl.textContent = "Done";
     }, 12000);
+  }
+
+  function navigate(input) {
+    var url = normalize(input);
+    if (!url) return;
+    trail = trail.slice(0, here + 1); /* a new address ends the future */
+    trail.push(url);
+    here = trail.length - 1;
+    show(url);
   }
 
   goBtn.addEventListener("click", function () {
@@ -288,20 +344,18 @@
     barEl.textContent = "Done";
   });
   refreshBtn.addEventListener("click", function () {
-    if (frame && frame.src) {
-      barEl.textContent = "Refreshing...";
-      setLoading(true);
-      frame.src = frame.src; /* eslint-disable-line no-self-assign */
-    }
+    if (here < 0) return;
+    show(trail[here]);
+    barEl.textContent = "Refreshing...";
   });
   backBtn.addEventListener("click", function () {
-    if (loads > 1) {
-      history.back();
-      fwdBtn.disabled = false;
-    }
+    /* Wandered off? Back means "take me back to the address I typed",
+       because that's the last place we can name. */
+    if (wandered) show(trail[here]);
+    else if (here > 0) show(trail[--here]);
   });
   fwdBtn.addEventListener("click", function () {
-    history.forward();
+    if (here < trail.length - 1) show(trail[++here]);
   });
 
   /* --- Favorites (presets + user's own, saved to localStorage) --- */

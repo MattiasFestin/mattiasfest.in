@@ -1,0 +1,22 @@
+{% set filename = file | default(value="") %}
+{% set caption_text = caption | default(value="") %}
+{% set label = title | default(value=caption_text) %}
+{% set explainer_title = explainer_title | default(value="What to watch for") %}
+<figure class="manim-figure"{% if label %} aria-label="{{ label }}"{% endif %}>
+  <video class="manim-video" autoplay muted loop playsinline preload="metadata"{% if poster %} poster="{{ poster }}"{% endif %}>
+    <source src="/videos/{{ filename }}.webm" type="video/webm">
+    <source src="/videos/{{ filename }}.mp4" type="video/mp4">
+    Your browser does not support embedded video.
+  </video>
+  {% if step_one %}
+  <aside class="manim-explainer" role="note" aria-label="{{ explainer_title }}">
+    <strong class="manim-explainer-title">{{ explainer_title }}</strong>
+    <ol>
+      <li>{{ step_one }}</li>
+      {% if step_two %}<li>{{ step_two }}</li>{% endif %}
+      {% if step_three %}<li>{{ step_three }}</li>{% endif %}
+    </ol>
+  </aside>
+  {% endif %}
+  {% if caption_text %}<figcaption>{{ caption_text }}</figcaption>{% endif %}
+</figure>
