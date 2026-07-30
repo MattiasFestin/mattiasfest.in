@@ -1,6 +1,6 @@
 +++
 title = "From lines to language models: Part 1 - Linear regression, the atom of ML"
-date = 2026-08-04
+date = 2026-07-31
 description = "Fitting a line means choosing a loss, and different losses crown different lines. Least squares turns out to be an orthogonal projection, the normal equations fall out of one perpendicularity condition, and gradient descent reaches the same answer by walking downhill, which is why it scales to everything that comes later."
 
 [extra]

@@ -1,6 +1,6 @@
 +++
 title = "From lines to language models: Part 7 - From predictor to assistant"
-date = 2026-09-15
+date = 2026-09-11
 description = "Ask a raw pretrained model \"What is the capital of Sweden?\" and it may answer with more exam questions — the predictor is doing its job perfectly; you asked for the next token when you wanted an assistant. The finale: supervised fine-tuning is the same cross-entropy on a tiny handwritten dataset, RLHF is a regression-shaped reward model with a KL leash to stop Goodharting, and hallucination is a precision failure shipped with a confident probability. Both series close: it's regressions all the way down, stacked, wired, and taught manners."
 
 [extra]

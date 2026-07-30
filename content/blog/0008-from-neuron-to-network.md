@@ -1,6 +1,6 @@
 +++
 title = "From lines to language models: Part 4 - One neuron is a vote, a network is a committee"
-date = 2026-08-25
+date = 2026-08-21
 description = "Four points labeled 0,1,1,0 defeat every line in existence, because no half-plane contains exactly two opposite corners of a square. The fix isn't a better neuron — a neuron is just Part 3's logistic regression — it's wiring: feed neurons' outputs to other neurons as features, and the hidden layer redraws the map so XOR becomes linearly separable in (h1, h2) coordinates. Two linear layers collapse into one, so the nonlinearity is load-bearing; backprop turns out to be the chain rule with caching, not a learning rule, and Part 3's g = p − y is still the entire signal, now flowing backward through the stack. Plus: why 'can approximate anything' doesn't mean 'will learn anything', and a committee beating a single voter on two moons."
 
 [extra]

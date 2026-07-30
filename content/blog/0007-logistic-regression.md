@@ -1,6 +1,6 @@
 +++
 title = "From lines to language models: Part 3 - Logistic regression, a line that votes"
-date = 2026-08-18
+date = 2026-08-14
 description = "Part 1's linear score was secretly a log-odds all along: solve log(p/(1−p)) = s for p and the sigmoid falls out, nothing decreed. Maximum likelihood on Bernoulli labels hands you cross-entropy, a loss that charges confident wrongness unboundedly and confident correctness nothing, and its gradient collapses to (σ(s)−y)·x — exactly Part 1's MSE gradient with the prediction renamed, the vanishing σ′ from Part 2 cancelled clean away. Softmax extends the vote to K classes, sigmoid turns out to be softmax with two, and the whole machine is the InfoNCE loss from the embeddings series wearing a classification costume."
 
 [extra]

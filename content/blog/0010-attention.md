@@ -1,6 +1,6 @@
 +++
 title = "From lines to language models: Part 6 - Attention is dot products all the way down"
-date = 2026-09-08
+date = 2026-09-04
 description = "\"The trophy would not fit in the suitcase because it was too ___\" — the next token depends on what 'it' refers to, and no fixed window can know that, because relevance depends on content, not position. Attention is the fix, built from machinery this series already owns: relevance is a query·key dot product, softmax over positions is the weighted opinion poll made literal, and the 1/√d scale is a temperature. Stack attend-then-think blocks, put Part 5's softmax head on top, and you own the whole transformer."
 
 [extra]

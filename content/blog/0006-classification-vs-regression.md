@@ -1,6 +1,6 @@
 +++
 title = "From lines to language models: Part 2 - Classification vs regression"
-date = 2026-08-11
+date = 2026-08-07
 description = "Fit a line to 0/1 spam labels and it works, until you add a few blatantly obvious spam emails and the previously-caught ones slip through, because squared error fines the model for being confidently right. The fix starts with an honest distinction: regression predicts a quantity, classification predicts a decision, and almost every classifier is secretly a regressor of scores plus a decision rule. Also: why a 99%-accurate spam filter can be useless, and why a threshold is a product decision, not math."
 
 [extra]
