@@ -4,7 +4,7 @@ date = 2026-08-07
 description = "Fit a line to 0/1 spam labels and it works, until you add a few blatantly obvious spam emails and the previously-caught ones slip through, because squared error fines the model for being confidently right. The fix starts with an honest distinction: regression predicts a quantity, classification predicts a decision, and almost every classifier is secretly a regressor of scores plus a decision rule. Also: why a 99%-accurate spam filter can be useless, and why a threshold is a product decision, not math."
 
 [extra]
-linkedin = "Part 2 of From lines to language models: fit a line to spam labels and it works — until you add blatantly obvious spam and the previously-caught ones slip through. Why squared error fines a model for being confidently right, why a 99%-accurate filter can be useless, and why a threshold is a product decision, not math."
+linkedin = "Part 2 of From lines to language models: fit a line to spam labels and it works, until you add blatantly obvious spam and the previously-caught ones slip through. Why squared error fines a model for being confidently right, why a 99%-accurate filter can be useless, and why a threshold is a product decision, not math."
 tags = ["ml", "classification", "regression", "intuition"]
 categories = ["Research Notes"]
 +++
@@ -67,9 +67,9 @@ Watch the boundary jump from 4 to ~15 and the three real spam emails flip to ham
 
 ## A quantity vs a decision
 
-The honest statement of the distinction: **regression predicts a quantity** (a price, a temperature, a delay: outputs that live on a continuum, where residuals have magnitudes and "off by 2" is twice as bad as "off by 1") and **classification predicts a decision** (spam or ham, cat or dog: outputs that live in a finite set, where the arithmetic of "off by 2" doesn't even parse).
+The distinction, stated plainly: **regression predicts a quantity** (a price, a temperature, a delay: outputs that live on a continuum, where residuals have magnitudes and "off by 2" is twice as bad as "off by 1") and **classification predicts a decision** (spam or ham, cat or dog: outputs that live in a finite set, where the arithmetic of "off by 2" doesn't even parse).
 
-But here's the part that makes the distinction useful instead of just taxonomic: almost every classifier you will ever meet is a **regressor of scores wearing a decision rule**. Underneath, there's a continuous function of the inputs, our familiar weighted opinion poll `$s = w \cdot x + b$` or something far deeper, and on top, a rule that converts the score into a verdict: *threshold it, or take the argmax*. The linear machinery from Part 1 doesn't get discarded; it gets a new job title. This is why "logistic regression" is a classification algorithm and nobody considers the name a mistake: it *is* a regression, of a score, with a decision rule bolted on. The design question is never "line or no line." It's what the score should *mean* and which loss teaches it that meaning.
+The distinction earns its keep, because almost every classifier you will ever meet is a **regressor of scores wearing a decision rule**. Underneath, there's a continuous function of the inputs, our familiar weighted opinion poll `$s = w \cdot x + b$` or something far deeper, and on top, a rule that converts the score into a verdict: *threshold it, or take the argmax*. The linear machinery from Part 1 doesn't get discarded; it gets a new job title. This is why "logistic regression" is a classification algorithm and nobody considers the name a mistake: it *is* a regression, of a score, with a decision rule bolted on. The design question is what the score should *mean* and which loss teaches it that meaning.
 
 ## What actually changes when the target is a category
 
@@ -79,7 +79,7 @@ Two things, and they cascade into everything else.
 
 **The right output object is a probability.** If a miss is a miss but misses have different prices, the most useful thing a model can hand downstream is not a verdict but a **calibrated probability**: "this is spam with probability 0.93." A probability lets every consumer apply their *own* costs and choose their own cutoff; a hard verdict bakes one particular cost assumption into the model forever. This is the same interface discipline as returning data instead of formatted strings. Verdicts are for the last possible moment.
 
-Which raises the obvious follow-up: our linear score `$wx + b$` happily outputs 9.1 and −0.13. It has the right shape (bigger score, spammier email) and the wrong range. We'll need to squash it into `$[0, 1]$`, and, crucially, pick a loss that treats the squashed value *as* a probability. Squared error is not that loss, and here's the intuition for why.
+Which raises the obvious follow-up: our linear score `$wx + b$` outputs 9.1 and −0.13. It has the right shape (bigger score, spammier email) and the wrong range. We'll need to squash it into `$[0, 1]$`, and, crucially, pick a loss that treats the squashed value *as* a probability. Squared error is not that loss, and here's the intuition for why.
 
 ## Why squared error keeps being the wrong tool
 
@@ -89,7 +89,7 @@ The hook showed failure mode one: on raw scores, MSE punishes confident correctn
 \frac{\partial}{\partial s} \bigl(\sigma(s) - y\bigr)^2 \;=\; 2\,\bigl(\sigma(s) - y\bigr)\; \sigma'(s)
 ```
 
-That `$\sigma'(s)$` factor is the slope of the squashing function, and it's near zero on both flat ends. So picture the worst case: the model says "definitely ham," `$\sigma(s) \approx 0$`, and the email is spam, `$y = 1$`. The error factor is maximal, but `$\sigma'(s) \approx 0$` strangles the product. **The gradient vanishes exactly where the model is most wrong**, gradient descent (our unkillable engine from Part 1) takes its stride-length steps on flat ground and barely moves, and the composed loss isn't convex anymore, so there are bad plateaus to get stuck on. Squared error plus squashing is a loss that stops teaching precisely when there's the most to learn. What we want instead is a loss whose gradient *grows* with confident wrongness. It exists, it's beautiful, and it's Part 3's job.
+That `$\sigma'(s)$` factor is the slope of the squashing function, and it's near zero on both flat ends. So picture the worst case: the model says "definitely ham," `$\sigma(s) \approx 0$`, and the email is spam, `$y = 1$`. The error factor is maximal, but `$\sigma'(s) \approx 0$` strangles the product. **The gradient vanishes exactly where the model is most wrong**, gradient descent (our unkillable engine from Part 1) takes its stride-length steps on flat ground and barely moves, and the composed loss isn't convex anymore, so there are bad plateaus to get stuck on. Squared error plus squashing is a loss that stops teaching precisely when there's the most to learn. What we want instead is a loss whose gradient *grows* with confident wrongness. It exists, and building it is Part 3's job.
 
 ## Two metrics cultures
 
@@ -134,11 +134,11 @@ The always-ham "model" posts the *best accuracy of the three* while doing litera
 
 Notice what the second demo also shows: the *same* scorer at threshold 2.0 versus 0.5 is two different products. High threshold: high precision, modest recall, the spam-filter posture, where a false positive (real mail buried) is the expensive mistake. Low threshold: high recall, poor precision, the medical-screening posture, where a false negative (a missed case) is the catastrophe and follow-up tests exist to mop up the false alarms. Same weights, same scores, opposite souls.
 
-Nothing in the mathematics chooses between them. The loss trains the scorer; the threshold encodes *your* costs, and those come from the business, the regulator, or the oncologist, not from `argmin`. This is also a production landmine with a familiar shape: [the drift post](@/blog/0004-what-are-drift.md) learned that hardcoded similarity thresholds don't survive a model swap, and classification thresholds are the same species. Retrain the scorer, and yesterday's 0.5 is not today's 0.5: the score distribution moved under the cutoff. A threshold is calibrated *against a specific model's scores*; version them together, and recalibrate on every retrain, or your precision/recall trade drifts silently while the accuracy dashboard stays green.
+Nothing in the mathematics chooses between them. The loss trains the scorer; the threshold encodes *your* costs, and those come from the business, the regulator, or the oncologist, not from `argmin`. This is also a production landmine with a familiar shape: [the drift post](@/blog/0004-what-are-drift.md) learned that hardcoded similarity thresholds don't survive a model swap, and classification thresholds are the same species. Retrain the scorer, and yesterday's 0.5 is not today's 0.5: the score distribution moved under the cutoff. A threshold is calibrated *against a specific model's scores*; version them together, and recalibrate on every retrain, or your precision/recall trade drifts while the accuracy dashboard stays green.
 
 ## The bridge
 
-Assemble the wish list this post has been writing. We want a model that: keeps the linear score `$w \cdot x + b$` (the opinion poll earned its keep), squashes it into `$[0, 1]$` so it can honestly be called a probability, and trains against a loss that rewards **calibrated honesty about uncertainty**, punishing confident wrongness harshly, confident correctness not at all, and vanishing nowhere we need it. That model exists, it's the workhorse classifier of the last century and this one, and true to this post's central claim it wears its construction in its name: *logistic regression*. A regression of scores, a decision rule on top, and one carefully chosen loss doing all the moral philosophy.
+Assemble the wish list this post has been writing. We want a model that: keeps the linear score `$w \cdot x + b$` (the opinion poll earned its keep), squashes it into `$[0, 1]$` so it can honestly be called a probability, and trains against a loss that rewards **calibrated honesty about uncertainty**, punishing confident wrongness harshly, confident correctness not at all, and vanishing nowhere we need it. That model exists, it's the workhorse classifier of the last century and this one, and true to this post's central claim it wears its construction in its name: *logistic regression*. A regression of scores, a decision rule on top, and one carefully chosen loss doing all the hard work.
 
 ## Closing thoughts
 
@@ -148,6 +148,6 @@ Next up: the line that votes. We squash the linear score into a probability, mee
 
 ## Further reading
 
-- **Hastie, Tibshirani & Friedman, *The Elements of Statistical Learning*, Chapter 4** — linear methods for classification, including exactly why regression on indicator labels misbehaves (and the "masking" problem it grows in the multi-class case). Free PDF from the authors.
-- **Fawcett, T., "An Introduction to ROC Analysis" (Pattern Recognition Letters, 2006)** — the standard treatment of scorers vs thresholds: how one score function generates a whole curve of classifiers, and how to compare them without committing to a cutoff.
-- **Saito, T. & Rehmsmeier, M., "The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets" (PLOS ONE, 2015)** — the class-imbalance section of this post, with teeth and experiments.
+- **Hastie, Tibshirani & Friedman, *The Elements of Statistical Learning*, Chapter 4**. Linear methods for classification, including exactly why regression on indicator labels misbehaves (and the "masking" problem it grows in the multi-class case). Free PDF from the authors.
+- **Fawcett, T., "An Introduction to ROC Analysis" (Pattern Recognition Letters, 2006)**. The standard treatment of scorers vs thresholds: how one score function generates a whole curve of classifiers, and how to compare them without committing to a cutoff.
+- **Saito, T. & Rehmsmeier, M., "The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets" (PLOS ONE, 2015)**. The class-imbalance section of this post, with teeth and experiments.

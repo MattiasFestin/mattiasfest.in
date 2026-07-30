@@ -1,10 +1,10 @@
 +++
 title = "From lines to language models: Part 4 - One neuron is a vote, a network is a committee"
 date = 2026-08-21
-description = "Four points labeled 0,1,1,0 defeat every line in existence, because no half-plane contains exactly two opposite corners of a square. The fix isn't a better neuron — a neuron is just Part 3's logistic regression — it's wiring: feed neurons' outputs to other neurons as features, and the hidden layer redraws the map so XOR becomes linearly separable in (h1, h2) coordinates. Two linear layers collapse into one, so the nonlinearity is load-bearing; backprop turns out to be the chain rule with caching, not a learning rule, and Part 3's g = p − y is still the entire signal, now flowing backward through the stack. Plus: why 'can approximate anything' doesn't mean 'will learn anything', and a committee beating a single voter on two moons."
+description = "Four points labeled 0,1,1,0 defeat every line in existence, because no half-plane contains exactly two opposite corners of a square. The fix is wiring: a neuron is just Part 3's logistic regression, so feed neurons' outputs to other neurons as features, and the hidden layer redraws the map so XOR becomes linearly separable in (h1, h2) coordinates. Two linear layers collapse into one, so the nonlinearity is load-bearing; backprop turns out to be the chain rule with caching, and Part 3's g = p − y is still the entire signal, now flowing backward through the stack. Plus: why 'can approximate anything' doesn't mean 'will learn anything', and a committee beating a single voter on two moons."
 
 [extra]
-linkedin = "Part 4 of From lines to language models: four points labeled 0,1,1,0 defeat every line in existence. The fix isn't a better neuron — it's wiring. Hidden layers redraw the map until the unsolvable becomes linearly separable, and backprop is not a learning rule, it's the chain rule with caching."
+linkedin = "Part 4 of From lines to language models: four points labeled 0,1,1,0 defeat every line in existence. The fix is wiring. Hidden layers redraw the map until the unsolvable becomes linearly separable, and backprop is the chain rule with caching."
 tags = ["ml", "neural-networks", "backpropagation", "deep-learning", "intuition"]
 categories = ["Research Notes"]
 +++
@@ -17,7 +17,7 @@ Four points, four labels:
 (0,0) \to 0, \qquad (0,1) \to 1, \qquad (1,0) \to 1, \qquad (1,1) \to 0
 ```
 
-That's **XOR**: fire when exactly one input is on. Now find a line — any line, any tilt, any offset — that puts the two 1s on one side and the two 0s on the other. Take your time; the search space is every hyperplane in the plane.
+That's **XOR**: fire when exactly one input is on. Now find a line (any line, any tilt, any offset) that puts the two 1s on one side and the two 0s on the other. Take your time; the search space is every hyperplane in the plane.
 
 There isn't one, and the reason fits in a sentence: the 1s sit at *opposite corners* of the unit square, and no half-plane contains two opposite corners without also swallowing at least one of the corners between them. Every classifier in Parts 1–3, however honestly it votes, draws exactly one hyperplane. **One voter cannot represent a non-linear opinion.** This tiny truth table is the cleanest possible witness, and it famously helped freeze neural-network research for a decade (Minsky & Papert, further reading).
 
@@ -25,11 +25,11 @@ The fix is not a smarter voter. It's a **committee**.
 
 **TL;DR**
 
-- A **neuron** is nothing new: it's Part 3's logistic regression — a weighted opinion poll `$w \cdot x + b$` plus a squash. The new idea is **wiring**: feed neurons' outputs into other neurons *as features*.
-- XOR falls to two hidden neurons you can build by hand: `$h_1 = $` OR, `$h_2 = $` AND, output = `$h_1$` AND NOT `$h_2$`. The punchline: **the hidden layer redraws the map** — in `$(h_1, h_2)$` coordinates, XOR is linearly separable.
-- The nonlinearity is **load-bearing**: two linear layers collapse into one linear layer by plain algebra. No squash, no committee — just one voter with extra steps.
-- **Backprop is not a learning rule; it's bookkeeping.** It's the chain rule organized so the forward pass caches what the backward pass reuses. Gradient descent is still the learner — Part 1's loop, unchanged. Part 3's `$g = p - y$` is still the entire signal; it just flows backward now, reweighted by each layer's weights and gated by each activation's slope.
-- Wide-enough one-hidden-layer nets can approximate any continuous function — but "can represent" ≠ "will learn". Depth buys **composition and reuse**, which is why deep beats wide in practice.
+- A **neuron** is nothing new: it's Part 3's logistic regression, a weighted opinion poll `$w \cdot x + b$` plus a squash. The new idea is **wiring**: feed neurons' outputs into other neurons *as features*.
+- XOR falls to two hidden neurons you can build by hand: `$h_1 = $` OR, `$h_2 = $` AND, output = `$h_1$` AND NOT `$h_2$`. The punchline: **the hidden layer redraws the map**. In `$(h_1, h_2)$` coordinates, XOR is linearly separable.
+- The nonlinearity is **load-bearing**: two linear layers collapse into one linear layer by plain algebra. No squash, no committee, just one voter with extra steps.
+- **Backprop is bookkeeping.** It's the chain rule organized so the forward pass caches what the backward pass reuses. Gradient descent is still the learner: Part 1's loop, unchanged. Part 3's `$g = p - y$` is still the entire signal; it just flows backward now, reweighted by each layer's weights and gated by each activation's slope.
+- Wide-enough one-hidden-layer nets can approximate any continuous function, but "can represent" ≠ "will learn". Depth buys **composition and reuse**, which is why deep beats wide.
 - Learned features are the payoff Part 1 promised: nobody handcrafts `$x^2$` anymore. The hidden layer *is* the feature engineer, on gradient-descent payroll.
 
 ## A neuron is nothing new
@@ -40,15 +40,15 @@ Strip the biology-flavored vocabulary and a **neuron** is:
 h = \phi(w \cdot x + b)
 ```
 
-A weighted opinion poll over its inputs, then a nonlinearity `$\phi$` (sigmoid, tanh, ReLU — the catalog comes below). With `$\phi = \sigma$` that is *literally* [Part 3](@/blog/0007-logistic-regression.md)'s logistic regression, character for character. If you followed Part 3, you already know everything a single neuron does. Zero new math.
+A weighted opinion poll over its inputs, then a nonlinearity `$\phi$` (sigmoid, tanh, ReLU; the catalog comes below). With `$\phi = \sigma$` that is *literally* [Part 3](@/blog/0007-logistic-regression.md)'s logistic regression, character for character. If you followed Part 3, you already know everything a single neuron does, with zero new math.
 
-The new idea is **wiring**. Take several neurons, point them all at the same input `$x$`, and collect their outputs into a vector `$h = (h_1, \dots, h_m)$`. Then — here's the move — treat `$h$` as the *feature vector* for another neuron:
+The new idea is **wiring**. Take several neurons, point them all at the same input `$x$`, and collect their outputs into a vector `$h = (h_1, \dots, h_m)$`. Then treat `$h$` as the *feature vector* for another neuron:
 
 ```math
 h = \phi(W_1 x + b_1), \qquad p = \sigma(w_2 \cdot h + b_2)
 ```
 
-That's a **multi-layer perceptron** (MLP) with one hidden layer: `$W_1$` is `$m$` opinion polls stacked into a matrix, and the output neuron polls *the polls*. Part 1 ended on "what if features were learned instead of designed?" — this is the answer's shape. The hidden layer's outputs are features nobody handcrafted, and since `$W_1$` sits inside the loss like any other parameter, gradient descent tunes the features and the classifier *in the same loop*.
+That's a **multi-layer perceptron** (MLP) with one hidden layer: `$W_1$` is `$m$` opinion polls stacked into a matrix, and the output neuron polls *the polls*. Part 1 ended on "what if features were learned instead of designed?" This is the answer's shape. The hidden layer's outputs are features nobody handcrafted, and since `$W_1$` sits inside the loss like any other parameter, gradient descent tunes the features and the classifier *in the same loop*.
 
 ## XOR by hand: the hidden layer redraws the map
 
@@ -78,9 +78,9 @@ print("\nin (h1, h2) space the four points sit at ~(0,0), (1,0), (1,0), (1,1)")
 print("and the line h1 - h2 = 0.5 separates them. XOR is now LINEAR.")
 ```
 
-Run it and read the hidden columns, because that's where the whole post lives. The four inputs land at roughly `$(0,0)$`, `$(1,0)$`, `$(1,0)$`, `$(1,1)$` in `$(h_1, h_2)$` coordinates — the two positive examples got **folded onto the same point**, and the line `$h_1 - h_2 = 0.5$` now separates the classes trivially. The output neuron is a plain Part 3 voter; it just votes in better coordinates.
+Run it and read the hidden columns, because that's where the whole post lives. The four inputs land at roughly `$(0,0)$`, `$(1,0)$`, `$(1,0)$`, `$(1,1)$` in `$(h_1, h_2)$` coordinates. The two positive examples got **folded onto the same point**, and the line `$h_1 - h_2 = 0.5$` now separates the classes trivially. The output neuron is a plain Part 3 voter; it just votes in better coordinates.
 
-**The hidden layer redraws the map.** And you have met this machine before: this is exactly what the mail-sorting machine in [the embeddings post](@/blog/0002-what-are-embeddings.md) does — hidden layers are *learned coordinates in which the problem becomes easy*. An embedding model is a stack of these layers with the classifier head snapped off: you keep the redrawn map and throw away the final vote.
+**The hidden layer redraws the map.** And you have met this machine before: this is exactly what the mail-sorting machine in [the embeddings post](@/blog/0002-what-are-embeddings.md) does. Hidden layers are *learned coordinates in which the problem becomes easy*. An embedding model is a stack of these layers with the classifier head snapped off: you keep the redrawn map and throw away the final vote.
 
 ## The nonlinearity is load-bearing
 
@@ -90,15 +90,15 @@ Tempting simplification: skip the squash, stack linear layers, stay differentiab
 W_2 (W_1 x + b_1) + b_2 \;=\; (W_2 W_1)\, x + (W_2 b_1 + b_2) \;=\; W' x + b'
 ```
 
-Two linear layers **collapse into one** — a hundred stacked linear layers are a single opinion poll with extra steps, still one hyperplane, still defeated by four points. The nonlinearity between layers is the only thing standing between "network" and "expensive line." It is load-bearing.
+Two linear layers **collapse into one**. A hundred stacked linear layers are a single opinion poll with extra steps, still one hyperplane, still defeated by four points. The nonlinearity between layers is the only thing standing between "network" and "expensive line."
 
-Which `$\phi$`, then? Sigmoid is the historical default, and for a *single* output neuron it's still right (Part 3 derived it from log-odds). But as a *hidden* activation in deep stacks it has a familiar disease: it **saturates**, and its slope `$\sigma' = \sigma(1-\sigma)$` tops out at 0.25. Part 2 met this villain once — the vanishing `$\sigma'$` that strangled squash-plus-squared-error. Part 3 cancelled it *at the output* by matching the loss to the link. But hidden layers get no such cancellation: as you'll see below, the backward signal picks up one activation-slope factor *per layer*, and `$0.25^{10} \approx 10^{-6}$`. Deep sigmoid stacks starve their early layers. Same villain, new crime scene: what was a squashing problem in Part 2 is a *depth* problem here.
+Which `$\phi$`, then? Sigmoid is the historical default, and for a *single* output neuron it's still right (Part 3 derived it from log-odds). But as a *hidden* activation in deep stacks it has a familiar disease: it **saturates**, and its slope `$\sigma' = \sigma(1-\sigma)$` tops out at 0.25. Part 2 met this villain once: the vanishing `$\sigma'$` that strangled squash-plus-squared-error. Part 3 cancelled it *at the output* by matching the loss to the link. But hidden layers get no such cancellation: as you'll see below, the backward signal picks up one activation-slope factor *per layer*, and `$0.25^{10} \approx 10^{-6}$`. Deep sigmoid stacks starve their early layers. What was a squashing problem in Part 2 is a *depth* problem here.
 
-The modern default is **ReLU**, `$\mathrm{ReLU}(s) = \max(0, s)$`: costs one comparison, and its slope is exactly 1 for every `$s > 0$` — no saturation, no shrinking factors, gradients pass through active units untaxed. (The price: units stuck at `$s < 0$` pass nothing, the "dead ReLU"; in practice, with sane init, enough units stay alive.) One sentence worth keeping: since ReLU is piecewise-linear and compositions of piecewise-linear maps are piecewise-linear, **a ReLU network is a machine for assembling many linear pieces into one function** — a committee of lines impersonating a curve, with more pieces than you'd ever handcraft.
+The modern default is **ReLU**, `$\mathrm{ReLU}(s) = \max(0, s)$`: costs one comparison, and its slope is exactly 1 for every `$s > 0$`, with no saturation and no shrinking factors. (The price: units stuck at `$s < 0$` pass nothing, the "dead ReLU"; with sane init, enough units stay alive.) One sentence worth keeping: since ReLU is piecewise-linear and compositions of piecewise-linear maps are piecewise-linear, **a ReLU network is a machine for assembling many linear pieces into one function** (a committee of lines impersonating a curve, with more pieces than you'd ever handcraft).
 
 ## Backprop is bookkeeping, not learning
 
-Now the part with the scary reputation. Gradient descent needs `$\partial \mathcal{L} / \partial \theta$` for every parameter `$\theta$` in every layer, and the network is a composition of functions, so the tool is the **chain rule** — the same one Part 1 used, applied more than once. **Backpropagation** is nothing but the chain rule *organized*: run the network forward and **cache** every intermediate value, then walk backward reusing the caches, so no derivative is computed twice.
+Now the part with the scary reputation. Gradient descent needs `$\partial \mathcal{L} / \partial \theta$` for every parameter `$\theta$` in every layer, and the network is a composition of functions, so the tool is the **chain rule** (the same one Part 1 used, applied more than once). **Backpropagation** is nothing but the chain rule *organized*: run the network forward and **cache** every intermediate value, then walk backward reusing the caches, so no derivative is computed twice.
 
 Take our one-hidden-layer network with cross-entropy loss, and start from what [Part 3](@/blog/0007-logistic-regression.md) already proved: the gradient of the loss with respect to the output score is
 
@@ -106,7 +106,7 @@ Take our one-hidden-layer network with cross-entropy loss, and start from what [
 g = p - y
 ```
 
-three characters wide, the entire learning signal. For the output layer's weights, chain through `$s_2 = w_2 \cdot h + b_2$`: the gradient is `$g \, h$` — *error times the feature that caused it*, Part 1's sentence verbatim, except the "features" are now the hidden activations. Then keep chaining, one hop per arrow, back into the hidden layer:
+three characters wide, the entire learning signal. For the output layer's weights, chain through `$s_2 = w_2 \cdot h + b_2$`: the gradient is `$g \, h$`. That is *error times the feature that caused it*, Part 1's sentence verbatim, except the "features" are now the hidden activations. Then keep chaining, one hop per arrow, back into the hidden layer:
 
 ```math
 \frac{\partial \mathcal{L}}{\partial h} = g \, w_2,
@@ -116,13 +116,13 @@ three characters wide, the entire learning signal. For the output layer's weight
 \frac{\partial \mathcal{L}}{\partial W_1} = \bigl(g \, w_2 \odot \phi'(s_1)\bigr)\, x^{\top}
 ```
 
-Read the middle expression as a story: the output error `$g$` flows backward, gets **reweighted** by the output layer's weights (`$w_2$` says how much each hidden unit's opinion mattered, so it also says how much blame each one gets), and gets **gated** by the activation's slope `$\phi'$` (a saturated unit wasn't listening on the way forward, so it takes no blame on the way backward — there's the `$0.25$`-per-layer tax on sigmoid, and ReLU's slope-1 exemption). Deeper networks just repeat the reweight-and-gate step once per layer.
+Read the middle expression as a story: the output error `$g$` flows backward, gets **reweighted** by the output layer's weights (`$w_2$` says how much each hidden unit's opinion mattered, so it also says how much blame each one gets), and gets **gated** by the activation's slope `$\phi'$` (a saturated unit wasn't listening on the way forward, so it takes no blame on the way backward; there's the `$0.25$`-per-layer tax on sigmoid, and ReLU's slope-1 exemption). Deeper networks just repeat the reweight-and-gate step once per layer.
 
-And note what backprop is *not*: it is not a learning rule. It never decides how to change a weight; it only delivers gradients, efficiently, by caching forward and reusing backward. The learner is still gradient descent — Part 1's loop with its stride length `$\eta$`, character for character unchanged. Backprop is the accountant; gradient descent is still the one walking downhill.
+And note what backprop is *not*: it is not a learning rule. It never decides how to change a weight; it only delivers gradients, efficiently, by caching forward and reusing backward. The learner is still gradient descent: Part 1's loop with its stride length `$\eta$`, character for character unchanged. Backprop is the accountant; gradient descent is still the one walking downhill.
 
 ## XOR learned from scratch
 
-Enough hand-construction. Random init, forward, backward, update — the loop from Part 1 wearing its fourth costume:
+Enough hand-construction. Random init, forward, backward, update: the same loop from Part 1, now with a hidden layer to walk back through:
 
 ```python
 import numpy as np
@@ -151,7 +151,7 @@ print(f"\ntargets       = {y}")
 print(f"final verdict = {(p > 0.5).astype(int)}")
 ```
 
-Ten lines of learning. The backward pass is two lines (`g`, `dh`), and `g = p - y` is still doing all the moral philosophy — everything after it is reweighting and gating. Try shrinking to 2 hidden units and rerunning with different seeds: sometimes it nails XOR, sometimes it stalls at loss ≈ 0.35 forever. That's your first meeting with **non-convexity** — Part 3's one-valley guarantee is officially gone, the landscape has plateaus and bad basins, and the practical remedy is unglamorous: more units than strictly necessary, so *some* random subset starts pointed the right way. Overparameterization as insurance.
+Ten lines of learning. The backward pass is two lines (`g`, `dh`), and `g = p - y` is still doing all the moral philosophy. Everything after it is reweighting and gating. Try shrinking to 2 hidden units and rerunning with different seeds: sometimes it nails XOR, sometimes it stalls at loss ≈ 0.35 forever. That's your first meeting with **non-convexity**. Part 3's one-valley guarantee is officially gone, the landscape has plateaus and bad basins, and the practical remedy is unglamorous: more units than strictly necessary, so *some* random subset starts pointed the right way. Overparameterization is insurance.
 
 ## The committee beats the single voter
 
@@ -188,24 +188,24 @@ print(f"logistic regression (one voter):  accuracy = {acc_lr:.3f}")
 print(f"MLP, 8 hidden units (committee):  accuracy = {acc_mlp:.3f}")
 ```
 
-The single voter does what a hyperplane can — respectably, on the parts of the moons that don't interleave — and then hits its representational ceiling. The committee bends. Same engine, same loss, same `$g = p - y$`; the only difference is eight learned features between the input and the vote.
+The single voter does what a hyperplane can (respectably, on the parts of the moons that don't interleave) and then hits its representational ceiling. The committee bends. Same engine, same loss, same `$g = p - y$`; the only difference is eight learned features between the input and the vote.
 
 ## Universal approximation, honestly
 
-Here's the theorem people quote and the fine print they skip. A one-hidden-layer network with enough units can approximate **any continuous function** on a bounded region to any accuracy you name (Cybenko 1989, Hornik 1991 — further reading). The proof sketch is even intuitive after the ReLU sentence above: enough little bumps and pieces, placed well, can trace any curve. So why stack layers at all?
+A one-hidden-layer network with enough units can approximate **any continuous function** on a bounded region to any accuracy you name (Cybenko 1989, Hornik 1991, further reading). The proof sketch is even intuitive after the ReLU sentence above: enough little bumps and pieces, placed well, can trace any curve. So why stack layers at all?
 
-Because "**can represent**" and "**will learn**" are different claims. The theorem says a good wide network *exists*; it says nothing about finding it by gradient descent from random init, with finite data, in finite time — and the width required can grow absurdly (exponentially, for some functions) as the target gets more compositional. Depth attacks that directly: a deep network computes *features of features*, so a sub-pattern learned once in layer 1 gets **reused** by everything above it, instead of being re-derived by a thousand parallel units. Composition is a compression scheme. That's the honest reason deep beats wide in practice, and it's the "stack of these layers" that the embeddings series was quietly running the whole time.
+Because "**can represent**" and "**will learn**" are different claims. The theorem says a good wide network *exists*; it says nothing about finding it by gradient descent from random init, with finite data, in finite time. And the width required can grow absurdly (exponentially, for some functions) as the target gets more compositional. Depth attacks that directly: a deep network computes *features of features*, so a sub-pattern learned once in layer 1 gets **reused** by everything above it, instead of being re-derived by a thousand parallel units. Composition is a compression scheme, and that's why deep beats wide. It's also why the embeddings series was running a stack of these layers the whole time.
 
-One production aside before closing, because more expressive power means more rope. A committee that can bend around two moons can also bend around noise — every mislabeled point in your training set is a shape an MLP will happily learn to carve. The classical instruments all still work: ridge's weight penalty from [Part 1](@/blog/0005-linear-regression.md) reappears verbatim as **weight decay**; **early stopping** quits training while the model still generalizes (watch a held-out set, stop when *its* loss turns upward); and the unfashionable truth is that the strongest regularizer is **more data** — rope is only dangerous in a small room.
+One production aside before closing, because more expressive power means more rope. A committee that can bend around two moons can also bend around noise: every mislabeled point in your training set is a shape an MLP will learn to carve. The classical instruments all still work. Ridge's weight penalty from [Part 1](@/blog/0005-linear-regression.md) reappears verbatim as **weight decay**, and **early stopping** quits training while the model still generalizes (watch a held-out set, stop when *its* loss turns upward). The unfashionable truth is that the strongest regularizer is **more data**. Rope is only dangerous in a small room.
 
 ## Closing thoughts
 
-Part 3's dare, settled: one line cannot carve XOR, and the fix was never a better line. A neuron is Part 3's voter unchanged; the invention is wiring voters into a committee, where the hidden layer redraws the map until the problem is linear — the mail-sorting machine from the embeddings series, revealed as layers all the way down. The nonlinearity is load-bearing (linear stacks collapse by one line of algebra), backprop is the chain rule with a caching discipline rather than a learning rule, and the learner is still Part 1's downhill walk, fed by Part 3's three-character signal `$g = p - y$`, reweighted and gated backward through the stack. What we paid for the power: convexity. One valley became a mountain range, and overparameterization became insurance rather than sin. And Part 1's oldest question is answered — the features nobody handcrafted are the hidden activations, designed by gradient descent on the job.
+Part 3's dare, settled: one line cannot carve XOR, and the fix was wiring. A neuron is Part 3's voter unchanged; the invention is wiring voters into a committee, where the hidden layer redraws the map until the problem is linear. That's the mail-sorting machine from the embeddings series, revealed as layers all the way down. The nonlinearity is load-bearing (linear stacks collapse by one line of algebra), and backprop is the chain rule with a caching discipline. The learner is still Part 1's downhill walk, fed by Part 3's three-character signal `$g = p - y$`, reweighted and gated backward through the stack. What we paid for the power: convexity. One valley became a mountain range, and overparameterization became insurance rather than sin. And Part 1's oldest question is answered: the features nobody handcrafted are the hidden activations, designed by gradient descent on the job.
 
-So we now own a machine that learns its own features and ends in the softmax vote Part 3 told us to remember. Next up: pointing that machine at language. Predicting the next word is — no metaphor — a classification problem over a vocabulary: tens of thousands of classes, softmax + cross-entropy, `$g = p - y$` and all, and taking that framing seriously is where language models begin.
+So we now own a machine that learns its own features and ends in the softmax vote Part 3 told us to remember. Next up: pointing that machine at language. Predicting the next word is (no metaphor) a classification problem over a vocabulary: tens of thousands of classes, softmax + cross-entropy, `$g = p - y$` and all, and taking that framing seriously is where language models begin.
 
 ## Further reading
 
-- **Minsky, M. & Papert, S., *Perceptrons* (1969)** — the book that made XOR famous: a rigorous map of what single-layer machines cannot represent, widely (if unfairly) blamed for the first neural-network winter.
-- **Rumelhart, D. E., Hinton, G. E. & Williams, R. J., "Learning representations by back-propagating errors" (Nature, 1986)** — the paper that put backprop on the map, with hidden units learning internal representations — including, yes, XOR.
-- **Cybenko, G., "Approximation by superpositions of a sigmoidal function" (1989)** and **Hornik, K., "Approximation capabilities of multilayer feedforward networks" (1991)** — the universal approximation theorems, existence proofs with all the fine print this post's honest paragraph flagged.
+- **Minsky, M. & Papert, S., *Perceptrons* (1969)**. The book that made XOR famous: a rigorous map of what single-layer machines cannot represent, widely (if unfairly) blamed for the first neural-network winter.
+- **Rumelhart, D. E., Hinton, G. E. & Williams, R. J., "Learning representations by back-propagating errors" (Nature, 1986)**. The paper that put backprop on the map, with hidden units learning internal representations (including, yes, XOR).
+- **Cybenko, G., "Approximation by superpositions of a sigmoidal function" (1989)** and **Hornik, K., "Approximation capabilities of multilayer feedforward networks" (1991)**. The universal approximation theorems: existence proofs with all the fine print this post's honest paragraph flagged.

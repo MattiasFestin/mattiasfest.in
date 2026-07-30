@@ -1,15 +1,15 @@
 +++
 title = "Python.exe: run code right here on the blog"
 date = 2026-07-28
-description = "Every Python snippet on this blog now has a Try me button that opens a retro editor and runs the code in your browser — no installs, powered by Pyodide and WebAssembly."
+description = "Every Python snippet on this blog now has a Try me button that opens a retro editor and runs the code in your browser. No installs, powered by Pyodide and WebAssembly."
 +++
 
 See a Python snippet on this blog, press **▶ Try me**, and it opens in
-`Python.exe` — a little Notepad-style editor with an MS-DOS output pane.
+`Python.exe`, a little Notepad-style editor with an MS-DOS output pane.
 Edit the code, press **Run** (or **F5**, like the good old days), and it
 executes *in your browser*. No installs, no server, nothing sent anywhere.
 
-Under the hood it's [Pyodide](https://pyodide.org/) — real CPython
+Under the hood it's [Pyodide](https://pyodide.org/), real CPython
 compiled to WebAssembly. The runtime (~10 MB) is downloaded only when
 you open the editor, and cached after that. If you never click, this
 page is as light as any other.
@@ -61,7 +61,7 @@ print(f"pi^2 / 6:                  {math.pi**2 / 6:.10f}")
 
 ## Even numpy works
 
-Imports of scientific packages are fetched automatically on first use —
+Imports of scientific packages are fetched automatically on first use.
 `numpy` is an extra download (a few MB), so the first run takes a
 moment. Here's the rotation matrix from the math post, as code:
 
@@ -80,12 +80,12 @@ print("x rotated 90 degrees:", np.round(R @ x, 3))
 
 ## The fine print
 
-- Everything runs client-side in a sandbox — you can't break the blog,
-  so go wild.
+- Everything runs client-side in a sandbox, so you can't break the blog.
+  Go wild.
 - The editor shares one Python session per page visit, so variables
   survive between runs until you close the tab.
 - File &rarr; Save writes to the virtual C:\ drive (your browser's
-  localStorage). No cloud, no sync, no backups — just like a real
+  localStorage). No cloud, no sync, no backups, just like a real
   hard drive from 1998.
 - It runs on the page's main thread: `while True: pass` will freeze
   the tab, exactly like it froze the family computer in 1998. Some

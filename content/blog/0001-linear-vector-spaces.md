@@ -74,7 +74,7 @@ And some instructive **non-examples**:
 
 ## Pillar two: what is a metric?
 
-A **metric** on a set `$X$` is a function `$d : X \times X \to [0, \infty)$` satisfying four axioms. Each one is a promise your algorithms quietly rely on:
+A **metric** on a set `$X$` is a function `$d : X \times X \to [0, \infty)$` satisfying four axioms. Each one is a promise your algorithms rely on:
 
 1. **Non-negativity**: `$d(x, y) \ge 0$`. Distances aren't negative.
 2. **Identity of indiscernibles**: `$d(x, y) = 0 \iff x = y$`. Zero distance means *same point*, so "distance zero" is a safe deduplication test.

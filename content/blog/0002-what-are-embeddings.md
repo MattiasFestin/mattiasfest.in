@@ -33,9 +33,9 @@ trained so that a chosen notion of similarity in the input world becomes geometr
 
 ## What survives the fold?
 
-The envelope is small and the letter is not, so the stamping is **<u>lossy</u>**: most of the letter's detail doesn't fit into the coordinate. But here's the part that trips people up: nobody sat down and *decided* what to keep. The model isn't compressing the letter so it can be reconstructed later. It's answering a much narrower question: *where should this letter sit so that the things my training called "similar" end up nearby?*
+The envelope is small and the letter is not, so the stamping is **<u>lossy</u>**: most of the letter's detail doesn't fit into the coordinate. The part people miss is that nobody sat down and *decided* what to keep. The model isn't compressing the letter so it can be reconstructed later. It's answering a much narrower question: *where should this letter sit so that the things my training called "similar" end up nearby?*
 
-That means what survives the fold is dictated by the **training data and objective**, not primarily by model size or vector dimension. A model trained to match questions to answers will preserve whatever helps with that (topic, intent, phrasing patterns) and cheerfully discard the rest. A model trained on paraphrase pairs keeps different things than one trained on code search. A gigantic model trained on broad topical similarity will still throw away your invoice numbers, because nothing in its training ever rewarded keeping them.
+That means what survives the fold is dictated by the **training data and objective**, not primarily by model size or vector dimension. A model trained to match questions to answers will preserve whatever helps with that (topic, intent, phrasing patterns) and discard the rest. A model trained on paraphrase pairs keeps different things than one trained on code search. A gigantic model trained on broad topical similarity will still throw away your invoice numbers, because nothing in its training ever rewarded keeping them.
 
 Size and dimensionality do matter, since a roomier envelope *can* hold finer distinctions. But capacity only determines what the model *could* keep. Training determines what it *does* keep. (That's the whole subject of [Part 2](@/blog/0003-how-are-embeddings-trained.md).)
 
@@ -45,7 +45,7 @@ The practical takeaway: if your application depends on a specific signal (exact 
 
 We compare envelopes by their direction more often than their length: **<u>cosine similarity</u>** is like checking whether two envelopes have the same tilt when you hold them up to the light. In practice, most pipelines L2-normalize their vectors first, and once everything has the same length, cosine ranking and Euclidean ranking agree exactly. Same neighbors, same order. The formal section below makes this precise.
 
-One honest caveat: cosine *distance* isn't a true metric, because it can break the triangle inequality. For most retrieval systems that's harmless, but some algorithms and index structures assume metric properties, and it's worth knowing when your notion of "distance" is only mostly a distance.
+One caveat: cosine *distance* isn't a true metric, because it can break the triangle inequality. For most retrieval systems that's harmless, but some algorithms and index structures assume metric properties, and it's worth knowing when your notion of "distance" is only mostly a distance.
 
 ## Searching the map
 
@@ -59,10 +59,10 @@ This is where the "bins" live: in the index, not the embedding. And it's worth b
 
 Now we can say it precisely. Each model defines its own map. Swap the model and there are two distinct failure modes, and it pays to keep them apart:
 
-1. **Mixing maps.** If you swap the query model but keep your old document vectors, you're comparing coordinates from two unrelated maps. The results aren't "drifted"; they're meaningless. Vectors from different models are not comparable, full stop.
+1. **Mixing maps.** If you swap the query model but keep your old document vectors, you're comparing coordinates from two unrelated maps. The results aren't "drifted"; they're meaningless. Vectors from different models are simply not comparable.
 2. **Redrawing the map.** If you re-embed your whole corpus with the new model, every comparison is valid again. But the new model kept different things when it folded, so distances shift and **neighborhoods reshuffle**. Your data didn't move; the definition of "similar" did.
 
-The second one is what this series means by **<u>embedding drift</u>**. It's subtler and more dangerous than the first, because everything still *works* (queries return plausible results) while your carefully tuned thresholds, clusters, and "memory" layers quietly stop meaning what they used to.
+The second one is what this series means by **<u>embedding drift</u>**. It's subtler and more dangerous than the first, because everything still *works* (queries return plausible results) while your carefully tuned thresholds, clusters, and "memory" layers stop meaning what they used to.
 
 (A note on terminology: in ML monitoring, "embedding drift" often means your *data* distribution shifting over time under a fixed model. Related, but not our topic. Here the data holds still and the model moves.)
 
@@ -146,6 +146,6 @@ An embedding model is a learned way of folding the world into a fixed-size vecto
 
 Cosine similarity, Euclidean distance, and the metric axioms are just different ways of turning those vectors into a notion of "near" and "far." On normalized vectors the first two agree; what matters is being consistent and knowing the trade-offs when you normalize, rank, or cluster.
 
-And embedding drift is what happens when you redraw the map. The documents didn't move, but the rules for what counts as "similar" did, so neighborhoods reshuffle. Sometimes that's an improvement; sometimes it quietly breaks your retrieval, routing, or memory layer.
+And embedding drift is what happens when you redraw the map. The documents didn't move, but the rules for what counts as "similar" did, so neighborhoods reshuffle. Sometimes that's an improvement; sometimes it breaks your retrieval or memory layer without any error showing up.
 
 So the natural next question is: where does a model's sense of "similar" actually come from? In the next post we look at how these machines are trained, and why training choices are exactly what makes two model versions disagree: [Part 2 - How are they trained?](@/blog/0003-how-are-embeddings-trained.md)

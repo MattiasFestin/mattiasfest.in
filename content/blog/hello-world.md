@@ -10,8 +10,8 @@ fast static site generator written in Rust, and styled with
 
 ## Why this stack?
 
-- **Zola** — a single binary, no dependency hell, blazing fast builds.
-- **98.css** — because the web peaked in 1998 and we all know it.
+- **Zola**: a single binary, no dependency hell, blazing fast builds.
+- **98.css**: because the web peaked in 1998 and we all know it.
 
 ## Some code
 
@@ -21,7 +21,7 @@ fn main() {
 }
 ```
 
-And here's some Python you can actually run — hit the **Try me** button
+And here's some Python you can actually run. Hit the **Try me** button
 and it opens in a little editor, no installation required:
 
 ```python
@@ -35,4 +35,4 @@ fizzbuzz(15)
 
 > Tip of the day: You can double-click the title bar to maximize a window.
 
-More posts coming soon. Stay tuned!
+Next up: getting math and runnable Python onto these pages.

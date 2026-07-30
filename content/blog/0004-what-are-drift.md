@@ -64,7 +64,7 @@ Three levels, from cheap-and-weak to expensive-and-decisive. You want all three,
 
 ### Level 1: geometry - did the map change shape?
 
-Here's a trap the rotation argument from [Part 2](@/blog/0003-how-are-embeddings-trained.md) sets for the unwary. The obvious metric is *anchor cosine drift*: pick a fixed anchor set `$A$` and average `$\cos(z_v(x),\, z_{v+1}(x))$` over it. But that compares coordinates **across two different maps**, and we know two runs can encode the *same* relative geometry in arbitrarily rotated coordinate systems. For a genuine model swap, anchor cosine can read near zero while retrieval behavior is nearly unchanged, or read high while behavior breaks. Use it only for incremental retrains of the *same* space lineage (continued fine-tuning of `$v$`), where coordinates are actually comparable.
+There is a trap the rotation argument from [Part 2](@/blog/0003-how-are-embeddings-trained.md) sets for the unwary. The obvious metric is *anchor cosine drift*: pick a fixed anchor set `$A$` and average `$\cos(z_v(x),\, z_{v+1}(x))$` over it. But that compares coordinates **across two different maps**, and we know two runs can encode the *same* relative geometry in arbitrarily rotated coordinate systems. For a genuine model swap, anchor cosine can read near zero while retrieval behavior is nearly unchanged, or read high while behavior breaks. Use it only for incremental retrains of the *same* space lineage (continued fine-tuning of `$v$`), where coordinates are actually comparable.
 
 The geometric metric that *is* valid across spaces compares relative structure: **second-order drift**. Sample anchor pairs `$(x, y)$` and compare each space's own opinion of them:
 
@@ -72,7 +72,7 @@ The geometric metric that *is* valid across spaces compares relative structure: 
 \operatorname{drift}_{2^{nd}} = 1 - \operatorname{corr}\Bigl(\;\cos\bigl(z_v(x), z_v(y)\bigr),\;\; \cos\bigl(z_{v+1}(x), z_{v+1}(y)\bigr)\;\Bigr)
 ```
 
-Each cosine is computed *within* one space, so no cross-map comparison ever happens; you're asking whether the two models *agree about which things are similar*, which is rotation-proof and exactly the question you care about. (This is the small-scale cousin of representation-similarity measures like CKA.)
+Each cosine is computed *within* one space, so no cross-map comparison ever happens; you're asking whether the two models *agree about which things are similar*, which is rotation-proof and the question you actually care about. (This is the small-scale cousin of representation-similarity measures like CKA.)
 
 ### Level 2: behavior - did the neighbors change?
 
@@ -86,7 +86,7 @@ averaged over `$A$`. This is the workhorse: cheap to compute offline against bot
 
 One more behavioral landmine: **absolute thresholds**. Every hardcoded number of the form "similarity above 0.9 means duplicate" or "below 0.35 means no match, refuse to answer" was calibrated to `$E_v$`'s score distribution. Model families differ wildly in how they spread cosine values: some cluster everything in `[0.6, 0.9]`, others use the whole range. Recalibrate every threshold against `$E_{v+1}$` on a labeled sample, or watch perfectly good retrieval get vetoed by a stale constant.
 
-Here's the Level 1 trap and the Level 2 truth in one simulation. Fake a "v+1" by rotating v's space (Part 2's argument says this is realistic) and adding a little genuine disagreement:
+One simulation shows the Level 1 trap and the Level 2 truth together. Fake a "v+1" by rotating v's space (Part 2's argument says this is realistic) and adding a little genuine disagreement:
 
 ```python
 import numpy as np
@@ -123,7 +123,7 @@ second-order corr:  0.976
 stability@10:       0.731
 ```
 
-Read that carefully. Anchor cosine screams catastrophe (near zero, as if the models were unrelated). The rotation-proof metrics tell the real story: the two models agree almost entirely about which things are similar, and about 7 of every top-10 neighbors survive the upgrade. Trust the wrong metric and you'd either panic over nothing or, in the mirror-image case, ship a break that anchor cosine happened to miss.
+Anchor cosine reads near zero, as if the models were unrelated. The rotation-proof metrics tell the real story: the two models agree almost entirely about which things are similar, and about 7 of every top-10 neighbors survive the upgrade. Trust the wrong metric and you'd either panic over nothing or, in the mirror-image case, ship a break that anchor cosine happened to miss.
 
 ### Level 3: outcomes - did the product change?
 
@@ -190,7 +190,7 @@ stability@10 via bridge:  0.813
 
 Without the bridge, cross-space search returns essentially random results (0.003 is what "mixing maps" looks like in numbers). One SVD later, old vectors land within a whisker of their new-space positions and recover most of the retrieval behavior. The gap that remains, from 0.813 to a perfect 1.0, is the genuine disagreement the noise term injected; that's the part no rotation can undo.
 
-Honesty about the limits: the bridge recovers the part of the change that is orientation, and *approximates* the rest. Where the models genuinely disagree about relative geometry (the new model learned distinctions the old one never made), no linear map can help, and those are often precisely the neighborhoods you upgraded for. Measure the bridge with the same stability@k and task-level metrics as any other candidate. It's a migration smoother, not a permanent adapter: budget its retirement from day one.
+The limits: the bridge recovers the part of the change that is orientation, and *approximates* the rest. Where the models genuinely disagree about relative geometry (the new model learned distinctions the old one never made), no linear map can help, and those are often precisely the neighborhoods you upgraded for. Measure the bridge with the same stability@k and task-level metrics as any other candidate. It's a migration smoother, not a permanent adapter: budget its retirement from day one.
 
 ## Why this compounds in modular and MoE-style systems
 

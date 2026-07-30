@@ -76,7 +76,7 @@ An eight-way multiple-choice exam (one positive, seven decoys), graded exactly l
 
 Two knobs deserve a closer look.
 
-**Temperature `$\tau$`** scales the logits before the softmax. Small `$\tau$` makes the exam brutal: the model is punished sharply for *any* decoy that scores close to the positive, so it focuses obsessively on the hardest confusions. Large `$\tau$` spreads the attention out and smooths the pressure. Too small and training gets twitchy, especially when the flashcards contain labeling noise, because the model is being maximally punished for "errors" that are actually bad labels.
+**Temperature `$\tau$`** scales the logits before the softmax. Small `$\tau$` makes the exam brutal: the model is punished sharply for *any* decoy that scores close to the positive, so it concentrates the signal on the hardest confusions. Large `$\tau$` spreads the attention out and smooths the pressure. Too small and training gets twitchy, especially when the flashcards contain labeling noise, because the model is being maximally punished for "errors" that are actually bad labels.
 
 **The gradient tells you what gets carved.** Differentiate the loss and you find that each negative is pushed away *in proportion to its softmax weight*, that is, in proportion to how confusable it currently is with the positive. Distant, irrelevant decoys contribute almost nothing; near-misses dominate the learning signal. The model spends its capacity exactly where the distinctions are hardest. This one fact explains most of the engineering that follows.
 
@@ -85,7 +85,7 @@ Two knobs deserve a closer look.
 If near-misses dominate the gradient, then *choosing the decoys* is choosing what the model learns. In practice nobody hand-picks them:
 
 - **In-batch negatives**: every other example in the training batch doubles as a decoy for the current query. Free, efficient, and it's why **batch size** is secretly a modeling decision: a batch of 4,096 gives each query 4,095 decoys and a much stronger uniformity signal than a batch of 64.
-- **Hard negatives**: documents that the *current* model ranks high but that are actually wrong, mined from the index or generated adversarially. These supply the near-misses the gradient craves, teaching distinctions like "same topic, wrong answer." A **curriculum** matters: introduce them too early and the model chases noise; too late and it stays coarse.
+- **Hard negatives**: documents that the *current* model ranks high but that are actually wrong, mined from the index or generated adversarially. These supply exactly those near-misses, teaching distinctions like "same topic, wrong answer." A **curriculum** matters: introduce them too early and the model chases noise; too late and it stays coarse.
 - **False negatives**: the failure mode of in-batch sampling. If your batch happens to contain a document that's *genuinely relevant* to the query, the loss punishes the model for placing it correctly. At web scale this is a real source of label noise, and part of why curated fine-tuning data and de-duplication earn their keep.
 
 There's an elegant way to see what all this pushing and pulling converges to. Contrastive objectives decompose into two forces (Wang & Isola, 2020). **Alignment**: positives should land close together. **Uniformity**: embeddings overall should spread out evenly over the unit sphere, so the space's capacity is actually used. Alignment without uniformity collapses the map to a point ("everything is similar"); uniformity without alignment scatters it randomly. A good embedding space is the tension between the two. That's also a tidy explanation for why pipelines normalize embeddings onto the sphere in the first place: it's the surface the objective is implicitly sculpting.
@@ -110,7 +110,7 @@ Beyond data and objective, a scatter of seemingly minor decisions each leave fin
 - **L2-normalization**: whether similarity means cosine or raw dot product (and whether vector length is allowed to carry information at all).
 - **Pooling**: a transformer produces one vector *per token*; the embedding is a summary. Mean-pooling, CLS-token, and last-token pooling produce genuinely different spaces from the same backbone.
 - **Temperature `$\tau$`**, **batch size**, and the **negative-mining curriculum**: as above.
-- **Instruction prefixes**: many modern models are trained with task markers like `query:` / `passage:`, or full natural-language instructions. Embedding text *without* the prefix the model was trained with quietly puts you in a different region of the map.
+- **Instruction prefixes**: many modern models are trained with task markers like `query:` / `passage:`, or full natural-language instructions. Embedding text *without* the prefix the model was trained with puts you in a different region of the map.
 - **Matryoshka training**: some models are trained so that truncating a vector to its first `$k$` dimensions still works as a coarser embedding, making dimension a runtime dial rather than a fixed choice.
 - **Mixed objectives**: contrastive terms combined with classification or distillation losses, to keep several kinds of signal alive in one vector.
 
@@ -118,7 +118,7 @@ And beneath it all, real-world data brings label noise, class imbalance, and dom
 
 ## Why two runs never draw the same map
 
-Here's the part that makes drift inevitable rather than unlucky, and it's worth being precise about.
+Drift is inevitable rather than unlucky, and the reason is worth stating precisely.
 
 Look back at the InfoNCE loss: it depends on the embeddings **only through dot products** like `$q \cdot p$`. Now take any orthogonal transformation `$Q$` (a rotation, possibly with reflections) and apply it to *every* embedding the model produces. Dot products don't budge:
 
