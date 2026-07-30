@@ -48,7 +48,7 @@ The new idea is **wiring**. Take several neurons, point them all at the same inp
 h = \phi(W_1 x + b_1), \qquad p = \sigma(w_2 \cdot h + b_2)
 ```
 
-That's a **multi-layer perceptron** (MLP) with one hidden layer: `$W_1$` is `$m$` opinion polls stacked into a matrix, and the output neuron polls *the polls*. Part 1 ended on "what if features were learned instead of designed?" This is the answer's shape. The hidden layer's outputs are features nobody handcrafted, and since `$W_1$` sits inside the loss like any other parameter, gradient descent tunes the features and the classifier *in the same loop*.
+That's a **multi-layer perceptron** (MLP) with one hidden layer: `$W_1$` is `$m$` opinion polls stacked into a matrix, and the output neuron polls *the polls*. Part 1 planted the question "what if features were learned instead of designed?" This is the answer's shape. The hidden layer's outputs are features nobody handcrafted, and since `$W_1$` sits inside the loss like any other parameter, gradient descent tunes the features and the classifier *in the same loop*.
 
 ## XOR by hand: the hidden layer redraws the map
 
@@ -96,7 +96,7 @@ W_2 (W_1 x + b_1) + b_2 \;=\; (W_2 W_1)\, x + (W_2 b_1 + b_2) \;=\; W' x + b'
 
 Two linear layers **collapse into one**. A hundred stacked linear layers are a single opinion poll with extra steps, still one hyperplane, still defeated by four points. The nonlinearity between layers is the only thing standing between "network" and "expensive line."
 
-Which `$\phi$`, then? Sigmoid is the historical default, and for a *single* output neuron it's still right (Part 3 derived it from log-odds). But as a *hidden* activation in deep stacks it has a familiar disease: it **saturates**, and its slope `$\sigma' = \sigma(1-\sigma)$` tops out at 0.25. Part 2 met this villain once: the vanishing `$\sigma'$` that strangled squash-plus-squared-error. Part 3 cancelled it *at the output* by matching the loss to the link. But hidden layers get no such cancellation: as you'll see below, the backward signal picks up one activation-slope factor *per layer*, and `$0.25^{10} \approx 10^{-6}$`. Deep sigmoid stacks starve their early layers. What was a squashing problem in Part 2 is a *depth* problem here.
+Which `$\phi$`, then? Sigmoid is the historical default, and for a *single* output neuron it's still right (Part 3 derived it from log-odds). But as a *hidden* activation in deep stacks it has a familiar disease: it **saturates**, and its slope `$\sigma' = \sigma(1-\sigma)$` tops out at 0.25. Part 2 met this villain once: the vanishing `$\sigma'$` that strangled squash-plus-squared-error. Part 3 cancelled it *at the output* by matching the loss to the link. But hidden layers get no such cancellation: as you'll see below, the backward signal picks up one activation-slope factor *per layer*, and `$0.25^{8} \approx 1.5 \times 10^{-5}$`. Deep sigmoid stacks starve their early layers. What was a squashing problem in Part 2 is a *depth* problem here.
 
 **tanh** is that same S-curve recentred: it runs from `$-1$` to `$1$`, sits at zero for zero input (so a layer's outputs don't all shove the next layer's weights the same way), and its slope tops out at 1 instead of 0.25, which is four times more signal surviving each layer. Its derivative is `$1 - \tanh^2$`, computable from the cached output alone, which is why it appears as `(1 - h**2)` in the demos below.
 

@@ -127,7 +127,7 @@ for step in range(1, 501):
     b -= lr * g.mean()
     if step in (1, 10, 100, 500):
         acc = ((p > 0.5) == y).mean()
-        print(f"step {step:4d}   loss = {loss:.4f}   acc = {acc:.3f}   "
+        print(f"step {step:4d}   loss = {loss:.4f}   train acc = {acc:.3f}   "
               f"w = [{w[0]:+.2f}, {w[1]:+.2f}]   b = {b:+.2f}")
 
 print("\ndecision surface ('.' = P<0.5, '#' = P>=0.5), x1 across, x2 down:")

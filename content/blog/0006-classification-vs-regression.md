@@ -129,7 +129,7 @@ Regression and classification don't just train differently, they *report* differ
 | worst-case error: how bad is my worst miss? | **recall**: of everything real, how much did I flag? |
 |                             | **confusion matrix**: the full 2×2 ledger of hits and both kinds of misses |
 
-Accuracy is the metric everyone reaches for first, and it has a famous failure: **class imbalance**. Spam is maybe 1% of a well-filtered mailbox. A "classifier" that unconditionally says ham is 99% accurate and catches zero spam. Run the numbers:
+Accuracy is the metric everyone reaches for first, and it has a famous failure: **class imbalance**. Spam is maybe 1% of a well-filtered mailbox. A "classifier" that unconditionally says ham is 99% accurate and catches zero spam. The numbers:
 
 ```python
 import numpy as np

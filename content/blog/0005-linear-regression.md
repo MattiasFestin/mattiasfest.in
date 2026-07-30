@@ -142,7 +142,7 @@ print(f"residual . 1-column = {r.sum():.2e}   (residuals sum to ~zero)")
 
 <!-- output -->
 
-Fifty noisy points, and the recovered `$w, b$` land within a hair of the truth. The two dot products at the end are the normal equations, verified numerically: the residual really is orthogonal to every column.
+Fifty noisy points, and the recovered slope lands within a hair of the truth (the intercept, which the noise leans on harder, less so). The two dot products at the end are the normal equations, verified numerically: the residual really is orthogonal to every column.
 
 One caveat to carry out of here, because it is the difference between the blackboard and production: forming `$X^T X$` squares the condition number of `$X$`. Fit a degree-7 polynomial on `$[0, 1]$` and `$X$` comes in around `$10^5$`, which is survivable, while `$X^T X$` comes in around `$10^{10}$`, which eats half your double-precision digits before the solver has done any work. Serious libraries never form it. They factor `$X$` directly with QR or SVD, which in numpy is `np.linalg.lstsq`. Use the normal equations to *understand* least squares, and `lstsq` to *compute* it.
 
@@ -208,12 +208,15 @@ for epoch in range(1, 101):
         loss = (((w * x + b) - y) ** 2).mean()
         print(f"epoch {epoch:4d}   loss = {loss:7.4f}   w = {w:.3f}   b = {b:.3f}")
 
-print("all 50 rows at once:  loss =  0.9934   w = 2.052   b = 0.757")
+A = np.c_[x, np.ones(50)]                          # the normal equations, again
+wf, bf = np.linalg.solve(A.T @ A, A.T @ y)
+print(f"all 50 rows at once:  loss = {(((wf * x + bf) - y) ** 2).mean():7.4f}"
+      f"   w = {wf:.3f}   b = {bf:.3f}")
 ```
 
 <!-- output -->
 
-A hundred epochs, five rows per step, and it arrives at the `$w, b$` the normal equations computed from all fifty at once. Now look at the loss between epoch 5 and epoch 20: it goes *up*. That is a mini-batch that happened to disagree, and that texture, a downward trend assembled from noisy steps that sometimes climb, is what every real training curve looks like.
+A hundred epochs, five rows per step, and it lands within a whisker of the `$w, b$` the normal equations computed from all fifty at once. Now look at the loss between epoch 5 and epoch 20: it goes *up*. That is a mini-batch that happened to disagree, and that texture, a downward trend assembled from noisy steps that sometimes climb, is what every real training curve looks like.
 
 This is the loop. Everything after this post makes the model bigger, the loss stranger and the step rule cleverer, but those four lines in the inner block barely change. Only the thing being differentiated does.
 
@@ -249,7 +252,7 @@ print(f"L1   : slope = {w_l1[0]:.2f}, intercept = {w_l1[1]:.2f}   <- barely noti
 
 <!-- output -->
 
-Ten points, one corrupted. The L2 slope gets yanked well past 3; the L1 slope stays glued near the true 2. One bad row, ten percent of the dataset, and the two losses tell you two different stories about the same data.
+Ten points, one corrupted. The L2 slope gets yanked past 3; the L1 slope stays glued near the true 2. One bad row, ten percent of the dataset, and the two losses tell you two different stories about the same data.
 
 ## Ridge, in one paragraph
 
