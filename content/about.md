@@ -2,6 +2,10 @@
 title = "About Me"
 +++
 
+<figure class="about-portrait">
+  <img src="/me-dithered.png" width="512" height="512" alt="Mattias Festin crouching behind his dog on a snowy beach.">
+</figure>
+
 I'm Mattias Festin, a senior developer, architect, and AppSec specialist at
 [Decerno](https://www.decerno.se/), working from Kalix in the very north of
 Sweden. I spend my days at the intersection of application security, AI, and

@@ -433,6 +433,22 @@ html.start-maximized .main-window:not(.dialog-window) {
     max-width: 100%;
   }
 
+  .about-portrait {
+    width: min(100%, 512px);
+    margin-top: 0;
+    margin-bottom: 18px;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #808080;
+    box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #dfdfdf;
+
+    img {
+      display: block;
+      width: 100%;
+      image-rendering: pixelated;
+    }
+  }
+
   blockquote {
     margin: 12px 0;
     padding: 8px 12px;
