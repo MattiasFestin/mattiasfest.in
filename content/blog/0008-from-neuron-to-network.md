@@ -58,13 +58,15 @@ Before letting gradient descent design features, let's design them ourselves onc
 - `$h_2 = $` **AND**`$(x_1, x_2)$`: weights `$(20, 20)$`, bias `$-30$`. Only both-on clears the bar.
 - output = `$h_1$` **AND NOT** `$h_2$`: weights `$(20, -20)$`, bias `$-10$`.
 
+Look at the first two: identical weights, different bias. OR and AND are the same weighted vote read at two different thresholds, which is worth noticing before the units start choosing their own settings.
+
 ```python
 import numpy as np
 sigmoid = lambda s: 1 / (1 + np.exp(-s))
 
-W1 = np.array([[20., 20.],     # h1: OR   (weights per input)
-               [20., 20.]]).T  # h2: AND
-b1 = np.array([-10., -30.])
+W1 = np.array([[20., 20.],     # rows are the inputs x1, x2
+               [20., 20.]])    # columns are the neurons: h1 (OR), h2 (AND)
+b1 = np.array([-10., -30.])    # same weights both times, only the bias differs
 w2 = np.array([20., -20.])     # output: h1 AND NOT h2
 b2 = -10.
 
@@ -94,6 +96,8 @@ Two linear layers **collapse into one**. A hundred stacked linear layers are a s
 
 Which `$\phi$`, then? Sigmoid is the historical default, and for a *single* output neuron it's still right (Part 3 derived it from log-odds). But as a *hidden* activation in deep stacks it has a familiar disease: it **saturates**, and its slope `$\sigma' = \sigma(1-\sigma)$` tops out at 0.25. Part 2 met this villain once: the vanishing `$\sigma'$` that strangled squash-plus-squared-error. Part 3 cancelled it *at the output* by matching the loss to the link. But hidden layers get no such cancellation: as you'll see below, the backward signal picks up one activation-slope factor *per layer*, and `$0.25^{10} \approx 10^{-6}$`. Deep sigmoid stacks starve their early layers. What was a squashing problem in Part 2 is a *depth* problem here.
 
+**tanh** is that same S-curve recentred: it runs from `$-1$` to `$1$`, sits at zero for zero input (so a layer's outputs don't all shove the next layer's weights the same way), and its slope tops out at 1 instead of 0.25, which is four times more signal surviving each layer. Its derivative is `$1 - \tanh^2$`, computable from the cached output alone, which is why it appears as `(1 - h**2)` in the demos below.
+
 The modern default is **ReLU**, `$\mathrm{ReLU}(s) = \max(0, s)$`: costs one comparison, and its slope is exactly 1 for every `$s > 0$`, with no saturation and no shrinking factors. (The price: units stuck at `$s < 0$` pass nothing, the "dead ReLU"; with sane init, enough units stay alive.) One sentence worth keeping: since ReLU is piecewise-linear and compositions of piecewise-linear maps are piecewise-linear, **a ReLU network is a machine for assembling many linear pieces into one function** (a committee of lines impersonating a curve, with more pieces than you'd ever handcraft).
 
 ## Backprop is bookkeeping, not learning
@@ -117,6 +121,41 @@ three characters wide, the entire learning signal. For the output layer's weight
 ```
 
 Read the middle expression as a story: the output error `$g$` flows backward, gets **reweighted** by the output layer's weights (`$w_2$` says how much each hidden unit's opinion mattered, so it also says how much blame each one gets), and gets **gated** by the activation's slope `$\phi'$` (a saturated unit wasn't listening on the way forward, so it takes no blame on the way backward; there's the `$0.25$`-per-layer tax on sigmoid, and ReLU's slope-1 exemption). Deeper networks just repeat the reweight-and-gate step once per layer.
+
+Which turns the activation question from a moment ago into something measurable. Stack eight layers, run exactly this backward pass, and print how much gradient survives to each one:
+
+```python
+import numpy as np
+np.random.seed(0)
+sigmoid = lambda s: 1 / (1 + np.exp(-s))
+
+L, width = 8, 16
+x = np.random.randn(64, width)
+y = (np.random.rand(64) > 0.5).astype(float)
+
+activations = {"sigmoid": (sigmoid,                    lambda h: h * (1 - h)),
+               "tanh":    (np.tanh,                    lambda h: 1 - h**2),
+               "ReLU":    (lambda s: np.maximum(0, s), lambda h: (h > 0) * 1.0)}
+
+print("norm of the gradient arriving at each layer, after one backward pass")
+print("           " + "".join(f"{'layer ' + str(i):>11}" for i in (1, 4, 8)))
+for name, (phi, dphi) in activations.items():
+    np.random.seed(1)
+    Ws = [np.random.randn(width, width) * 0.5 for _ in range(L)]
+    hs = [x]
+    for W in Ws:                                     # forward, caching every layer
+        hs.append(phi(hs[-1] @ W))
+    w_out = np.random.randn(width) * 0.5
+    d = np.outer(sigmoid(hs[-1] @ w_out) - y, w_out) * dphi(hs[-1])
+    norms = {}
+    for i in range(L - 1, -1, -1):                   # backward, reweight and gate
+        norms[i + 1] = np.linalg.norm(hs[i].T @ d)
+        d = (d @ Ws[i].T) * dphi(hs[i])
+    print(f"{name:>9}:  " + "".join(f"{norms[i]:>11.2e}" for i in (1, 4, 8))
+          + f"     layer 8 / layer 1 = {norms[8] / norms[1]:8.1f}x")
+```
+
+Read the sigmoid row. The gradient arriving at layer 8 is over a thousand times larger than the gradient arriving at layer 1, because eight `$\sigma'$` factors have gated it on the way down. The early layers, the ones meant to be building the primitive features everything above them reuses, are close to frozen. tanh and ReLU keep the signal roughly the same size the whole way. That is the entire case for the modern default, and note that it is a *depth* argument: at the two-layer scale of this post's demos any of the three works fine, which is why the code here uses tanh and doesn't apologize for it.
 
 And note what backprop is *not*: it is not a learning rule. It never decides how to change a weight; it only delivers gradients, efficiently, by caching forward and reusing backward. The learner is still gradient descent: Part 1's loop with its stride length `$\eta$`, character for character unchanged. Backprop is the accountant; gradient descent is still the one walking downhill.
 
@@ -151,11 +190,11 @@ print(f"\ntargets       = {y}")
 print(f"final verdict = {(p > 0.5).astype(int)}")
 ```
 
-Ten lines of learning. The backward pass is two lines (`g`, `dh`), and `g = p - y` is still doing all the moral philosophy. Everything after it is reweighting and gating. Try shrinking to 2 hidden units and rerunning with different seeds: sometimes it nails XOR, sometimes it stalls at loss ≈ 0.35 forever. That's your first meeting with **non-convexity**. Part 3's one-valley guarantee is officially gone, the landscape has plateaus and bad basins, and the practical remedy is unglamorous: more units than strictly necessary, so *some* random subset starts pointed the right way. Overparameterization is insurance.
+Ten lines of learning. The backward pass is two lines (`g`, `dh`), and `g = p - y` is still doing all the moral philosophy. Everything after it is reweighting and gating. Try shrinking to 2 hidden units and rerunning with different seeds: seeds 0, 1 and 2 stall at loss `$\approx 0.347$` forever, while 3 through 7 solve it cleanly. That's your first meeting with **non-convexity**. Part 3's one-valley guarantee is officially gone, the landscape has plateaus and bad basins, and the practical remedy is unglamorous: more units than strictly necessary, so *some* random subset starts pointed the right way. Overparameterization is insurance.
 
 ## The committee beats the single voter
 
-XOR is four points. Here's the same lesson at two hundred: two interleaved crescent moons, a shape no hyperplane can split, and a head-to-head between Part 3's logistic regression and a small MLP.
+XOR is four points. Here's the same lesson at two hundred: two interleaved crescent moons, a shape no hyperplane can split, and a head-to-head between Part 3's logistic regression and a small MLP. We train on 140 of the points and keep 60 back, because accuracy on data a model has already seen is a number about memory, not about learning.
 
 ```python
 import numpy as np
@@ -168,27 +207,33 @@ X = np.vstack([np.c_[np.cos(t), np.sin(t)],
 X += np.random.normal(0, 0.15, X.shape)
 y = np.r_[np.zeros(100), np.ones(100)]
 
+idx = np.random.permutation(200)                     # 140 to train on, 60 held back
+tr, te = idx[:140], idx[140:]
+
 w, b = np.zeros(2), 0.0                              # single voter (Part 3)
 for _ in range(2000):
-    g = sigmoid(X @ w + b) - y
-    w -= 0.5 * X.T @ g / 200; b -= 0.5 * g.mean()
-acc_lr = ((sigmoid(X @ w + b) > 0.5) == y).mean()
+    g = sigmoid(X[tr] @ w + b) - y[tr]
+    w -= 0.5 * X[tr].T @ g / 140;  b -= 0.5 * g.mean()
+score_lr = lambda Z: sigmoid(Z @ w + b)
 
 W1 = np.random.randn(2, 8) * 0.5; b1 = np.zeros(8)   # committee: 8 tanh units
 w2 = np.random.randn(8) * 0.5;    b2 = 0.0
 for _ in range(4000):
-    h = np.tanh(X @ W1 + b1)
-    g = sigmoid(h @ w2 + b2) - y
+    h = np.tanh(X[tr] @ W1 + b1)
+    g = sigmoid(h @ w2 + b2) - y[tr]
     dh = np.outer(g, w2) * (1 - h**2)
-    w2 -= 0.5 * h.T @ g / 200;  b2 -= 0.5 * g.mean()
-    W1 -= 0.5 * X.T @ dh / 200; b1 -= 0.5 * dh.mean(axis=0)
-acc_mlp = ((sigmoid(np.tanh(X @ W1 + b1) @ w2 + b2) > 0.5) == y).mean()
+    w2 -= 0.5 * h.T @ g / 140;   b2 -= 0.5 * g.mean()
+    W1 -= 0.5 * X[tr].T @ dh / 140;  b1 -= 0.5 * dh.mean(axis=0)
+score_mlp = lambda Z: sigmoid(np.tanh(Z @ W1 + b1) @ w2 + b2)
 
-print(f"logistic regression (one voter):  accuracy = {acc_lr:.3f}")
-print(f"MLP, 8 hidden units (committee):  accuracy = {acc_mlp:.3f}")
+for name, f in [("one voter", score_lr), ("committee of 8", score_mlp)]:
+    print(f"{name:16s}  train = {((f(X[tr]) > 0.5) == y[tr]).mean():.3f}   "
+          f"held out = {((f(X[te]) > 0.5) == y[te]).mean():.3f}")
 ```
 
 The single voter does what a hyperplane can (respectably, on the parts of the moons that don't interleave) and then hits its representational ceiling. The committee bends. Same engine, same loss, same `$g = p - y$`; the only difference is eight learned features between the input and the vote.
+
+Now read the two columns against each other, because that gap is the whole reason this post ends on a warning. The committee scores a perfect 1.000 on the points it trained on and 0.983 on the sixty it never saw. The single voter barely distinguishes the two (0.871 against 0.850), because a hyperplane has too few degrees of freedom to memorize anything even if it wanted to. Expressive power is exactly what makes those two numbers come apart.
 
 ## Universal approximation, honestly
 
