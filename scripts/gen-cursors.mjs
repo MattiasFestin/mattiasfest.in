@@ -6,6 +6,11 @@
  * pixels on high-DPI screens each cursor is emitted twice: at 1x and
  * at 2x (nearest-neighbor pre-scaled), wired up via CSS image-set().
  *
+ * The PNGs are hand-encoded below rather than via pngjs, and are then
+ * repacked losslessly by scripts/optimize-png.mjs (which the build
+ * runs) - at these sizes a palette is usually a net loss against the
+ * PLTE/tRNS overhead, so most of them are left exactly as written.
+ *
  * Run manually after editing the pixel maps:  node scripts/gen-cursors.mjs
  */
 

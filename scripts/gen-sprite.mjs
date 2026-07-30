@@ -13,6 +13,12 @@
  * Maskable variants sit on the teal desktop color with enough padding
  * to survive round masks.
  *
+ * pngjs always writes 32-bit RGBA, so the files this produces are
+ * several times larger than they need to be for 10-odd flat colors.
+ * scripts/optimize-png.mjs repacks them losslessly into palette PNGs
+ * afterwards, and the build runs it, so don't be alarmed if the sizes
+ * committed to git don't match what this script just wrote.
+ *
  * Run manually after changing the ICONS list:  node scripts/gen-sprite.mjs
  */
 

@@ -53,6 +53,10 @@ const png = Buffer.from(b64[1], "base64");
 /* Sanity-check it really is the sheet the frame table indexes into,
    rather than silently shipping a broken background. */
 const { width, height } = PNG.sync.read(png);
+/* Written through verbatim: upstream already ships it as a 107-color
+   palette PNG, and it is better compressed than anything we can
+   produce with zlib alone (scripts/optimize-png.mjs measures its own
+   repack at ~90 kB worse, and so leaves this file alone). */
 writeFileSync(`${OUT_DIR}map.png`, png);
 
 /* --- Animations --> CSS --- */
