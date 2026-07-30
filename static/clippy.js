@@ -530,7 +530,12 @@
   /* Silent when the assistant is simply going away: "Stopped." is the
      answer to a Stop button, not to the whole clip being dismissed. */
   function stopReading(announceIt) {
-    if (speech) speech.cancel();
+    if (speech) {
+      speech.cancel();
+      /* cancel() empties the queue but leaves the engine paused, and a
+         paused engine swallows the next read in silence too. */
+      if (paused) speech.resume();
+    }
     if (!reading) return;
     gen++;
     reading = false;

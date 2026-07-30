@@ -215,6 +215,8 @@ test.describe("reading a post aloud", () => {
   const SPEECH_STUB = () => {
     const spoken = [];
     let live = null;
+    let timer = null;
+    let paused = false;
     window.__spoken = spoken;
     window.__paused = false;
     window.SpeechSynthesisUtterance = class {
@@ -225,24 +227,43 @@ test.describe("reading a post aloud", () => {
         this.onerror = null;
       }
     };
+    /* An utterance only ends after a stretch of *unpaused* time, so a
+       paused read really does stand still instead of quietly running to
+       the end of the post underneath the test. */
+    const arm = (u) => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        timer = null;
+        if (live === u && u.onend) u.onend();
+      }, 30);
+    };
+    const disarm = () => {
+      if (timer) clearTimeout(timer);
+      timer = null;
+    };
     const synth = {
       speak(u) {
         spoken.push(u.text);
         live = u;
-        setTimeout(() => {
-          if (live === u && u.onend) u.onend();
-        }, 30);
+        if (!paused) arm(u);
       },
       /* cancel() drops the utterance in flight, exactly as the real one
-         does - which is what the generation guard in clippy.js is for. */
+         does - which is what the generation guard in clippy.js is for.
+         Per spec it leaves the paused state alone, which is a trap only
+         an honest stub can catch. */
       cancel() {
         live = null;
+        disarm();
       },
       pause() {
+        paused = true;
         window.__paused = true;
+        disarm();
       },
       resume() {
+        paused = false;
         window.__paused = false;
+        if (live) arm(live);
       },
     };
     /* speechSynthesis is a read-only accessor on window, so plain
@@ -342,6 +363,27 @@ test.describe("reading a post aloud", () => {
     const said = await page.evaluate(() => window.__spoken.length);
     await page.waitForTimeout(300);
     expect(await page.evaluate(() => window.__spoken.length)).toBe(said);
+  });
+
+  /* Cancelling does not un-pause the engine, so a read that was paused
+     before it was stopped used to leave the next one mute. */
+  test("stopping a paused read doesn't silence the next one", async ({ page }) => {
+    await summonOnPost(page);
+    await (await openReadOffer(page)).click();
+
+    await page.getByRole("button", { name: "Pause" }).click();
+    await expect(page.locator("#assistant-live")).toHaveText("Paused.");
+    await page.getByRole("button", { name: "Stop" }).click();
+    await expect(page.locator("#assistant-live")).toHaveText("Stopped.");
+
+    const said = await page.evaluate(() => window.__spoken.length);
+    await (await openReadOffer(page)).click();
+    await expect(page.locator("#assistant-live")).toHaveText("Reading the post aloud.");
+    /* Past the first block: the second one only arrives if the engine
+       actually finished the first. */
+    await expect
+      .poll(() => page.evaluate(() => window.__spoken.length), { timeout: 5_000 * SLOW })
+      .toBeGreaterThan(said + 1);
   });
 
   test("nothing to read, nothing offered", async ({ page }) => {
