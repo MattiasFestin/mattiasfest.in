@@ -1,5 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { launchApp, SLOW } from "./helpers.js";
+import { test, expect, launchApp, SLOW } from "./helpers.js";
 
 /* Popup dialogs are the top layer of the desktop metaphor: whatever is
    open - app windows, an always-on-top Winamp, the Start menu - a

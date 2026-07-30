@@ -1,5 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { SLOW } from "./helpers.js";
+import { test, expect, SLOW } from "./helpers.js";
 
 /* Python.exe: lazy-loaded editor (editor.js) + Pyodide runtime in a
    worker (pyworker.js → jsDelivr CDN). UI tests stub the worker so they

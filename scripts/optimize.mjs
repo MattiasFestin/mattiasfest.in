@@ -28,7 +28,17 @@ const CSS_SOURCES = [
   { file: "site.css", urlDir: "/" },
 ];
 
-const JS_FILES = ["main.js", "editor.js", "pyworker.js", "browser.js", "winamp.js", "sw.js"];
+const JS_FILES = [
+  "main.js",
+  "editor.js",
+  "pyworker.js",
+  "browser.js",
+  "winamp.js",
+  "screensaver.js",
+  "clippy.js",
+  "find.js",
+  "sw.js",
+];
 
 /** Rewrite relative url(...) references to absolute paths. */
 function rebaseUrls(css, urlDir) {
@@ -42,7 +52,12 @@ async function bundleCss() {
   let out = "";
   for (const { file, urlDir } of CSS_SOURCES) {
     const path = join(PUBLIC_DIR, file);
-    out += rebaseUrls(readFileSync(path, "utf8"), urlDir) + "\n";
+    /* Zola's Sass compiler prefixes a UTF-8 BOM whenever the compiled
+       CSS contains non-ASCII (a \25b2 escape resolved to "▲", say).
+       Harmless at the top of its own file, fatal in the middle of a
+       concatenation: the BOM glues itself to the next selector and
+       silently drops that rule. */
+    out += rebaseUrls(readFileSync(path, "utf8").replace(/^\uFEFF/, ""), urlDir) + "\n";
   }
   const { code } = await transform(out, { loader: "css", minify: true });
   writeFileSync(join(PUBLIC_DIR, "bundle.css"), code);

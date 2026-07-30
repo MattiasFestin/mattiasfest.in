@@ -36,6 +36,8 @@ const ICONS_SMALL = {
   "control-panel": "directory_control_panel-1.png",
   shutdown: "shut_down_normal-1.png",
   notepad: "notepad-0.png",
+  display: "display_properties-1.png", /* desktop Properties / Screen Saver */
+  "help-book": "help_book_small-1.png", /* Start > Help (the Assistant) */
   error: "msg_error-2.png",
   ie: "msie1-3.png",
   flag: "windows-3.png", // 14x14, Start button
@@ -47,6 +49,9 @@ const ICONS_SMALL = {
   mail: "envelope_closed-1.png",
   print: "printer-1.png",
   world: "world-1.png",
+  /* Find: Files or Folders */
+  find: "search_directory-1.png",
+  document: "document-1.png", /* a "file" in the Find results list */
 };
 
 /* The Win98 pack has no IE nav arrows (Back/Forward/Stop/Refresh) -
@@ -173,6 +178,7 @@ const ICONS_LARGE = {
   error: "msg_error-0.png",
   warning: "msg_warning-0.png",
   ie: "msie1-0.png",
+  find: "search_directory-2.png",
   modem: "expansion_board_modem-0.png",
   winamp: "winamp.png",
 };

@@ -1,5 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { launchApp, SLOW } from "./helpers.js";
+import { test, expect, launchApp, SLOW } from "./helpers.js";
 
 /* Long multi-app sessions. Individual window operations are covered in
    windows.spec.js; these drive several apps at once - opening,

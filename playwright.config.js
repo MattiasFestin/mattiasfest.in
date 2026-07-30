@@ -12,6 +12,11 @@ const PORT = 1112;
 const CI = !!process.env.CI;
 const SLOW = CI ? 3 : 1;
 
+/* The site dials a modem and can read posts aloud; neither belongs in
+   the background of an unattended test run. */
+const MUTE_CHROME = { args: ["--mute-audio"] };
+const MUTE_FIREFOX = { firefoxUserPrefs: { "media.volume_scale": "0.0" } };
+
 export default defineConfig({
   testDir: "tests",
   fullyParallel: true,
@@ -31,12 +36,15 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   /* Top browser engines: Chrome, Firefox, Safari - desktop and mobile.
-     (Firefox has no mobile emulation in Playwright.) */
+     (Firefox has no mobile emulation in Playwright.)
+     Headless does not mean silent: mute the engines that can be muted at
+     launch. WebKit has no equivalent switch, so tests/helpers.js also
+     silences Web Audio and speech synthesis inside every page. */
   projects: [
-    { name: "chromium", use: { browserName: "chromium" } },
-    { name: "firefox", use: { browserName: "firefox" } },
+    { name: "chromium", use: { browserName: "chromium", launchOptions: MUTE_CHROME } },
+    { name: "firefox", use: { browserName: "firefox", launchOptions: MUTE_FIREFOX } },
     { name: "webkit", use: { browserName: "webkit" } },
-    { name: "mobile-chrome", use: { ...devices["Pixel 7"] } },
+    { name: "mobile-chrome", use: { ...devices["Pixel 7"], launchOptions: MUTE_CHROME } },
     { name: "mobile-safari", use: { ...devices["iPhone 14"] } },
   ],
   webServer: {

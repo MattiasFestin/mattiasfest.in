@@ -48,21 +48,42 @@ const TIERS = [
     "/icons/app-512.png",
     "/icons/app-maskable-192.png",
     "/icons/app-maskable-512.png",
+    "/clippy/map.png",
   ],
+  /* clippy sprite sheet styles: reference map.png, loaded by clippy.js */
+  ["/clippy/clippy.css"],
   /* worker: referenced by editor.js */
   ["/pyworker.js"],
   /* webamp bundle: referenced by winamp.js */
   ["/webamp/webamp.bundle.min.js"],
   /* lazy apps: referenced by main.js / HTML data attributes */
-  ["/editor.js", "/browser.js", "/winamp.js"],
+  [
+    "/editor.js",
+    "/browser.js",
+    "/winamp.js",
+    "/screensaver.js",
+    "/clippy.js",
+    "/find.js",
+    "/elasticlunr.min.js",
+    "/search_index.en.js",
+  ],
   /* entry points: referenced by HTML only */
   ["/bundle.css", "/main.js"],
 ];
 
 /* Fingerprinted (immutable, cache-first once fetched) but NOT precached
    by the service worker: nobody should download ~900 KB of Webamp in
-   the background for a Winamp they may never open. */
-const NO_PRECACHE = new Set(["/webamp/webamp.bundle.min.js"]);
+   the background for a Winamp they may never open - and the same goes
+   for the full-text search index, which Find only needs when someone
+   searches for text *inside* a page, and for the 1.3 MB Clippy sprite
+   sheet, which only arrives once someone actually summons him. */
+const NO_PRECACHE = new Set([
+  "/webamp/webamp.bundle.min.js",
+  "/elasticlunr.min.js",
+  "/search_index.en.js",
+  "/clippy/map.png",
+  "/clippy/clippy.css",
+]);
 
 const shortHash = (buf) => createHash("sha256").update(buf).digest("hex").slice(0, 8);
 

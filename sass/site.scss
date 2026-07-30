@@ -1221,6 +1221,348 @@ input[type="range"]:focus-visible {
   }
 }
 
+/* --- Find: Files or Folders --- */
+/* The 1998 dialog, note for note: a flat menu bar, three notebook tabs
+   over a silver page, the Find Now / Stop / New Search column on the
+   right, and a five-column results list that only unfolds once there is
+   something to show. */
+@keyframes mf-find-sweep {
+  0% {
+    transform: translate(-5px, 2px);
+  }
+  25% {
+    transform: translate(2px, -3px);
+  }
+  50% {
+    transform: translate(5px, 2px);
+  }
+  75% {
+    transform: translate(-2px, -3px);
+  }
+}
+
+.find-window {
+  position: fixed;
+  top: 8vh;
+  left: calc(50% - min(340px, 48vw));
+  width: min(680px, 96vw);
+  display: flex;
+  flex-direction: column;
+  /* Floats above the main window; .app-window.front handles focus */
+  z-index: 3;
+
+  .find-menubar {
+    display: flex;
+    align-items: center;
+    padding: 1px 2px 2px;
+    margin-bottom: 2px;
+
+    span {
+      padding: 2px 7px 3px;
+      cursor: default;
+
+      &:hover {
+        box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+      }
+    }
+  }
+
+  .find-criteria {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 0 6px 6px;
+  }
+
+  .find-tabs {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Notebook tabs. 98.css styles a <menu role=tablist> of anchors; these
+     are real buttons so the roving-tabindex keyboard pattern works, so
+     the raised-folder-tab bevel is rebuilt here. */
+  .find-tablist {
+    display: flex;
+    padding-left: 3px;
+    margin-bottom: -2px;
+    position: relative;
+    z-index: 2;
+
+    button {
+      min-width: 0;
+      min-height: 0;
+      padding: 4px 9px 5px;
+      background: silver;
+      border-top-left-radius: 3px;
+      border-top-right-radius: 3px;
+      box-shadow: inset -1px 0 #0a0a0a, inset 1px 1px #dfdfdf,
+        inset -2px 0 #808080, inset 2px 2px #fff;
+
+      &:focus {
+        outline: 1px dotted #222;
+        outline-offset: -4px;
+      }
+
+      &[aria-selected="true"] {
+        margin: -2px -3px -1px;
+        padding: 6px 12px 8px;
+        position: relative;
+        z-index: 3;
+      }
+    }
+  }
+
+  .find-pane {
+    background: silver;
+    padding: 12px 10px;
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff,
+      inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+
+    &[hidden] {
+      display: none;
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  .find-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    + .find-field {
+      margin-top: 8px;
+    }
+
+    /* One column of right-aligned labels, Win98-style */
+    > label:first-child {
+      flex: 0 0 96px;
+      justify-content: flex-end;
+      text-align: right;
+    }
+
+    input[type="text"],
+    select {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* The size comparison is a short dropdown, not a full-width one:
+       the number and its KB label share the row */
+    #find-size-op {
+      flex: 0 0 110px;
+    }
+
+    input[type="number"] {
+      width: 56px;
+      flex: 0 0 auto;
+      font-family: inherit;
+      font-size: 12px;
+    }
+
+    input[type="date"] {
+      flex: 0 1 auto;
+      min-width: 0;
+      font-family: inherit;
+      font-size: 11px;
+      background: #fff;
+      border: none;
+      padding: 2px 4px;
+      box-shadow: inset -1px -1px #fff, inset 1px 1px #808080,
+        inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a;
+    }
+  }
+
+  /* Checkbox / radio rows: 98.css positions the box off the label, so
+     the flex gap must not apply to the hidden input */
+  .find-field-check {
+    gap: 4px;
+    padding-left: 100px;
+
+    label {
+      flex: 0 0 auto;
+      text-align: left;
+      justify-content: flex-start;
+    }
+  }
+
+  .find-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    /* Lines Find Now up with the first field, the way the original did;
+       the glass's box is always reserved so the buttons never jump. */
+    padding-top: 4px;
+    flex: 0 0 auto;
+
+    button {
+      min-width: 92px;
+    }
+  }
+
+  /* The magnifying glass that swept a document while Win98 searched.
+     Discrete poses + step-end keeps it a chunky 4-frame loop. */
+  .find-glass {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+  }
+
+  &.searching .find-glass {
+    visibility: visible;
+
+    .icon {
+      animation: mf-find-sweep 0.6s step-end infinite;
+    }
+  }
+
+  .find-results {
+    padding: 0 6px 4px;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .find-results-panel {
+    background: #fff;
+    height: min(280px, 34vh);
+  }
+
+  .find-table {
+    width: 100%;
+    table-layout: fixed;
+
+    th,
+    td {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Name gets the room; the rest are fixed like Explorer's columns */
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 22%;
+    }
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 56px;
+    }
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 108px;
+    }
+    th:nth-child(5),
+    td:nth-child(5) {
+      width: 92px;
+    }
+
+    thead > tr > th {
+      padding: 0;
+    }
+
+    /* Sortable headers stay flush inside the raised header cell */
+    .find-sort {
+      width: 100%;
+      min-width: 0;
+      min-height: 0;
+      padding: 1px 6px 2px;
+      background: transparent;
+      box-shadow: none;
+      text-align: left;
+      font-size: 11px;
+
+      &:active {
+        box-shadow: none;
+        padding: 2px 5px 1px 7px;
+      }
+
+      &.sorted::after {
+        content: " \25b2";
+        font-size: 8px;
+      }
+
+      &.sorted.desc::after {
+        content: " \25bc";
+      }
+    }
+
+    td {
+      padding: 3px 6px;
+    }
+
+    tbody tr {
+      @include cursor-hand;
+
+      &:hover {
+        background: navy;
+        color: #fff;
+
+        a {
+          color: #fff;
+        }
+      }
+
+      &.highlighted a {
+        color: #fff;
+      }
+    }
+
+    .find-name {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .find-name a {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-decoration: none;
+      color: inherit;
+    }
+  }
+
+  .find-empty {
+    color: #595959;
+    text-align: center;
+    padding: 12px 0 4px;
+    margin: 0;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  /* Second status field is decoration; it goes first when space is tight */
+  .find-monitor {
+    flex-grow: 0;
+    flex-basis: 150px;
+  }
+
+  /* Dragged taller or maximized, the results list takes the new room -
+     there's no .window-body here to do it for us. */
+  &.resized,
+  &.maximized {
+    .find-results:not([hidden]) {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .find-results-panel {
+      flex: 1;
+      height: auto;
+      min-height: 0;
+    }
+  }
+}
+
 /* --- Python editor (Python.exe) --- */
 .editor-window {
   position: fixed;
@@ -1484,6 +1826,280 @@ body.shut-down {
   overflow: hidden;
 }
 
+/* --- Desktop context menu --- */
+/* Same chrome as the Start menu, tighter metrics - Win98's popup menus
+   used a smaller item height than the Start menu's chunky rows. */
+.context-menu {
+  position: fixed;
+  z-index: 35;
+  min-width: 168px;
+  background: silver;
+  padding: 2px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #dfdfdf,
+    inset -2px -2px #808080, inset 2px 2px #fff;
+
+  &[hidden] {
+    display: none;
+  }
+
+  [role="menuitem"] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 24px 4px 9px;
+    color: #000;
+    font-family: inherit;
+    font-size: 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    box-shadow: none;
+    min-height: 0;
+    min-width: 0;
+    @include cursor-arrow;
+
+    &:hover:not([aria-disabled="true"]),
+    &:focus-visible:not([aria-disabled="true"]) {
+      background: navy;
+      color: #fff;
+      outline: none;
+    }
+
+    &:active {
+      padding: 4px 24px 4px 9px;
+    }
+
+    /* Greyed out but still focusable (see base.html): the engraved look
+       is how Win98 drew a disabled menu label. */
+    &[aria-disabled="true"] {
+      color: #808080;
+      text-shadow: 1px 1px #fff;
+
+      &:focus-visible {
+        outline: 1px dotted #000;
+        outline-offset: -2px;
+      }
+    }
+  }
+
+  .context-menu-separator {
+    height: 0;
+    margin: 3px 2px;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #fff;
+  }
+}
+
+/* Desktop > Refresh: the icons blink out and back, like a real repaint */
+.desktop.refreshing .desktop-icons {
+  visibility: hidden;
+}
+
+/* --- Screen saver --- */
+/* position: fixed beats the UA's [hidden] rule, so the display: none
+   has to be restated here. Explicit width/height too: the canvas is a
+   replaced element, so inset: 0 alone would leave it at its intrinsic
+   size rather than stretching it. */
+.screensaver {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  cursor: none;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+/* --- Office Assistant --- */
+/* The sprite sheet's frame size, and where the artwork's head sits
+   inside it (measured from the right edge) - the balloon's tail points
+   there. Phones scale the whole thing rather than resizing the frame,
+   because the animations step background-position in device pixels.
+   Keep these in step with scripts/gen-clippy.mjs. */
+$clip-w: 124px;
+$clip-h: 93px;
+$clip-head: 57px;
+$clip-phone-scale: 0.667;
+
+.assistant {
+  position: fixed;
+  right: 18px;
+  bottom: $taskbar-height + 14px;
+  z-index: 45;
+  width: $clip-w;
+  /* The container floats over whatever window happens to be underneath;
+     only the assistant's own controls should ever swallow a click. */
+  pointer-events: none;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .assistant-clip,
+  .assistant-close,
+  .assistant-balloon {
+    pointer-events: auto;
+  }
+}
+
+/* One sprite-sheet frame. The entrance is the sheet's own "Show"
+   animation now, so there is no keyframe to write here: everything the
+   assistant does lives in the lazy-loaded clippy/clippy.css. */
+.assistant-clip {
+  display: block;
+  width: $clip-w;
+  height: $clip-h;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  min-width: 0;
+  min-height: 0;
+  @include cursor-hand;
+
+  &:active {
+    padding: 0;
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 1px dotted #ffcc00;
+    outline-offset: 2px;
+  }
+}
+
+.assistant-close {
+  position: absolute;
+  /* Tucked into the sprite box's top-right corner, which the artwork
+     leaves empty in every pose - anywhere further out and the button
+     reads as floating loose in the desktop. */
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+  font-size: 11px;
+  line-height: 1;
+  @include cursor-arrow;
+
+  &::before {
+    content: "\00d7";
+  }
+}
+
+/* The balloon is the Win98 tooltip yellow, not a window - assistants
+   spoke in balloons, and it keeps it visually distinct from real UI. */
+.assistant-balloon {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 16px);
+  width: 246px;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  background: #ffffe1;
+  border: 1px solid #000;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  line-height: 1.45;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .assistant-text {
+    margin: 0;
+  }
+}
+
+.assistant-tail {
+  position: absolute;
+  top: 100%;
+  width: 20px;
+  height: 12px;
+  /* Lined up with the sprite's head rather than the box edge: the
+     artwork sits left of centre in the frame. */
+  right: $clip-head - 10px;
+
+  /* Outlined tail: a black triangle with a slightly smaller yellow one
+     sitting on top, which is cheaper than clip-path and pixel-crisp. */
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    border-style: solid;
+    border-color: transparent;
+  }
+
+  &::before {
+    left: 0;
+    top: 0;
+    border-width: 12px 10px 0;
+    border-top-color: #000;
+  }
+
+  &::after {
+    left: 1px;
+    top: -1px;
+    border-width: 11px 9px 0;
+    border-top-color: #ffffe1;
+  }
+}
+
+.assistant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+
+  &:empty {
+    display: none;
+  }
+
+  button {
+    min-width: 0;
+    font-size: 11px;
+  }
+}
+
+/* The block being read aloud. Same tooltip yellow as the balloon, so the
+   highlight reads as "the assistant is here" rather than as a selection,
+   with a navy bar in the margin for anyone who can't see the tint. */
+.reading-now {
+  background: #ffffc0;
+  box-shadow: -4px 0 0 #000080;
+}
+
+/* The Control Panel grew a Screen Saver and an Assistant section; it can
+   now outgrow a short viewport, so let its body scroll rather than push
+   the OK/Cancel buttons off screen. */
+#control-panel .window-body {
+  max-height: calc(100vh - #{$taskbar-height} - 72px);
+  overflow-y: auto;
+}
+
+.saver-row {
+  gap: 6px;
+
+  input[type="number"] {
+    width: 54px;
+    font-family: inherit;
+    font-size: 12px;
+  }
+
+  button {
+    margin-left: auto;
+    min-width: 70px;
+  }
+}
+
 /* --- Small screens --- */
 @media (max-width: 600px) {
   .desktop {
@@ -1535,5 +2151,94 @@ body.shut-down {
     left: 4px;
     width: calc(100vw - 8px);
     height: calc(100vh - #{$taskbar-height} - 8px);
+  }
+
+  /* Find has no room for a right-hand button column or a label gutter;
+     labels move above their fields and the buttons form a bottom row. */
+  .find-window {
+    top: 4px;
+    left: 4px;
+    width: calc(100vw - 8px);
+
+    .find-criteria {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .find-tabs {
+      width: 100%;
+    }
+
+    .find-field {
+      flex-wrap: wrap;
+
+      > label:first-child {
+        flex: 0 0 100%;
+        justify-content: flex-start;
+        text-align: left;
+      }
+    }
+
+    .find-field-check {
+      padding-left: 4px;
+    }
+
+    .find-actions {
+      flex-direction: row;
+      justify-content: flex-end;
+      padding-top: 8px;
+
+      button {
+        min-width: 0;
+        flex: 1;
+        padding: 0 4px;
+        white-space: nowrap;
+      }
+    }
+
+    .find-glass {
+      height: auto;
+      flex: 0 0 auto;
+    }
+
+    /* In Folder, Size and Type don't earn their pixels on a phone */
+    .find-table th:nth-child(2),
+    .find-table td:nth-child(2),
+    .find-table th:nth-child(3),
+    .find-table td:nth-child(3),
+    .find-table th:nth-child(4),
+    .find-table td:nth-child(4) {
+      display: none;
+    }
+
+    .find-monitor {
+      display: none;
+    }
+  }
+
+  /* The sprite animates by stepping background-position in device
+     pixels, so the frame box can't be resized - scale the whole thing
+     instead. Negative margins shrink the *layout* box to the scaled
+     result, which keeps the balloon and its tail sitting just above the
+     clip rather than 31px of empty air above it. */
+  .assistant {
+    right: 8px;
+    bottom: $taskbar-height + 8px;
+    width: $clip-w * $clip-phone-scale;
+  }
+
+  .assistant-clip {
+    margin: ($clip-h * $clip-phone-scale - $clip-h) 0 0
+      ($clip-w * $clip-phone-scale - $clip-w);
+    transform: scale($clip-phone-scale);
+    transform-origin: bottom right;
+  }
+
+  .assistant-tail {
+    right: $clip-head * $clip-phone-scale - 10px;
+  }
+
+  .assistant-balloon {
+    width: min(240px, calc(100vw - 24px));
   }
 }

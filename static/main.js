@@ -5,6 +5,13 @@
     (document.currentScript && document.currentScript.dataset.browserSrc) || "/browser.js";
   var WINAMP_SRC =
     (document.currentScript && document.currentScript.dataset.winampSrc) || "/winamp.js";
+  var SCREENSAVER_SRC =
+    (document.currentScript && document.currentScript.dataset.screensaverSrc) ||
+    "/screensaver.js";
+  var CLIPPY_SRC =
+    (document.currentScript && document.currentScript.dataset.clippySrc) || "/clippy.js";
+  var FIND_SRC =
+    (document.currentScript && document.currentScript.dataset.findSrc) || "/find.js";
 
   var startBtn = document.getElementById("start-button");
   var startMenu = document.getElementById("start-menu");
@@ -325,6 +332,129 @@
     if (!e.target.closest(".desktop-icon")) deselectIcons();
   });
 
+  /* --- Desktop context menu --- */
+  /* Right-clicking a Win98 desktop and getting the browser's own menu
+     is the loudest break in the illusion. Only the bare desktop is
+     hijacked: inside windows the native menu (copy, view source, open
+     link in new tab) is far more useful than any homage. */
+  var deskMenu = document.getElementById("desktop-menu");
+  var desktopEl = document.getElementById("desktop");
+  /* Original DOM order, so "Line up Icons" has something to restore. */
+  var iconOrder = icons.slice();
+
+  function deskMenuItems() {
+    return Array.prototype.slice.call(deskMenu.querySelectorAll("[role=menuitem]"));
+  }
+
+  var deskMenuOpener = null;
+
+  function openDeskMenu(x, y) {
+    deskMenuOpener = document.activeElement;
+    deskMenu.hidden = false;
+    /* Measure only once visible, then flip back over the click point
+       near an edge - exactly what the real menus did. */
+    var r = deskMenu.getBoundingClientRect();
+    var vw = document.documentElement.clientWidth;
+    var vh = window.innerHeight - 34; /* taskbar */
+    if (x + r.width > vw) x = Math.max(0, x - r.width);
+    if (y + r.height > vh) y = Math.max(0, y - r.height);
+    deskMenu.style.left = x + "px";
+    deskMenu.style.top = y + "px";
+    var first = deskMenuItems()[0];
+    if (first) first.focus();
+  }
+
+  function closeDeskMenu(refocus) {
+    if (deskMenu.hidden) return;
+    deskMenu.hidden = true;
+    if (!refocus) return;
+    /* Same contract as the dialogs: hand focus back where it came from,
+       falling back to the Start button when that element is gone. */
+    var opener = deskMenuOpener;
+    deskMenuOpener = null;
+    if (opener && document.contains(opener) && opener.focus) {
+      opener.focus();
+      if (document.activeElement === opener) return;
+    }
+    startBtn.focus();
+  }
+
+  function runDeskCommand(cmd) {
+    if (cmd === "arrange" || cmd === "lineup") {
+      var wrap = document.querySelector(".desktop-icons");
+      var order = iconOrder.slice();
+      if (cmd === "arrange") {
+        order.sort(function (a, b) {
+          return a.querySelector(".desktop-icon-label").textContent.localeCompare(
+            b.querySelector(".desktop-icon-label").textContent
+          );
+        });
+      }
+      order.forEach(function (i) { wrap.appendChild(i); });
+    } else if (cmd === "refresh") {
+      /* F5 on the desktop repainted the icons with a visible blink. */
+      desktopEl.classList.add("refreshing");
+      setTimeout(function () { desktopEl.classList.remove("refreshing"); }, 130);
+    } else if (cmd === "properties") {
+      /* Desktop > Properties was Display Properties; ours opens on the
+         Screen Saver control, which is the interesting half. */
+      cpOpen(document.getElementById("cp-saver"));
+    }
+  }
+
+  desktopEl.addEventListener("contextmenu", function (e) {
+    if (e.target.closest(".app-window, .desktop-icon, .assistant")) return;
+    e.preventDefault();
+    setStartMenu(false);
+    deselectIcons();
+    openDeskMenu(e.clientX, e.clientY);
+  });
+
+  deskMenu.addEventListener("click", function (e) {
+    var item = e.target.closest("[role=menuitem]");
+    if (!item) return;
+    if (item.getAttribute("aria-disabled") === "true") return;
+    closeDeskMenu(false);
+    runDeskCommand(item.dataset.cmd);
+  });
+
+  deskMenu.addEventListener("keydown", function (e) {
+    var items = deskMenuItems();
+    var idx = items.indexOf(document.activeElement);
+    if (e.key === "Escape") {
+      closeDeskMenu(true);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      items[(idx + 1) % items.length].focus();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      items[(idx - 1 + items.length) % items.length].focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      items[0].focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      items[items.length - 1].focus();
+    }
+  });
+
+  document.addEventListener("click", function (e) {
+    if (deskMenu.hidden || deskMenu.contains(e.target)) return;
+    closeDeskMenu(false);
+  });
+
+  /* Keyboard equivalent of a right-click, but only when focus is out on
+     the desktop itself - inside a window the native menu still wins. */
+  document.addEventListener("keydown", function (e) {
+    var wanted = e.key === "ContextMenu" || (e.shiftKey && e.key === "F10");
+    if (!wanted || !deskMenu.hidden) return;
+    var a = document.activeElement;
+    if (a && a.closest(".app-window, .popup-dialog, .start-menu, .taskbar, .assistant")) return;
+    e.preventDefault();
+    var r = desktopEl.getBoundingClientRect();
+    openDeskMenu(r.left + 24, r.top + 24);
+  });
+
   /* --- Post table rows (any window) --- */
   document.querySelectorAll("tr[data-href]").forEach(function (row) {
     row.addEventListener("click", function (e) {
@@ -417,6 +547,9 @@
   var cpMaximized = document.getElementById("cp-maximized");
   var cpModem = document.getElementById("cp-modem");
   var cpFaithful = document.getElementById("cp-faithful");
+  var cpSaver = document.getElementById("cp-saver");
+  var cpSaverWait = document.getElementById("cp-saver-wait");
+  var cpAssistant = document.getElementById("cp-assistant");
 
   /* Faithful '98 defaults to on; the pre-paint head script turns the
      default off when it detects a likely visually impaired user (see
@@ -437,11 +570,14 @@
     cpMaximized.checked = wantsStartMaximized();
     cpModem.checked = settings.modemSound !== false;
     cpFaithful.checked = faithfulOn();
+    cpSaver.value = saverMode(false);
+    cpSaverWait.value = saverWait();
+    cpAssistant.checked = assistantOn();
   }
 
-  function cpOpen() {
+  function cpOpen(focusTarget) {
     cpSyncControls();
-    openPopup(cpWin, cpWidth);
+    openPopup(cpWin, focusTarget || cpWidth);
   }
 
   function cpClose(save) {
@@ -450,8 +586,13 @@
       settings.startMaximized = cpMaximized.checked;
       settings.modemSound = cpModem.checked;
       settings.faithful98 = cpFaithful.checked;
+      settings.screensaver = cpSaver.value;
+      settings.screensaverWait = Number(cpSaverWait.value);
+      settings.assistant = cpAssistant.checked;
       saveSettings();
       applyFaithful();
+      applyAssistant();
+      resetIdle();
     }
     applyReadingWidth(); // reverts live preview unless saved
     closePopup(cpWin);
@@ -477,7 +618,16 @@
     cpMaximized.checked = false;
     cpModem.checked = true;
     cpFaithful.checked = faithfulDefault();
+    cpSaver.value = SAVER_DEFAULT;
+    cpSaverWait.value = SAVER_WAIT_DEFAULT;
+    cpAssistant.checked = false;
     document.documentElement.style.setProperty("--reading-width", "80ch");
+  });
+
+  /* Preview runs the saver for real, the way the Display Properties
+     button did - move the mouse and you're back. */
+  document.getElementById("cp-saver-preview").addEventListener("click", function () {
+    startScreensaver(cpSaver.value === "none" ? SAVER_DEFAULT : cpSaver.value);
   });
 
   cpWin.addEventListener("keydown", function (e) {
@@ -493,6 +643,19 @@
     btnFor: btnFor,
     loadScript: loadScript,
     winampError: function (message) { winampError(message); },
+    /* Bridge for the lazy apps (clippy.js) - settings live here, and
+       the launchers are function declarations, so hoisting makes them
+       safe to reference from this earlier assignment. */
+    getSetting: function (key) { return settings[key]; },
+    setSetting: function (key, value) {
+      settings[key] = value;
+      saveSettings();
+    },
+    openPyEditor: function (code) { openPyEditor(code || null); },
+    openBrowser: function () { openBrowser(); },
+    openWinamp: function () { openWinamp(); },
+    openFind: function (query) { openFind(query); },
+    startScreensaver: function () { startScreensaver(saverMode(true)); },
   };
 
   var editorPromise = null;
@@ -599,6 +762,57 @@
     openWinamp();
   });
 
+  /* --- Find: Files or Folders (lazy-loaded) --- */
+  /* The chrome ships in the page; find.js adds the behaviour, and only
+     reaches for the full-text index if someone searches inside files. */
+  var findPromise = null;
+  function openFind(query) {
+    if (window.MFFind) {
+      window.MFFind.open(query);
+      return;
+    }
+    if (!findPromise) {
+      findPromise = loadScript(FIND_SRC, function () { return window.MFFind; })
+        .catch(function (err) {
+          findPromise = null; // allow retry
+          throw err;
+        });
+    }
+    findPromise.then(
+      function (find) { find.open(query); },
+      function () {
+        var status = document.getElementById("find-status");
+        if (status) status.textContent = "Failed to load Find \u2014 check your connection";
+        var w = winById("find");
+        if (w) {
+          w.classList.remove("closed", "minimized");
+          var b = btnFor("find");
+          if (b) b.hidden = false;
+          activate("find");
+        }
+      }
+    );
+  }
+
+  document.getElementById("menu-find").addEventListener("click", function () {
+    setStartMenu(false);
+    openFind(null);
+  });
+
+  /* F3 opened Find on a Win98 desktop, and Ctrl+F did it from any
+     Explorer window; both are muscle memory for "search this thing".
+     Typing in a field always wins - the Python editor and the Find
+     window's own boxes keep the browser's native shortcuts. */
+  document.addEventListener("keydown", function (e) {
+    var wanted = e.key === "F3" || ((e.ctrlKey || e.metaKey) && (e.key === "f" || e.key === "F"));
+    if (!wanted || e.altKey) return;
+    var a = document.activeElement;
+    if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;
+    e.preventDefault();
+    setStartMenu(false);
+    openFind(null);
+  });
+
   /* Winamp launch failure dialog: shown from here (winamp.js failed to
      load) or from winamp.js (Webamp bundle failed); shared via MF. */
   var winampDialog = document.getElementById("winamp-dialog");
@@ -637,6 +851,133 @@
       });
       wrap.appendChild(btn);
     });
+
+  /* --- Screen saver (lazy-loaded) --- */
+  /* The canvas savers live in screensaver.js and are only fetched when
+     the machine has actually been idle long enough to need one, so the
+     feature costs nothing to anyone who keeps reading. */
+  var SAVER_DEFAULT = "starfield";
+  var SAVER_WAIT_DEFAULT = 5; /* minutes */
+  var saverPromise = null;
+  var saverBroken = false; /* failed to load: stop retrying this page view */
+  var idleTimer = null;
+  var lastIdleReset = 0;
+
+  function saverMode(coerce) {
+    var mode = typeof settings.screensaver === "string" ? settings.screensaver : SAVER_DEFAULT;
+    /* coerce: a caller that wants a saver *now* (Preview, the Assistant)
+       shouldn't be defeated by the user's "(None)" preference. */
+    return coerce && mode === "none" ? SAVER_DEFAULT : mode;
+  }
+
+  function saverWait() {
+    var n = Number(settings.screensaverWait);
+    if (!isFinite(n) || n < 1) n = SAVER_WAIT_DEFAULT;
+    return Math.min(Math.round(n), 60);
+  }
+
+  function saverRunning() {
+    return !!(window.MFScreensaver && window.MFScreensaver.running());
+  }
+
+  function startScreensaver(name) {
+    if (saverBroken || saverRunning()) return;
+    if (document.body.classList.contains("shut-down")) return;
+    var mode = name || saverMode(false);
+    if (mode === "none") return;
+    if (window.MFScreensaver) {
+      window.MFScreensaver.start(mode, { onstop: resetIdle });
+      return;
+    }
+    if (!saverPromise) {
+      saverPromise = loadScript(SCREENSAVER_SRC, function () { return window.MFScreensaver; })
+        .catch(function (err) {
+          saverPromise = null; // allow retry
+          throw err;
+        });
+    }
+    saverPromise.then(
+      function (saver) { saver.start(mode, { onstop: resetIdle }); },
+      function () { saverBroken = true; }
+    );
+  }
+
+  function scheduleIdle() {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = null;
+    if (saverMode(false) === "none" || saverBroken) return;
+    idleTimer = setTimeout(function () { startScreensaver(null); }, saverWait() * 60000);
+  }
+
+  function resetIdle() {
+    /* mousemove fires in floods; rescheduling a timer per event is
+       wasteful, and one second of granularity on a five-minute timer is
+       not a distinction anyone can perceive. */
+    var now = Date.now();
+    if (now - lastIdleReset < 1000) return;
+    lastIdleReset = now;
+    if (saverRunning()) return; /* its own onstop will reschedule */
+    scheduleIdle();
+  }
+
+  ["mousemove", "mousedown", "keydown", "wheel", "touchstart", "scroll"].forEach(function (ev) {
+    window.addEventListener(ev, resetIdle, { passive: true, capture: true });
+  });
+  scheduleIdle();
+
+  /* --- Office Assistant (lazy-loaded) --- */
+  /* Summon-only, like every other app here: clippy.js is never fetched
+     until someone asks for the Assistant from Start > Help or turns it
+     on in the Control Panel. The setting persists, so for anyone who
+     opted in it comes back on later pages - but even then the fetch is
+     deferred to idle time so it never competes with the page itself. */
+  var clippyPromise = null;
+
+  function assistantOn() {
+    return settings.assistant === true;
+  }
+
+  function loadClippy() {
+    if (window.MFClippy) return Promise.resolve(window.MFClippy);
+    if (!clippyPromise) {
+      clippyPromise = loadScript(CLIPPY_SRC, function () { return window.MFClippy; })
+        .catch(function (err) {
+          clippyPromise = null; // allow retry
+          throw err;
+        });
+    }
+    return clippyPromise;
+  }
+
+  function openAssistant(greet) {
+    loadClippy().then(
+      function (clippy) { clippy.show({ greet: !!greet }); },
+      function () { /* no assistant is no tragedy */ }
+    );
+  }
+
+  function applyAssistant() {
+    if (assistantOn()) openAssistant(false);
+    else if (window.MFClippy) window.MFClippy.hide();
+  }
+
+  document.getElementById("menu-help").addEventListener("click", function () {
+    setStartMenu(false);
+    /* Asking for Help is consent: always greet, even if it was hidden. */
+    settings.assistant = true;
+    saveSettings();
+    openAssistant(true);
+  });
+
+  /* Opted in on a previous visit: bring it back, but only once the
+     browser has nothing better to do. */
+  if (assistantOn()) {
+    if (window.requestIdleCallback) {
+      requestIdleCallback(function () { openAssistant(false); }, { timeout: 4000 });
+    } else {
+      window.addEventListener("load", function () { openAssistant(false); });
+    }
+  }
 
   /* --- Shut Down... --- */
   document.getElementById("menu-shutdown").addEventListener("click", function () {

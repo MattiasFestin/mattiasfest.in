@@ -1,5 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { isMobile, showDesktop } from "./helpers.js";
+import { test, expect, isMobile, showDesktop } from "./helpers.js";
 
 test.describe("home page", () => {
   test.beforeEach(async ({ page }) => {

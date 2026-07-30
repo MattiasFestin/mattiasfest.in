@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers.js";
 
 test.describe("start menu", () => {
   test.beforeEach(async ({ page }) => {

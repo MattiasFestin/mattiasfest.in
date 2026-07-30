@@ -1,5 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { launchApp, SLOW } from "./helpers.js";
+import { test, expect, launchApp, SLOW } from "./helpers.js";
 
 /* "The Internet": lazy-loaded browser.js, dial-up theater, then the web
    of 1998 via the Wayback Machine in a sandboxed iframe. Tests disable

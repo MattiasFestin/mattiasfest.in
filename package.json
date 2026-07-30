@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.0",
+    "clippyjs": "^0.1.0",
     "esbuild": "^0.28.1",
     "pngjs": "^7.0.0",
     "temml": "^0.13.3",

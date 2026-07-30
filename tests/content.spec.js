@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers.js";
 
 /* Content-level features: feeds, compile-time math, syntax
    highlighting, comments, reading width. */

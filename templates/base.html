@@ -66,7 +66,7 @@
   <link rel="stylesheet" href="{{ get_url(path='98/98.css') }}">
   <link rel="stylesheet" href="{{ get_url(path='temml/Temml-Local.css') }}">
   <link rel="stylesheet" href="{{ get_url(path='site.css') }}">
-  <script src="{{ get_url(path='main.js') }}" data-editor-src="{{ get_url(path='editor.js') }}" data-browser-src="{{ get_url(path='browser.js') }}" data-winamp-src="{{ get_url(path='winamp.js') }}" defer></script>
+  <script src="{{ get_url(path='main.js') }}" data-editor-src="{{ get_url(path='editor.js') }}" data-browser-src="{{ get_url(path='browser.js') }}" data-winamp-src="{{ get_url(path='winamp.js') }}" data-screensaver-src="{{ get_url(path='screensaver.js') }}" data-clippy-src="{{ get_url(path='clippy.js') }}" data-find-src="{{ get_url(path='find.js') }}" defer></script>
   <link rel="alternate" type="application/atom+xml" title="{{ config.title }}" href="{{ get_url(path='atom.xml') }}">
 </head>
 <body>
@@ -256,6 +256,137 @@
           <p class="status-bar-field browser-zone"><span class="icon icon-world-16" aria-hidden="true"></span> Internet zone (1998)</p>
         </div>
       </section>
+
+      {# Find: Files or Folders. The chrome is static markup so the
+         lazy-loaded find.js is pure behaviour; the catalog below feeds
+         it names, folders and dates without touching the (much larger)
+         elasticlunr index, which is only fetched when someone actually
+         searches for text inside a file. #}
+      <section class="window app-window find-window closed" data-win="find" aria-label="Find files"
+               data-lunr-src="{{ get_url(path='elasticlunr.min.js') }}"
+               data-index-src="{{ get_url(path='search_index.en.js') }}">
+        <div class="title-bar">
+          <span class="title-bar-icon icon icon-find-16" aria-hidden="true"></span>
+          <div class="title-bar-text" id="find-title">Find: All Files</div>
+          <div class="title-bar-controls">
+            <button aria-label="Minimize"></button>
+            <button aria-label="Maximize"></button>
+            <button aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="find-menubar" aria-hidden="true">
+          <span>File</span><span>Edit</span><span>View</span><span>Options</span><span>Help</span>
+        </div>
+        <form class="find-criteria" id="find-form" autocomplete="off">
+          <div class="find-tabs">
+            <div class="find-tablist" role="tablist" aria-label="Search criteria">
+              <button type="button" role="tab" id="find-tab-name" aria-controls="find-pane-name" aria-selected="true">Name &amp; Location</button>
+              <button type="button" role="tab" id="find-tab-date" aria-controls="find-pane-date" aria-selected="false" tabindex="-1">Date</button>
+              <button type="button" role="tab" id="find-tab-adv" aria-controls="find-pane-adv" aria-selected="false" tabindex="-1">Advanced</button>
+            </div>
+
+            <div class="find-pane" role="tabpanel" id="find-pane-name" aria-labelledby="find-tab-name" tabindex="0">
+              <div class="find-field">
+                <label for="find-named">Named:</label>
+                <input type="text" id="find-named" spellcheck="false" autocapitalize="off">
+              </div>
+              <div class="find-field">
+                <label for="find-text">Containing text:</label>
+                <input type="text" id="find-text" spellcheck="false" autocapitalize="off">
+              </div>
+              <div class="find-field">
+                <label for="find-look">Look in:</label>
+                <select id="find-look">
+                  <option value="*">My Computer</option>
+                  <option value="C:\">C:\</option>
+                  <option value="C:\Blog">C:\Blog</option>
+                </select>
+              </div>
+              <div class="find-field find-field-check">
+                <input type="checkbox" id="find-subfolders" checked>
+                <label for="find-subfolders">Include subfolders</label>
+              </div>
+            </div>
+
+            <div class="find-pane" role="tabpanel" id="find-pane-date" aria-labelledby="find-tab-date" tabindex="0" hidden>
+              <div class="find-field find-field-check">
+                <input type="radio" name="find-when" id="find-when-all" value="all" checked>
+                <label for="find-when-all">All files</label>
+              </div>
+              <div class="find-field find-field-check">
+                <input type="radio" name="find-when" id="find-when-between" value="between">
+                <label for="find-when-between">between</label>
+                <input type="date" id="find-from" aria-label="Modified on or after">
+                <span>and</span>
+                <input type="date" id="find-to" aria-label="Modified on or before">
+              </div>
+              <div class="find-field find-field-check">
+                <input type="radio" name="find-when" id="find-when-months" value="months">
+                <label for="find-when-months">during the previous</label>
+                <input type="number" id="find-months" min="1" max="99" value="6" aria-label="Number of months">
+                <span>month(s)</span>
+              </div>
+              <div class="find-field find-field-check">
+                <input type="radio" name="find-when" id="find-when-days" value="days">
+                <label for="find-when-days">during the previous</label>
+                <input type="number" id="find-days" min="1" max="999" value="30" aria-label="Number of days">
+                <span>day(s)</span>
+              </div>
+            </div>
+
+            <div class="find-pane" role="tabpanel" id="find-pane-adv" aria-labelledby="find-tab-adv" tabindex="0" hidden>
+              <div class="find-field">
+                <label for="find-type">Of type:</label>
+                <select id="find-type">
+                  <option value="*">All Files and Folders</option>
+                  <option value="html">HTML Document</option>
+                  <option value="dir">File Folder</option>
+                </select>
+              </div>
+              <div class="find-field">
+                <label for="find-size-op">Size is:</label>
+                <select id="find-size-op">
+                  <option value="">(any)</option>
+                  <option value="min">At least</option>
+                  <option value="max">At most</option>
+                </select>
+                <input type="number" id="find-size" min="0" max="9999" value="10" disabled aria-label="Size in kilobytes">
+                <span>KB</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="find-actions">
+            <div class="find-glass" aria-hidden="true"><span class="icon icon-find-32"></span></div>
+            <button type="submit" id="find-now">Find Now</button>
+            <button type="button" id="find-stop" disabled>Stop</button>
+            <button type="button" id="find-new">New Search</button>
+          </div>
+        </form>
+
+        <div class="find-results" id="find-results" hidden>
+          <div class="sunken-panel find-results-panel">
+            <table class="interactive find-table">
+              <thead>
+                <tr>
+                  <th scope="col"><button type="button" class="find-sort" data-sort="name" aria-label="Sort by Name">Name</button></th>
+                  <th scope="col"><button type="button" class="find-sort" data-sort="folder" aria-label="Sort by In Folder">In Folder</button></th>
+                  <th scope="col"><button type="button" class="find-sort" data-sort="size" aria-label="Sort by Size">Size</button></th>
+                  <th scope="col"><button type="button" class="find-sort" data-sort="type" aria-label="Sort by Type">Type</button></th>
+                  <th scope="col"><button type="button" class="find-sort" data-sort="date" aria-label="Sort by Modified">Modified</button></th>
+                </tr>
+              </thead>
+              <tbody id="find-rows"></tbody>
+            </table>
+          </div>
+          <p class="find-empty" id="find-empty" hidden>There are no items to show in this view.</p>
+        </div>
+
+        <div class="status-bar">
+          <p class="status-bar-field" id="find-status" role="status">Ready</p>
+          <p class="status-bar-field find-monitor">Monitoring New Items</p>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -281,6 +412,10 @@
     <button class="taskbar-task" data-for="winamp" hidden aria-pressed="false">
       <span class="icon icon-winamp-16" aria-hidden="true"></span>
       <span class="taskbar-task-label">Winamp</span>
+    </button>
+    <button class="taskbar-task" data-for="find" hidden aria-pressed="false">
+      <span class="icon icon-find-16" aria-hidden="true"></span>
+      <span class="taskbar-task-label" id="find-task-label">Find: All Files</span>
     </button>
     <div class="taskbar-clock status-bar-field">
       {% if config.extra.goatcounter %}
@@ -355,12 +490,62 @@
         </button>
       </li>
       <li role="none">
+        <button role="menuitem" class="start-menu-item-button" id="menu-find">
+          <span class="icon icon-find-16" aria-hidden="true"></span> Find: Files or Folders...
+        </button>
+      </li>
+      <li role="none">
+        <button role="menuitem" class="start-menu-item-button" id="menu-help">
+          <span class="icon icon-help-book-16" aria-hidden="true"></span> Help
+        </button>
+      </li>
+      <li role="none">
         <button role="menuitem" class="start-menu-item-button" id="menu-shutdown">
           <span class="icon icon-shutdown-16" aria-hidden="true"></span> Shut Down...
         </button>
       </li>
     </ul>
   </nav>
+
+  {# Right-clicking the desktop background. Disabled entries are kept
+     focusable via aria-disabled (not the disabled attribute) so keyboard
+     users can still traverse the whole menu, per the ARIA menu pattern -
+     and because a Win98 menu with greyed-out Paste is half the joke. #}
+  <nav class="context-menu" id="desktop-menu" hidden role="menu" aria-label="Desktop">
+    <button type="button" role="menuitem" data-cmd="arrange">Arrange Icons by Name</button>
+    <button type="button" role="menuitem" data-cmd="lineup">Line up Icons</button>
+    <button type="button" role="menuitem" data-cmd="refresh">Refresh</button>
+    <div role="separator" class="context-menu-separator"></div>
+    <button type="button" role="menuitem" aria-disabled="true">Paste</button>
+    <button type="button" role="menuitem" aria-disabled="true">Paste Shortcut</button>
+    <div role="separator" class="context-menu-separator"></div>
+    <button type="button" role="menuitem" aria-disabled="true">New</button>
+    <div role="separator" class="context-menu-separator"></div>
+    <button type="button" role="menuitem" data-cmd="properties">
+      <span class="icon icon-display-16" aria-hidden="true"></span> Properties
+    </button>
+  </nav>
+
+  {# The Office Assistant. Static markup so the lazy-loaded clippy.js is
+     pure behaviour; the clip itself is a single sprite-sheet frame,
+     animated entirely by classes from the equally lazy clippy.css. #}
+  <div class="assistant" id="assistant" hidden>
+    <div class="assistant-balloon" id="assistant-balloon" hidden>
+      <p class="assistant-text" id="assistant-text" role="status"></p>
+      <div class="assistant-actions" id="assistant-actions"></div>
+      <span class="assistant-tail" aria-hidden="true"></span>
+    </div>
+    <button type="button" class="assistant-clip" id="assistant-clip"
+            aria-label="Office Assistant - click for a tip">
+      <span class="clippy" id="assistant-sprite" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="assistant-close" id="assistant-close"
+            aria-label="Hide the Office Assistant"></button>
+  </div>
+
+  {# Read-aloud narrates its state here rather than through the balloon,
+     which is visual furniture the assistant reuses for everything. #}
+  <p class="sr-only" id="assistant-live" role="status" aria-live="polite"></p>
 
   <div class="window popup-dialog" id="control-panel" hidden role="dialog" aria-labelledby="cp-title" aria-modal="false">
     <div class="title-bar">
@@ -383,10 +568,36 @@
         </div>
       </fieldset>
       <fieldset>
+        <legend>Screen Saver</legend>
+        <div class="field-row-stacked">
+          <label for="cp-saver">Screen saver</label>
+          <select id="cp-saver">
+            <option value="none">(None)</option>
+            <option value="starfield">Starfield Simulation</option>
+            <option value="flying">Flying Windows</option>
+            <option value="mystify">Mystify Your Mind</option>
+            <option value="pipes">3D Pipes</option>
+          </select>
+        </div>
+        <div class="field-row saver-row">
+          <label for="cp-saver-wait">Wait:</label>
+          <input type="number" id="cp-saver-wait" min="1" max="60" step="1" value="5">
+          <span>minutes</span>
+          <button type="button" id="cp-saver-preview">Preview</button>
+        </div>
+      </fieldset>
+      <fieldset>
         <legend>Sounds</legend>
         <div class="field-row">
           <input type="checkbox" id="cp-modem" checked>
           <label for="cp-modem">Play modem sound when connecting</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Assistant</legend>
+        <div class="field-row">
+          <input type="checkbox" id="cp-assistant">
+          <label for="cp-assistant">Show the Office Assistant</label>
         </div>
       </fieldset>
       <fieldset>
@@ -505,6 +716,24 @@ Do you want to restart it now?</span>
     <p>It's now safe to turn off<br>your computer.</p>
     <p class="shutdown-hint">(click anywhere or press any key to turn it back on)</p>
   </div>
+
+  {# The "file system" Find searches: every page on the site, described
+     the way Explorer would have described it. Names, folders, dates and
+     sizes all come from the content itself, so listing and filtering
+     cost no extra request - only "Containing text" reaches for Zola's
+     (much larger) elasticlunr index, and only when it's filled in. #}
+  {%- set root = get_section(path="_index.md") -%}
+  {%- set blog = get_section(path="blog/_index.md") -%}
+  {%- set built = now() | date(format="%Y-%m-%d") -%}
+  <script type="application/json" id="find-catalog">[
+  {"u":{{ get_url(path="") | json_encode | safe }},"n":"index.html","p":"C:\\","t":{{ root.title | json_encode | safe }},"d":"{{ built }}","w":{{ root.word_count }}},
+  {"u":{{ blog.permalink | json_encode | safe }},"n":"Blog","p":"C:\\","t":{{ blog.title | json_encode | safe }},"d":"{{ built }}","k":"dir"}
+  {%- for p in root.pages %},
+  {"u":{{ p.permalink | json_encode | safe }},"n":"{{ p.slug }}.html","p":"C:\\","t":{{ p.title | json_encode | safe }},"d":"{{ p.date | default(value=built) }}","w":{{ p.word_count }}}
+  {%- endfor -%}
+  {%- for p in blog.pages %},
+  {"u":{{ p.permalink | json_encode | safe }},"n":"{{ p.slug }}.html","p":"C:\\Blog","t":{{ p.title | json_encode | safe }},"d":"{{ p.date | default(value=built) }}","w":{{ p.word_count }}}
+  {%- endfor %}]</script>
 
   {% if config.extra.goatcounter %}
   <script data-goatcounter="https://{{ config.extra.goatcounter }}.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>

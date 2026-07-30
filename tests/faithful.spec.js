@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers.js";
 
 /* Faithful '98 title-bar buttons: the authentic 16x14 originals are the
    default on every device, desktop and mobile alike. The pre-paint

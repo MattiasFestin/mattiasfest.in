@@ -1,5 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { launchApp, SLOW } from "./helpers.js";
+import { test, expect, launchApp, SLOW } from "./helpers.js";
 
 /* Winamp is triple-lazy: nothing on page load, winamp.js on first open,
    which in turn pulls the ~900 KB Webamp bundle. These tests pin both
