@@ -445,6 +445,7 @@ html.start-maximized .main-window:not(.dialog-window) {
     img {
       display: block;
       width: 100%;
+      height: auto;
       image-rendering: pixelated;
     }
   }
