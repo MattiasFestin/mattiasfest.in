@@ -375,7 +375,6 @@
     if (b) b.hidden = false;
     window.MF.activate("pyedit");
     loadRuntimeOnce().catch(function () {});
-    pyCode.focus();
     if (fresh) pyCaretHome();
   }
 
