@@ -6,7 +6,9 @@
     "build": "zola build && node scripts/render-math.mjs && node scripts/optimize.mjs && node scripts/fingerprint.mjs",
     "build:ci": "node scripts/prune-scheduled.mjs && npm run build",
     "dev": "node scripts/dev.mjs",
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:ci": "playwright test --grep-invert @external",
+    "test:external": "playwright test --grep @external"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.0",

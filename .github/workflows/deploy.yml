@@ -41,7 +41,13 @@ jobs:
         run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Run e2e tests
-        run: npm test
+        run: npm run test:ci
+
+      - name: Run external-dependency e2e tests (non-blocking)
+        # Boots the real Pyodide runtime from a CDN. Informative only:
+        # a third-party outage must never block publishing a post.
+        continue-on-error: true
+        run: npm run test:external
 
       - name: Build site (prune scheduled posts, Zola + math rendering)
         run: npm run build:ci

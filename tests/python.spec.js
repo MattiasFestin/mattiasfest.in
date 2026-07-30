@@ -260,7 +260,7 @@ test("a broken runtime download reports a friendly error", async ({ page }) => {
   );
 });
 
-test("runs real Python via Pyodide", async ({ page }) => {
+test("runs real Python via Pyodide @external", async ({ page }) => {
   test.skip(
     test.info().project.name !== "chromium",
     "the runtime is engine-independent; once is enough"
@@ -268,7 +268,9 @@ test("runs real Python via Pyodide", async ({ page }) => {
   /* The only test that leaves the machine: it downloads a genuine
      ~10 MB runtime from a CDN and boots it while the other browser
      projects run in parallel, so it gets its own generous budget
-     (scaled again on slower, busier CI runners). */
+     (scaled again on slower, busier CI runners). Tagged @external so
+     the deploy gate can exclude it - a CDN hiccup must never block
+     publishing a post. */
   test.setTimeout(180_000 * SLOW);
   const boot = 120_000 * SLOW;
   const run = 60_000 * SLOW;
