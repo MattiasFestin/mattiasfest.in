@@ -213,3 +213,7 @@ Nothing here is exotic. Version the interface, measure the break at the level th
 - Schönemann, *A generalized solution of the orthogonal Procrustes problem* (1966): the closed-form bridge.
 - Shen et al., *Towards Backward-Compatible Representation Learning* (2020): training new models to be compatible with old indexes, the industrial-strength cousin of the bridge.
 - Webber, Moffat, Zobel, *A Similarity Measure for Indefinite Rankings* (RBO, 2010): rank-aware neighbor-list comparison.
+
+### Visual guide
+
+- **3Blue1Brown, ["Change of basis"](https://www.3blue1brown.com/lessons/change-of-basis) (2016)**: a visual explanation of how the same vector can have different coordinates under different bases, useful context for this post's incompatible-embedding-space and linear-bridge discussion.

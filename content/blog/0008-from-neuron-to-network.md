@@ -259,6 +259,13 @@ So we now own a machine that learns its own features and ends in the softmax vot
 
 ## Further reading
 
+### Visual guides
+
+- **3Blue1Brown, ["But what is a Neural Network?"](https://www.3blue1brown.com/lessons/neural-networks) (2017)**: a visual introduction to weighted layers, nonlinear activations, and why stacking them creates more expressive functions.
+- **3Blue1Brown, ["Gradient descent, how neural networks learn"](https://www.3blue1brown.com/lessons/gradient-descent) (2017)**: an intuitive explanation of the loss landscape and the iterative optimization process behind training.
+- **3Blue1Brown, ["What is backpropagation really doing?"](https://www.3blue1brown.com/lessons/backpropagation) (2017)**: a visual explanation of how a training example's desired output changes flow backward through a network to update its weights.
+
+### Technical references
+
 - **Minsky, M. & Papert, S., *Perceptrons* (1969)**. The book that made XOR famous: a rigorous map of what single-layer machines cannot represent, widely (if unfairly) blamed for the first neural-network winter.
-- **Rumelhart, D. E., Hinton, G. E. & Williams, R. J., "Learning representations by back-propagating errors" (Nature, 1986)**. The paper that put backprop on the map, with hidden units learning internal representations (including, yes, XOR).
 - **Cybenko, G., "Approximation by superpositions of a sigmoidal function" (1989)** and **Hornik, K., "Approximation capabilities of multilayer feedforward networks" (1991)**. The universal approximation theorems: existence proofs with all the fine print this post's honest paragraph flagged.

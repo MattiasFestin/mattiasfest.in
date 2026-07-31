@@ -240,3 +240,8 @@ So the model is assembled (tokens to embeddings to N blocks to a 50,000-way vote
 - **Vaswani, A. et al., "Attention Is All You Need" (NeurIPS, 2017)**: the transformer paper, with the `$\text{softmax}(QK^\top/\sqrt{d_k})V$` display, multi-head attention, and the (then-radical) claim that the gather-then-think block needs no recurrence at all.
 - **Bahdanau, D., Cho, K. & Bengio, Y., "Neural Machine Translation by Jointly Learning to Align and Translate" (ICLR, 2015; arXiv 2014)**: attention's debut, three years earlier, with a translation decoder learning to look back at the right source words, and the attention-weight matrices that made everyone believe.
 - **Elhage, N. et al., "A Mathematical Framework for Transformer Circuits" (Anthropic, 2021)**: the residual-stream view taken seriously, with heads as read-write operations on a shared channel, and the discovery of induction heads with legible, testable jobs.
+
+### Visual guides
+
+- **3Blue1Brown, ["Transformers, the tech behind LLMs | Deep Learning Chapter 5"](https://www.3blue1brown.com/lessons/gpt) (2024)**: a visual overview of the transformer block, embeddings, and the role attention plays in context-aware token representations.
+- **3Blue1Brown, ["Attention in transformers, step-by-step | Deep Learning Chapter 6"](https://www.3blue1brown.com/lessons/attention) (2024)**: a visual walkthrough of queries, keys, values, masking, and multi-head attention.

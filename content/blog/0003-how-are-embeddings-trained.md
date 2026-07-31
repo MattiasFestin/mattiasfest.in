@@ -185,3 +185,8 @@ In [Part 3](@/blog/0004-what-are-drift.md) we treat that as what it really is, *
 - Oord, Li, Vinyals, *Representation Learning with Contrastive Predictive Coding* (2018): where InfoNCE comes from.
 - Chen et al., *SimCLR* (2020): in-batch negatives, temperature, and batch size, studied carefully (in vision).
 - Karpukhin et al., *Dense Passage Retrieval* (2020): the dual-encoder retrieval blueprint.
+
+### Visual guides
+
+- **3Blue1Brown, ["But what is Cross-Entropy? | Compression is Intelligence Part 2"](https://www.3blue1brown.com/lessons/cross-entropy) (2026)**: a visual framing of cross-entropy—the loss inside InfoNCE's multiple-choice objective.
+- **3Blue1Brown, ["Gradient descent, how neural networks learn"](https://www.3blue1brown.com/lessons/gradient-descent) (2017)**: an intuitive look at the optimization process that adjusts an embedding model's parameters from training examples.

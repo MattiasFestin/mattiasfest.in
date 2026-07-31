@@ -218,3 +218,7 @@ Thank you for walking the whole line. If someone asks you what a language model 
 - **Ouyang, L. et al., "Training Language Models to Follow Instructions with Human Feedback" (2022)**: InstructGPT, this post's three phases as a production pipeline, including the finding that a 1.3B tuned model beat a 175B raw one on human preference. The paper behind the product.
 - **Gekhman, Z. et al., "Does Fine-Tuning LLMs on New Knowledge Encourage Hallucinations?" (EMNLP, 2024)**: the measurement behind Phase 2's warning. Examples carrying knowledge the base model lacks are fit slowly, and as it finally fits them, its tendency to hallucinate on knowledge it already had climbs roughly linearly. Evidence that SFT elicits what's there rather than installing what isn't.
 - **Holtzman, A., Buys, J., Du, L., Forbes, M. & Choi, Y., "The Curious Case of Neural Text Degeneration" (ICLR, 2020)**: why greedy loops and the raw tail unravels, with the nucleus-sampling fix; the sampling section's evidence base.
+
+### Visual guide
+
+- **3Blue1Brown, ["Large Language Models explained briefly"](https://www.3blue1brown.com/lessons/mini-llm) (2024)**: a visual overview of the post's arc from next-token pretraining to RLHF-tuned chatbots.

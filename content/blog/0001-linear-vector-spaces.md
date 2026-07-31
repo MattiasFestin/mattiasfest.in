@@ -344,6 +344,14 @@ A quadratic in `$t$` that never goes negative has non-positive discriminant: `$4
 
 ## Further reading
 
+### Visual guides
+
+- **3Blue1Brown, ["Abstract vector spaces"](https://www.3blue1brown.com/lessons/abstract-vector-spaces) (2016)**: a visual introduction to vector spaces beyond arrows, including functions as vectors, linearity, bases, and coordinates.
+- **3Blue1Brown, ["Dot products and duality"](https://www.3blue1brown.com/lessons/dot-products) (2016)**: the geometric meaning of dot products, projections, orthogonality, and why alignment measures similarity.
+- **3Blue1Brown, ["Thinking outside the 10-dimensional box"](https://www.3blue1brown.com/lessons/higher-dimensions) (2017)**: a visual exercise in building reliable intuition for high-dimensional geometry.
+
+### Technical references
+
 - Sheldon Axler, *Linear Algebra Done Right*: the vector-space pillar, done properly.
 - Walter Rudin, *Principles of Mathematical Analysis*: metric spaces, completeness, topology.
 - Beyer, Goldstein, Ramakrishnan, Shaft, *When Is "Nearest Neighbor" Meaningful?* (ICDT 1999): the distance-concentration result behind the high-dimensions section.

@@ -288,6 +288,13 @@ But regression predicts a *quantity*. Next up: what happens when the thing you p
 
 ## Further reading
 
+### Visual guides
+
+- **3Blue1Brown, ["Dot products and duality"](https://www.3blue1brown.com/lessons/dot-products) (2016)**: a visual explanation of dot products and projections, the geometry underlying least-squares fitting.
+- **3Blue1Brown, ["Gradient descent, how neural networks learn"](https://www.3blue1brown.com/lessons/gradient-descent) (2017)**: an intuitive explanation of minimizing a loss by repeatedly stepping downhill, the iterative alternative to solving regression in closed form.
+
+### Technical references
+
 - **Stigler, S. M., "Gauss and the Invention of Least Squares" (The Annals of Statistics, 1981)**. The definitive account of the Legendre-Gauss priority dispute: Legendre published first (1805), Gauss claimed he'd been using it since 1795, and historians have been adjudicating ever since.
 - **Hastie, Tibshirani & Friedman, *The Elements of Statistical Learning*, Chapter 3**. Linear methods for regression done properly: least squares, ridge, lasso, and the subset-selection zoo. Free PDF from the authors.
 - **Boyd & Vandenberghe, *Introduction to Applied Linear Algebra* (VMLS), Chapters 12-13**. The cleanest treatment of least squares as projection and the normal equations, with the QR-factorization route you should actually use instead of forming `$X^T X$`.

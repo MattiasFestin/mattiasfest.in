@@ -188,3 +188,9 @@ The bigram demo drew the ceiling in crayon: one token of context makes word-shap
 - **Shannon, C. E., "A Mathematical Theory of Communication" (1948)** and **"Prediction and Entropy of Printed English" (1951)**. The origin of everything in the perplexity section: entropy as die-size, and humans playing the next-letter game to bound the entropy of English at about one bit per character.
 - **Bengio, Y., Ducharme, R., Vincent, P. & Jauvin, C., "A Neural Probabilistic Language Model" (JMLR, 2003)**. The paper that assembled this post's exact recipe first: a learned embedding table, a hidden layer, and a softmax over the vocabulary, trained end to end by gradient descent.
 - **Radford, A., Wu, J., Child, R., Luan, D., Amodei, D. & Sutskever, I., "Language Models are Unsupervised Multitask Learners" (2019)**. The GPT-2 paper: next-token prediction at scale, the 50,257-token vocabulary this post kept quoting, and the discovery that one classifier, trained hard enough, learns to do everything else.
+
+### Visual guides
+
+- **3Blue1Brown, ["Large Language Models explained briefly"](https://www.3blue1brown.com/lessons/mini-llm) (2024)**: a concise visual introduction to next-token prediction, sampling, pretraining, and the role of embeddings and attention.
+- **3Blue1Brown, ["Transformers, the tech behind LLMs | Deep Learning Chapter 5"](https://www.3blue1brown.com/lessons/gpt) (2024)**: a visual walkthrough of token embeddings, softmax, and the transformer structure that turns context into a next-token distribution.
+- **3Blue1Brown, ["Reinventing Entropy | Compression & Intelligence Part 1"](https://www.3blue1brown.com/lessons/entropy) (2026)**: a visual companion to the entropy and perplexity discussion.

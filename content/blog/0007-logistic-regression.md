@@ -217,5 +217,5 @@ But every classifier in this post draws a *flat* boundary. One line, however wel
 ## Further reading
 
 - **Cox, D. R., "The Regression Analysis of Binary Sequences" (JRSS B, 1958)**. The paper that made logistic regression a first-class statistical citizen: binary outcomes, the logistic link, and maximum likelihood, all in one place.
-- **McCullagh, P. & Nelder, J. A., *Generalized Linear Models* (2nd ed., 1989)**. The grand unification this post gestured at: pick a noise distribution and a link function, and MSE-with-identity and cross-entropy-with-logit fall out as siblings, gradients matching.
+- **3Blue1Brown, ["But what is Cross-Entropy? | Compression is Intelligence Part 2"](https://www.3blue1brown.com/lessons/cross-entropy) (2026)**: a visual explanation of cross-entropy as the cost of encoding data with the wrong probability model.
 - **Guo, C., Pleiss, G., Sun, Y. & Weinberger, K. Q., "On Calibration of Modern Neural Networks" (ICML 2017)**. The calibration aside with experiments: modern networks are systematically overconfident, reliability diagrams expose it, and temperature scaling (one scalar!) largely fixes it.

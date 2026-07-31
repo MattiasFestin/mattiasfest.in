@@ -136,6 +136,12 @@ Let `$d(x, y)$` be a distance function between vectors `$x$` and `$y$`. The requ
 
 Cosine distance `$1 - \cos(x, y)$` can fail the triangle inequality, so it's not a true metric. If you need one on directions, the angular distance `$\arccos(\cos(x, y))$` *is* a proper metric on the unit sphere. But for ranking neighbors, plain cosine is almost always what you want.
 
+## Further reading
+
+- **3Blue1Brown, ["Dot products and duality"](https://www.3blue1brown.com/lessons/dot-products) (2016)**: the visual intuition for dot products, projections, and directional similarity behind cosine scores.
+- **3Blue1Brown, ["Thinking outside the 10-dimensional box"](https://www.3blue1brown.com/lessons/higher-dimensions) (2017)**: a visual companion to this post's warning that high-dimensional geometry resists low-dimensional intuition.
+- **3Blue1Brown, ["Transformers, the tech behind LLMs | Deep Learning Chapter 5"](https://www.3blue1brown.com/lessons/gpt) (2024)**: a visual explanation of learned token embeddings and how vector directions can encode useful distinctions.
+
 ## Closing Thoughts
 
 An embedding model is a learned way of folding the world into a fixed-size vector and declaring that "things that land close together are similar enough." The fold is lossy, and the choice of what survives isn't made by anyone in particular; it's the frozen residue of the training data and objective.
