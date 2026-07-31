@@ -29,7 +29,15 @@ fingerprint() {
 
 prepare_post() {
   post="$1"
-  source="$2"
+  content="$2"
+  source="$3"
+
+  if [ ! -f "$content" ]; then
+    echo "Post $post is not published in this build; removing its delivery pairs."
+    rm -f "$output/$post-"*.mp4 "$output/$post-"*.webm
+    return
+  fi
+
   expected=$(fingerprint "$source")
   cached=""
 
@@ -47,6 +55,6 @@ prepare_post() {
   printf '%s %s\n' "$post" "$expected" >> "$tmp_manifest"
 }
 
-prepare_post 0001 manim/p0001_linear_vector_spaces.py
-prepare_post 0005 manim/p0005_linear_regression.py
+prepare_post 0001 content/blog/0001-linear-vector-spaces.md manim/p0001_linear_vector_spaces.py
+prepare_post 0005 content/blog/0005-linear-regression.md manim/p0005_linear_regression.py
 mv "$tmp_manifest" "$manifest"

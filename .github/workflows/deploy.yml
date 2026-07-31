@@ -123,6 +123,9 @@ jobs:
         continue-on-error: true
         run: npm run test:external
 
+      - name: Prune scheduled posts
+        run: npm run prune:scheduled
+
       # A single immutable cache holds every delivery video. On a cache-key
       # miss, restore the most recent compatible entry, then validate each
       # post's fingerprint and remove only stale delivery pairs before the
@@ -139,8 +142,8 @@ jobs:
       - name: Prepare cached Manim delivery videos
         run: sh manim/prepare-video-cache.sh
 
-      - name: Build site (prune scheduled posts, Zola + math rendering)
-        run: npm run build:ci:cached
+      - name: Build site (Zola + math rendering)
+        run: npm run render:manim:cached && npm run build
 
       - uses: actions/configure-pages@v5
 
