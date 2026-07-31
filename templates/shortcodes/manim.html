@@ -6,9 +6,10 @@
   <div class="manim-player">
     <div class="manim-player-titlebar">
       <span class="manim-player-title">Media Player</span>
+      <span class="manim-player-status" aria-hidden="true">PAUSED</span>
     </div>
     <div class="manim-player-screen">
-      <video class="manim-video" autoplay muted loop playsinline preload="metadata"{% if poster %} poster="{{ poster }}"{% endif %}>
+      <video class="manim-video" tabindex="0" autoplay muted loop playsinline preload="metadata"{% if poster %} poster="{{ poster }}"{% endif %}>
         <source src="/videos/{{ filename }}.webm" type="video/webm">
         <source src="/videos/{{ filename }}.mp4" type="video/mp4">
         Your browser does not support embedded video.
@@ -16,12 +17,13 @@
     </div>
     <div class="manim-player-transport" role="group" aria-label="Animation controls">
       <div class="manim-player-buttons">
-        <button class="manim-player-button" type="button" data-manim-action="play" aria-label="Play animation" disabled>▶</button>
-        <button class="manim-player-button" type="button" data-manim-action="stop" aria-label="Stop and rewind animation" disabled>■</button>
-        <button class="manim-player-button" type="button" data-manim-action="pause" aria-label="Pause animation" disabled>❚❚</button>
+        <button class="manim-player-button" type="button" data-manim-action="play" aria-label="Play animation" title="Play (Space)" disabled>▶</button>
+        <button class="manim-player-button" type="button" data-manim-action="pause" aria-label="Pause animation" title="Pause (Space)" disabled>❚❚</button>
+        <button class="manim-player-button" type="button" data-manim-action="stop" aria-label="Stop and rewind animation" title="Stop (Home)" disabled>■</button>
       </div>
-      <input class="manim-player-scrubber" type="range" min="0" max="0" value="0" step="0.01" aria-label="Seek animation" disabled>
+      <input class="manim-player-scrubber" type="range" min="0" max="0" value="0" step="0.01" aria-label="Seek animation" title="Seek (← →)" disabled>
       <span class="manim-player-time">0:00 / 0:00</span>
+      <button class="manim-player-button manim-player-fullscreen" type="button" data-manim-action="fullscreen" aria-label="View animation fullscreen" title="Fullscreen (F)" disabled>⛶</button>
     </div>
   </div>
   {% if step_one %}

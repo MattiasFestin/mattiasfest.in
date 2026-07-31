@@ -730,18 +730,29 @@
     if (!player) return;
 
     var play = player.querySelector('[data-manim-action="play"]');
-    var stop = player.querySelector('[data-manim-action="stop"]');
     var pause = player.querySelector('[data-manim-action="pause"]');
+    var stop = player.querySelector('[data-manim-action="stop"]');
+    var fullscreen = player.querySelector('[data-manim-action="fullscreen"]');
     var scrubber = player.querySelector(".manim-player-scrubber");
     var time = player.querySelector(".manim-player-time");
-    if (!play || !stop || !pause || !scrubber || !time) return;
+    var status = player.querySelector(".manim-player-status");
+    if (!play || !pause || !stop || !scrubber || !time) return;
     video.dataset.manimPlayerWired = "true";
+
+    function bufferedEnd() {
+      try {
+        return video.buffered.length ? video.buffered.end(video.buffered.length - 1) : 0;
+      } catch (err) {
+        return 0;
+      }
+    }
 
     function updateTime() {
       var duration = video.duration;
       if (!Number.isFinite(duration) || duration <= 0) {
         scrubber.disabled = true;
         scrubber.style.setProperty("--manim-progress", "0%");
+        scrubber.style.setProperty("--manim-buffered", "0%");
         time.textContent = "0:00 / 0:00";
         return;
       }
@@ -751,38 +762,120 @@
       scrubber.max = duration;
       scrubber.value = current;
       scrubber.style.setProperty("--manim-progress", (current / duration) * 100 + "%");
+      scrubber.style.setProperty(
+        "--manim-buffered",
+        Math.min(100, (bufferedEnd() / duration) * 100) + "%"
+      );
       time.textContent = formatManimTime(current) + " / " + formatManimTime(duration);
     }
 
+    /* The transport doubles as a status display: whichever mode is current
+       stays pressed, and the title bar spells it out. */
     function updatePlayingState() {
-      player.classList.toggle("is-playing", !video.paused && !video.ended);
+      var playing = !video.paused && !video.ended;
+      var stopped = !playing && !video.currentTime;
+      player.classList.toggle("is-playing", playing);
+      play.classList.toggle("is-active", playing);
+      pause.classList.toggle("is-active", !playing && !stopped);
+      stop.classList.toggle("is-active", stopped);
+      if (status) status.textContent = playing ? "PLAYING" : stopped ? "STOPPED" : "PAUSED";
     }
 
-    [play, stop, pause].forEach(function (button) { button.disabled = false; });
-    play.addEventListener("click", function () {
+    function refresh() {
+      updateTime();
+      updatePlayingState();
+    }
+
+    /* Pausing by hand is a decision, not a scroll position, so it is
+       remembered: the viewport observer will not restart what a reader
+       deliberately stopped. */
+    function start() {
       delete video.dataset.manimUserPaused;
       video.play().catch(function () {});
-    });
-    pause.addEventListener("click", function () {
+    }
+    function halt() {
       video.dataset.manimUserPaused = "true";
       video.pause();
-    });
+    }
+    function toggle() {
+      if (video.paused) start();
+      else halt();
+    }
+    function seekTo(seconds) {
+      if (!Number.isFinite(video.duration)) return;
+      video.currentTime = Math.min(Math.max(seconds, 0), video.duration);
+    }
+
+    [play, pause, stop].forEach(function (button) { button.disabled = false; });
+    play.addEventListener("click", start);
+    pause.addEventListener("click", halt);
     stop.addEventListener("click", function () {
-      video.dataset.manimUserPaused = "true";
-      video.pause();
+      halt();
       video.currentTime = 0;
     });
+    video.addEventListener("click", toggle);
     scrubber.addEventListener("input", function () {
-      if (Number.isFinite(video.duration)) video.currentTime = Number(scrubber.value);
+      seekTo(Number(scrubber.value));
     });
-    ["loadedmetadata", "durationchange", "timeupdate", "seeking", "seeked"].forEach(function (eventName) {
+
+    /* Keyboard shortcuts once anything in the player has focus. Arrow keys
+       are taken over from the range input, whose 0.01s step would otherwise
+       make them useless for seeking. */
+    player.addEventListener("keydown", function (event) {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      var onButton = event.target.tagName === "BUTTON";
+      var key = event.key;
+      if ((key === " " || key === "Spacebar" || key === "k") && !onButton) {
+        event.preventDefault();
+        toggle();
+      } else if (key === "ArrowLeft" || key === "ArrowRight") {
+        event.preventDefault();
+        seekTo(video.currentTime + (key === "ArrowLeft" ? -5 : 5));
+      } else if (key === "Home") {
+        event.preventDefault();
+        seekTo(0);
+      } else if (key === "End") {
+        event.preventDefault();
+        seekTo(video.duration);
+      } else if (key === "f" && !onButton) {
+        event.preventDefault();
+        toggleFullscreen();
+      }
+    });
+
+    /* Element fullscreen keeps the transport visible; iOS only fullscreens
+       the video itself, so fall back to that where it is all we get. */
+    function toggleFullscreen() {
+      if (document.fullscreenElement === player) {
+        if (document.exitFullscreen) document.exitFullscreen().catch(function () {});
+      } else if (player.requestFullscreen) {
+        player.requestFullscreen().catch(function () {});
+      } else if (video.webkitEnterFullscreen) {
+        video.webkitEnterFullscreen();
+      }
+    }
+
+    if (fullscreen) {
+      if (player.requestFullscreen || video.webkitEnterFullscreen) {
+        fullscreen.disabled = false;
+        fullscreen.addEventListener("click", toggleFullscreen);
+        document.addEventListener("fullscreenchange", function () {
+          var active = document.fullscreenElement === player;
+          player.classList.toggle("is-fullscreen", active);
+          fullscreen.setAttribute("aria-label", active ? "Exit fullscreen" : "View animation fullscreen");
+        });
+      } else {
+        fullscreen.hidden = true;
+      }
+    }
+
+    ["loadedmetadata", "durationchange", "timeupdate", "progress", "seeking", "seeked"].forEach(function (eventName) {
       video.addEventListener(eventName, updateTime);
     });
-    ["play", "pause", "ended"].forEach(function (eventName) {
+    ["play", "pause", "ended", "timeupdate", "seeked"].forEach(function (eventName) {
       video.addEventListener(eventName, updatePlayingState);
     });
-    updateTime();
-    updatePlayingState();
+    refresh();
   }
 
   function wireManimVideos() {

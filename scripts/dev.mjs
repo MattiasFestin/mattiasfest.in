@@ -14,7 +14,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, statSync, watch } from "node:fs";
+import { createReadStream, existsSync, readFileSync, statSync, watch } from "node:fs";
 import http from "node:http";
 import { extname, join, normalize } from "node:path";
 
@@ -111,6 +111,8 @@ const MIME = {
   ".woff2": "font/woff2",
   ".webmanifest": "application/manifest+json",
   ".txt": "text/plain; charset=utf-8",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
 };
 
 function resolveFile(urlPath) {
@@ -131,8 +133,44 @@ http
       res.end(existsSync(notFound) ? readFileSync(notFound) : "404 Not Found");
       return;
     }
+    const type = MIME[extname(file)] ?? "application/octet-stream";
+    const size = statSync(file).size;
+
+    /* Browsers only treat a video as seekable when the server answers
+       byte ranges, so serve them the way the real host does - otherwise
+       the media player's scrubber is dead in local dev. */
+    const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? "");
+    if (range && size) {
+      let start = range[1] ? Number(range[1]) : null;
+      let end = range[2] ? Number(range[2]) : null;
+      if (start === null) {
+        start = Math.max(0, size - (end ?? 0)); /* suffix range: last N bytes */
+        end = size - 1;
+      } else if (end === null || end >= size) {
+        end = size - 1;
+      }
+
+      if (start > end || start >= size) {
+        res.writeHead(416, { "Content-Range": `bytes */${size}` });
+        res.end();
+        return;
+      }
+
+      res.writeHead(206, {
+        "Content-Type": type,
+        "Content-Length": end - start + 1,
+        "Content-Range": `bytes ${start}-${end}/${size}`,
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "no-store",
+      });
+      createReadStream(file, { start, end }).pipe(res);
+      return;
+    }
+
     res.writeHead(200, {
-      "Content-Type": MIME[extname(file)] ?? "application/octet-stream",
+      "Content-Type": type,
+      "Content-Length": size,
+      "Accept-Ranges": "bytes",
       "Cache-Control": "no-store",
     });
     res.end(readFileSync(file));

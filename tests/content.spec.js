@@ -76,6 +76,7 @@ test("math posts can embed accessible, explained Manim figures", async ({ page }
       await expect(players.nth(i).locator(".manim-player-titlebar")).toHaveText(/Media Player/);
 
       await expect(players.nth(i).locator(".manim-player-buttons > button.manim-player-button")).toHaveCount(3);
+      await expect(players.nth(i).locator('[data-manim-action="fullscreen"]')).toHaveCount(1);
       await expect(players.nth(i).locator('input.manim-player-scrubber[type="range"]')).toHaveCount(1);
       await expect(videos.nth(i)).toHaveAttribute("autoplay", "");
       await expect(videos.nth(i)).toHaveAttribute("muted", "");
@@ -83,6 +84,15 @@ test("math posts can embed accessible, explained Manim figures", async ({ page }
       await expect(videos.nth(i).locator('source[type="video/webm"]')).toHaveCount(1);
       await expect(videos.nth(i).locator('source[type="video/mp4"]')).toHaveCount(1);
       await expect(explainers.nth(i).locator("ol > li")).toHaveCount(3);
+      const controlsFit = await players.nth(i).locator(".manim-player-transport").evaluate((transport) => {
+        const bounds = transport.getBoundingClientRect();
+        return transport.scrollWidth <= transport.clientWidth &&
+          [...transport.querySelectorAll(".manim-player-button")].every((button) => {
+            const rect = button.getBoundingClientRect();
+            return rect.left >= bounds.left && rect.right <= bounds.right;
+          });
+      });
+      expect(controlsFit).toBe(true);
       const playerWidth = await players.nth(i).evaluate((el) => Math.round(el.getBoundingClientRect().width));
       const explainerWidth = await explainers.nth(i).evaluate((el) => Math.round(el.getBoundingClientRect().width));
       expect(explainerWidth).toBe(playerWidth);
@@ -95,9 +105,46 @@ test("math posts can embed accessible, explained Manim figures", async ({ page }
     await pause.click();
     await expect(firstVideo).toHaveJSProperty("paused", true);
     await expect(firstVideo).toHaveAttribute("data-manim-user-paused", "true");
+    // The transport reports state: exactly one mode stays pressed.
+    await expect(firstPlayer.locator(".manim-player-buttons .is-active")).toHaveCount(1);
+    await expect(firstPlayer.locator(".manim-player-status")).toHaveText(/PAUSED|STOPPED/);
+
+    // Clicking the picture is the shortcut most readers reach for first.
+    await firstVideo.click();
+    await expect(firstVideo).not.toHaveAttribute("data-manim-user-paused");
+    await firstVideo.click();
+    await expect(firstVideo).toHaveAttribute("data-manim-user-paused", "true");
+
     await firstPlayer.locator('[data-manim-action="play"]').click();
     await expect(firstVideo).not.toHaveAttribute("data-manim-user-paused");
+
+    // Stop rewinds as well as halting.
+    await firstPlayer.locator('[data-manim-action="stop"]').click();
+    await expect(firstVideo).toHaveJSProperty("paused", true);
+    await expect(firstVideo).toHaveJSProperty("currentTime", 0);
   }
+});
+
+test("animation clips are served so the scrubber can actually seek", async ({ page, request }) => {
+  await page.goto("/blog/0005-linear-regression/");
+  const sources = await page.locator("video.manim-video source[type='video/webm']").evaluateAll(
+    (nodes) => nodes.map((node) => node.getAttribute("src"))
+  );
+  expect(sources.length).toBeGreaterThan(0);
+
+  /* Manim output is rendered on demand, so only assert on the clips this
+     checkout actually has. A video served without byte ranges reports an
+     empty `seekable` range and silently ignores every seek. */
+  let checked = 0;
+  for (const src of sources) {
+    const head = await request.get(src, { headers: { Range: "bytes=0-99" } });
+    if (head.status() === 404) continue;
+    checked += 1;
+    expect(head.status()).toBe(206);
+    expect(head.headers()["content-type"]).toBe("video/webm");
+    expect(head.headers()["content-range"]).toMatch(/^bytes 0-99\/\d+$/);
+  }
+  test.skip(checked === 0, "no rendered Manim clips in this checkout");
 });
 
 test("posts have a giscus comments section", async ({ page }) => {

@@ -476,8 +476,9 @@ html.start-maximized .main-window:not(.dialog-window) {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 8px;
       min-height: 18px;
-      padding: 1px 2px 1px 4px;
+      padding: 1px 4px;
       color: #fff;
       background: navy;
       font-size: 12px;
@@ -485,7 +486,19 @@ html.start-maximized .main-window:not(.dialog-window) {
       line-height: 1;
     }
 
+    .manim-player-title {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
 
+    /* A tiny state readout, the way every player of the era had one. */
+    .manim-player-status {
+      flex: none;
+      color: #7f9fff;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+    }
 
     .manim-player-screen {
       margin-top: 3px;
@@ -496,11 +509,41 @@ html.start-maximized .main-window:not(.dialog-window) {
       box-shadow: inset 1px 1px #000, inset -1px -1px #808080;
     }
 
+    /* Clicking the picture is the interaction people try first, so it
+       toggles playback; the video is focusable to make the same thing
+       reachable from the keyboard. */
     .manim-video {
       display: block;
       width: 100%;
       height: auto;
       background: #0d1016;
+      cursor: pointer;
+
+      &:focus-visible {
+        outline: 2px dotted #fff;
+        outline-offset: -4px;
+      }
+    }
+
+    /* Fullscreen is a class, not :fullscreen, so one rule covers every
+       engine (and the iOS path, which fullscreens the video itself). */
+    .manim-player.is-fullscreen {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+
+      .manim-player-screen {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .manim-video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
     }
 
     .manim-player-transport {
@@ -524,8 +567,9 @@ html.start-maximized .main-window:not(.dialog-window) {
       align-items: center;
       justify-content: center;
       box-sizing: border-box;
-      width: 19px;
-      height: 18px;
+      width: 21px;
+      min-width: 21px;
+      height: 20px;
       padding: 0;
       color: #000;
       background: #c0c0c0;
@@ -536,7 +580,19 @@ html.start-maximized .main-window:not(.dialog-window) {
       line-height: 1;
       cursor: pointer;
 
-      &:active {
+      &:hover:not(:disabled) {
+        background: #d6d6d6;
+      }
+
+      /* The transport reports which mode is current by staying pressed,
+         so a glance at the bar answers "is this running?". */
+      &.is-active:not(:disabled) {
+        background: #b0b0b0;
+        border-color: #404040 #fff #fff #404040;
+        padding: 1px 0 0 1px;
+      }
+
+      &:active:not(:disabled) {
         border-color: #404040 #fff #fff #404040;
         padding: 1px 0 0 1px;
       }
@@ -552,33 +608,49 @@ html.start-maximized .main-window:not(.dialog-window) {
       }
     }
 
+    .manim-player-fullscreen {
+      flex: none;
+      margin-left: 1px;
+    }
+
     .manim-player-scrubber {
       flex: 1;
       min-width: 20px;
-      height: 18px;
+      height: 20px;
       margin: 0;
       appearance: none;
       -webkit-appearance: none;
       background: transparent;
       cursor: pointer;
 
+      /* Played, then buffered, then untouched: the same three-tone rail
+         the old players used. */
       &::-webkit-slider-runnable-track {
         height: 8px;
-        background: linear-gradient(to right, #000080 0, #000080 var(--manim-progress, 0%), #808080 var(--manim-progress, 0%), #808080 100%);
+        background: linear-gradient(
+          to right,
+          #000080 0,
+          #000080 var(--manim-progress, 0%),
+          #a8a8a8 var(--manim-progress, 0%),
+          #a8a8a8 var(--manim-buffered, 0%),
+          #808080 var(--manim-buffered, 0%),
+          #808080 100%
+        );
         border: 1px solid;
         border-color: #404040 #fff #fff #404040;
         box-shadow: inset 1px 1px #000;
       }
 
       &::-webkit-slider-thumb {
-        width: 8px;
-        height: 14px;
-        margin-top: -4px;
+        width: 9px;
+        height: 16px;
+        margin-top: -5px;
         appearance: none;
         -webkit-appearance: none;
         background: #c0c0c0;
         border: 1px solid;
         border-color: #fff #404040 #404040 #fff;
+        box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #808080;
       }
 
       &::-moz-range-track {
@@ -595,12 +667,13 @@ html.start-maximized .main-window:not(.dialog-window) {
       }
 
       &::-moz-range-thumb {
-        width: 7px;
-        height: 13px;
+        width: 8px;
+        height: 15px;
         background: #c0c0c0;
         border: 1px solid;
         border-color: #fff #404040 #404040 #fff;
         border-radius: 0;
+        box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #808080;
       }
 
       &:focus-visible {
@@ -619,11 +692,10 @@ html.start-maximized .main-window:not(.dialog-window) {
       color: #000;
       font-family: "Courier New", monospace;
       font-size: 10px;
+      font-variant-numeric: tabular-nums;
       text-align: right;
       white-space: nowrap;
     }
-
-
 
     @media (max-width: 420px) {
       .manim-player-titlebar {
@@ -651,6 +723,32 @@ html.start-maximized .main-window:not(.dialog-window) {
         margin-left: auto;
         min-width: auto;
         font-size: 9px;
+      }
+    }
+
+    /* Fingers need a bigger target than a mouse pointer does; 21px squares
+       are a Win98 detail, not something worth missing a tap over. */
+    @media (pointer: coarse) {
+      .manim-player-button {
+        width: 30px;
+        min-width: 30px;
+        height: 28px;
+        font-size: 12px;
+      }
+
+      .manim-player-scrubber {
+        height: 28px;
+
+        &::-webkit-slider-thumb {
+          width: 14px;
+          height: 22px;
+          margin-top: -8px;
+        }
+
+        &::-moz-range-thumb {
+          width: 13px;
+          height: 21px;
+        }
       }
     }
 
