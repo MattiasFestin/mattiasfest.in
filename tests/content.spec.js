@@ -57,22 +57,43 @@ test("a page can mix pre-run and press-Run-yourself snippets", async ({ page }) 
   await expect(page.locator("#content .code-output pre")).toContainText("Floppy disks:");
 });
 
-test("math posts can embed accessible, muted Manim figures", async ({ page }) => {
-  await page.goto("/blog/0001-linear-vector-spaces/");
-  const figures = page.locator("figure.manim-figure");
-  await expect(figures).toHaveCount(3);
+test("math posts can embed accessible, explained Manim figures", async ({ page }) => {
+  for (const [post, count] of [
+    ["0001-linear-vector-spaces", 3],
+    ["0005-linear-regression", 3],
+  ]) {
+    await page.goto(`/blog/${post}/`);
+    const figures = page.locator("figure.manim-figure");
+    const players = figures.locator(".manim-player");
+    const videos = figures.locator("video.manim-video");
+    const explainers = figures.locator("aside.manim-explainer[role=note]");
+    await expect(figures).toHaveCount(count);
+    await expect(players).toHaveCount(count);
+    await expect(videos).toHaveCount(count);
+    await expect(explainers).toHaveCount(count);
 
-  const videos = figures.locator("video.manim-video");
-  const explainers = figures.locator("aside.manim-explainer[role=note]");
-  await expect(videos).toHaveCount(3);
-  await expect(explainers).toHaveCount(3);
-  for (let i = 0; i < 3; i++) {
-    await expect(videos.nth(i)).toHaveAttribute("autoplay", "");
-    await expect(videos.nth(i)).toHaveAttribute("muted", "");
-    await expect(videos.nth(i)).toHaveAttribute("playsinline", "");
-    await expect(videos.nth(i).locator('source[type="video/webm"]')).toHaveCount(1);
-    await expect(videos.nth(i).locator('source[type="video/mp4"]')).toHaveCount(1);
-    await expect(explainers.nth(i).locator("ol > li")).toHaveCount(3);
+    for (let i = 0; i < count; i++) {
+      await expect(players.nth(i).locator(".manim-player-titlebar")).toHaveText(/Media Player/);
+
+      await expect(players.nth(i).locator("button.manim-player-button")).toHaveCount(3);
+      await expect(players.nth(i).locator('input.manim-player-scrubber[type="range"]')).toHaveCount(1);
+      await expect(videos.nth(i)).toHaveAttribute("autoplay", "");
+      await expect(videos.nth(i)).toHaveAttribute("muted", "");
+      await expect(videos.nth(i)).toHaveAttribute("playsinline", "");
+      await expect(videos.nth(i).locator('source[type="video/webm"]')).toHaveCount(1);
+      await expect(videos.nth(i).locator('source[type="video/mp4"]')).toHaveCount(1);
+      await expect(explainers.nth(i).locator("ol > li")).toHaveCount(3);
+    }
+
+    const firstPlayer = players.first();
+    const firstVideo = videos.first();
+    const pause = firstPlayer.locator('[data-manim-action="pause"]');
+    await expect(pause).toBeEnabled();
+    await pause.click();
+    await expect(firstVideo).toHaveJSProperty("paused", true);
+    await expect(firstVideo).toHaveAttribute("data-manim-user-paused", "true");
+    await firstPlayer.locator('[data-manim-action="play"]').click();
+    await expect(firstVideo).not.toHaveAttribute("data-manim-user-paused");
   }
 });
 

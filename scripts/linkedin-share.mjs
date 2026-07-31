@@ -31,7 +31,7 @@ import { join } from "node:path";
 
 const BLOG_DIR = new URL("../content/blog", import.meta.url).pathname;
 const ZOLA_TOML = new URL("../zola.toml", import.meta.url).pathname;
-const API_VERSION = process.env.LINKEDIN_VERSION || "202506";
+const API_VERSION = process.env.LINKEDIN_VERSION || "202607";
 
 const token = process.env.LINKEDIN_ACCESS_TOKEN;
 const dryRun = !!process.env.SHARE_DRY_RUN;

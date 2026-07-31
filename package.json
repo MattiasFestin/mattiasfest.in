@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/optimize-png.mjs && zola build && node scripts/run-python.mjs && node scripts/render-math.mjs && node scripts/optimize.mjs && node scripts/fingerprint.mjs",
-    "render:manim": "sh manim/render.sh 0001 --final",
-    "render:manim:cached": "sh manim/render.sh 0001 --final --if-missing",
+    "render:manim": "sh manim/render.sh 0001 --final && sh manim/render.sh 0005 --final",
+    "render:manim:cached": "sh manim/render.sh 0001 --final --if-missing && sh manim/render.sh 0005 --final --if-missing",
     "build:ci:site": "node scripts/prune-scheduled.mjs && npm run build",
     "build:ci": "npm run render:manim && npm run build:ci:site",
     "build:ci:cached": "npm run render:manim:cached && npm run build:ci:site",

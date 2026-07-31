@@ -4,17 +4,17 @@
 # Requirements (macOS):
 #   brew install cairo typst ffmpeg
 #   python3.11 -m venv .venv-manim
-#   .venv-manim/bin/pip install manim
+#   .venv-manim/bin/pip install -r requirements-manim.txt
 #
 # Usage from the repository root:
-#   manim/render.sh 0001                       # fast, 854×480 review render
-#   manim/render.sh 0001 --final               # 1920×1080 delivery render
+#   manim/render.sh 0001                       # 720p/30fps review render
+#   manim/render.sh 0005 --final               # 1080p/60fps delivery render
 #   manim/render.sh 0001 --final --if-missing  # render only absent delivery pairs
+#   manim/render.sh 0005 --final SceneName     # one scene only
 #
-# The source MP4s are copied to static/videos/ alongside WebM (VP9), so
-# browsers select the smaller format first and Safari still has a native
-# fallback. Both delivery files are ignored by no build step and are served
-# directly by Zola.
+# `static/videos/` is intentionally gitignored. CI runs `render:manim` before
+# Zola builds public/, so generated delivery files are deploy artifacts rather
+# than workstation-specific repository content.
 
 set -eu
 
@@ -23,37 +23,46 @@ shift || true
 quality=""
 skip_existing=false
 
-if [ "$post" != "0001" ]; then
-  echo "Usage: manim/render.sh 0001 [--final] [--if-missing] [scene ...]" >&2
-  exit 2
-fi
+case "$post" in
+  0001)
+    source="manim/p0001_linear_vector_spaces.py"
+    default_scenes="NearestNeighborIsADecision UnitBallsAndSparsity HighDimensionsAreWeird"
+    ;;
+  0005)
+    source="manim/p0005_linear_regression.py"
+    default_scenes="LossChoosesTheLine LeastSquaresIsAProjection GradientDescentFindsTheLine"
+    ;;
+  *)
+    echo "Usage: manim/render.sh {0001|0005} [--final] [--if-missing] [scene ...]" >&2
+    exit 2
+    ;;
+esac
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --final)
       quality="--final"
+      shift
       ;;
     --if-missing)
       skip_existing=true
-      ;;
-    NearestNeighborIsADecision|UnitBallsAndSparsity|HighDimensionsAreWeird)
-      break
+      shift
       ;;
     *)
-      echo "Unknown option or scene: $1" >&2
-      exit 2
+      break
       ;;
   esac
-  shift
 done
 
 if [ "$#" -eq 0 ]; then
-  set -- NearestNeighborIsADecision UnitBallsAndSparsity HighDimensionsAreWeird
+  # Intentional word splitting: this turns the selected post's scene list into
+  # positional arguments without requiring Bash arrays.
+  set -- $default_scenes
 fi
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 python="$root/.venv-manim/bin/manim"
-source="$root/manim/p0001_linear_vector_spaces.py"
+source="$root/$source"
 media="$root/.cache/manim-delivery"
 output="$root/static/videos"
 
@@ -73,24 +82,27 @@ else
 fi
 
 for scene do
-  case "$scene" in
-    NearestNeighborIsADecision) stem="nearest-neighbor-is-a-decision" ;;
-    UnitBallsAndSparsity) stem="unit-balls-and-sparsity" ;;
-    HighDimensionsAreWeird) stem="high-dimensions-are-weird" ;;
+  case "$post:$scene" in
+    0001:NearestNeighborIsADecision) stem="nearest-neighbor-is-a-decision" ;;
+    0001:UnitBallsAndSparsity) stem="unit-balls-and-sparsity" ;;
+    0001:HighDimensionsAreWeird) stem="high-dimensions-are-weird" ;;
+    0005:LossChoosesTheLine) stem="loss-chooses-the-line" ;;
+    0005:LeastSquaresIsAProjection) stem="least-squares-is-a-projection" ;;
+    0005:GradientDescentFindsTheLine) stem="gradient-descent-finds-the-line" ;;
     *)
-      echo "Unknown scene: $scene" >&2
+      echo "Unknown scene for post $post: $scene" >&2
       exit 2
       ;;
   esac
 
-  destination="$output/0001-$stem"
+  destination="$output/$post-$stem"
   if [ "$skip_existing" = true ] && [ -s "$destination.mp4" ] && [ -s "$destination.webm" ]; then
     echo "Using cached delivery video: $destination"
     continue
   fi
 
   "$python" $render_args --disable_caching --media_dir "$media" "$source" "$scene"
-  input="$media/videos/p0001_linear_vector_spaces/$folder/$scene.mp4"
+  input="$media/videos/$(basename "$source" .py)/$folder/$scene.mp4"
   cp "$input" "$destination.mp4"
   ffmpeg -y -i "$input" \
     -c:v libvpx-vp9 -crf 32 -b:v 0 -row-mt 1 -tile-columns 2 -an \

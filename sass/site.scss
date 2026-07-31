@@ -459,13 +459,178 @@ html.start-maximized .main-window:not(.dialog-window) {
     margin-bottom: 22px;
     text-align: center;
 
-    .manim-video {
-      display: block;
+    .manim-player {
       width: min(100%, 900px);
       margin: 0 auto;
+      padding: 3px;
+      color: #000;
+      background: #c0c0c0;
+      border: 2px solid;
+      border-color: #fff #404040 #404040 #fff;
+      box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #808080;
+      text-align: left;
+    }
+
+    .manim-player-titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 18px;
+      padding: 1px 2px 1px 4px;
+      color: #fff;
+      background: navy;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1;
+    }
+
+
+
+    .manim-player-screen {
+      margin-top: 3px;
+      padding: 3px;
       background: #0d1016;
-      border: 1px solid #808080;
-      box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #dfdfdf;
+      border: 2px solid;
+      border-color: #404040 #fff #fff #404040;
+      box-shadow: inset 1px 1px #000, inset -1px -1px #808080;
+    }
+
+    .manim-video {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #0d1016;
+    }
+
+    .manim-player-transport {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 23px;
+      margin-top: 3px;
+      padding: 2px;
+      font-size: 10px;
+    }
+
+    .manim-player-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      width: 19px;
+      height: 18px;
+      padding: 0;
+      color: #000;
+      background: #c0c0c0;
+      border: 1px solid;
+      border-color: #fff #404040 #404040 #fff;
+      font-family: "Arial", sans-serif;
+      font-size: 10px;
+      line-height: 1;
+      cursor: pointer;
+
+      &:active {
+        border-color: #404040 #fff #fff #404040;
+        padding: 1px 0 0 1px;
+      }
+
+      &:focus-visible {
+        outline: 1px dotted #000;
+        outline-offset: -3px;
+      }
+
+      &:disabled {
+        color: #808080;
+        cursor: default;
+      }
+    }
+
+    .manim-player-scrubber {
+      flex: 1;
+      min-width: 20px;
+      height: 18px;
+      margin: 0;
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      cursor: pointer;
+
+      &::-webkit-slider-runnable-track {
+        height: 8px;
+        background: linear-gradient(to right, #000080 0, #000080 var(--manim-progress, 0%), #808080 var(--manim-progress, 0%), #808080 100%);
+        border: 1px solid;
+        border-color: #404040 #fff #fff #404040;
+        box-shadow: inset 1px 1px #000;
+      }
+
+      &::-webkit-slider-thumb {
+        width: 8px;
+        height: 14px;
+        margin-top: -4px;
+        appearance: none;
+        -webkit-appearance: none;
+        background: #c0c0c0;
+        border: 1px solid;
+        border-color: #fff #404040 #404040 #fff;
+      }
+
+      &::-moz-range-track {
+        height: 8px;
+        background: #808080;
+        border: 1px solid;
+        border-color: #404040 #fff #fff #404040;
+        box-shadow: inset 1px 1px #000;
+      }
+
+      &::-moz-range-progress {
+        height: 8px;
+        background: #000080;
+      }
+
+      &::-moz-range-thumb {
+        width: 7px;
+        height: 13px;
+        background: #c0c0c0;
+        border: 1px solid;
+        border-color: #fff #404040 #404040 #fff;
+        border-radius: 0;
+      }
+
+      &:focus-visible {
+        outline: 1px dotted #000;
+        outline-offset: 1px;
+      }
+
+      &:disabled {
+        cursor: default;
+        opacity: 0.65;
+      }
+    }
+
+    .manim-player-time {
+      min-width: 67px;
+      color: #000;
+      font-family: "Courier New", monospace;
+      font-size: 10px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+
+
+    @media (max-width: 420px) {
+      .manim-player-titlebar {
+        font-size: 11px;
+      }
+
+      .manim-player-transport {
+        gap: 2px;
+      }
+
+      .manim-player-time {
+        min-width: auto;
+        font-size: 9px;
+      }
     }
 
     /* This is intentionally a yellow Win98-style announcement, not a
@@ -2237,6 +2402,12 @@ $clip-phone-scale: 0.667;
 
   .app-window .window-body {
     padding: 10px 12px;
+  }
+
+  /* Keep the square portrait comfortably within the reading column rather
+     than filling a narrow phone screen edge to edge. */
+  .app-window .window-body .about-portrait {
+    width: min(100%, 256px);
   }
 
   /* Maximized needs no special casing here: the global rule (fixed,

@@ -716,6 +716,75 @@
      the reader's window, honour reduced-motion, and rerun the wiring after
      client-side navigation swaps article content. */
   var manimObserver = null;
+
+  function formatManimTime(seconds) {
+    seconds = Math.max(0, Math.floor(Number(seconds) || 0));
+    var minutes = Math.floor(seconds / 60);
+    var remainder = String(seconds % 60);
+    return minutes + ":" + (remainder.length < 2 ? "0" : "") + remainder;
+  }
+
+  function wireManimPlayerControls(video) {
+    if (video.dataset.manimPlayerWired) return;
+    var player = video.closest(".manim-player");
+    if (!player) return;
+
+    var play = player.querySelector('[data-manim-action="play"]');
+    var stop = player.querySelector('[data-manim-action="stop"]');
+    var pause = player.querySelector('[data-manim-action="pause"]');
+    var scrubber = player.querySelector(".manim-player-scrubber");
+    var time = player.querySelector(".manim-player-time");
+    if (!play || !stop || !pause || !scrubber || !time) return;
+    video.dataset.manimPlayerWired = "true";
+
+    function updateTime() {
+      var duration = video.duration;
+      if (!Number.isFinite(duration) || duration <= 0) {
+        scrubber.disabled = true;
+        scrubber.style.setProperty("--manim-progress", "0%");
+        time.textContent = "0:00 / 0:00";
+        return;
+      }
+
+      var current = Math.min(Math.max(video.currentTime || 0, 0), duration);
+      scrubber.disabled = false;
+      scrubber.max = duration;
+      scrubber.value = current;
+      scrubber.style.setProperty("--manim-progress", (current / duration) * 100 + "%");
+      time.textContent = formatManimTime(current) + " / " + formatManimTime(duration);
+    }
+
+    function updatePlayingState() {
+      player.classList.toggle("is-playing", !video.paused && !video.ended);
+    }
+
+    [play, stop, pause].forEach(function (button) { button.disabled = false; });
+    play.addEventListener("click", function () {
+      delete video.dataset.manimUserPaused;
+      video.play().catch(function () {});
+    });
+    pause.addEventListener("click", function () {
+      video.dataset.manimUserPaused = "true";
+      video.pause();
+    });
+    stop.addEventListener("click", function () {
+      video.dataset.manimUserPaused = "true";
+      video.pause();
+      video.currentTime = 0;
+    });
+    scrubber.addEventListener("input", function () {
+      if (Number.isFinite(video.duration)) video.currentTime = Number(scrubber.value);
+    });
+    ["loadedmetadata", "durationchange", "timeupdate", "seeking", "seeked"].forEach(function (eventName) {
+      video.addEventListener(eventName, updateTime);
+    });
+    ["play", "pause", "ended"].forEach(function (eventName) {
+      video.addEventListener(eventName, updatePlayingState);
+    });
+    updateTime();
+    updatePlayingState();
+  }
+
   function wireManimVideos() {
     if (manimObserver) manimObserver.disconnect();
     var videos = Array.prototype.slice.call(contentEl.querySelectorAll("video.manim-video"));
@@ -725,6 +794,7 @@
     videos.forEach(function (video) {
       video.muted = true;
       video.playsInline = true;
+      wireManimPlayerControls(video);
       if (reduce) video.pause();
     });
     if (reduce || !("IntersectionObserver" in window)) {
@@ -735,8 +805,8 @@
     manimObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         var video = entry.target;
-        if (entry.isIntersecting) video.play().catch(function () {});
-        else video.pause();
+        if (entry.isIntersecting && video.dataset.manimUserPaused !== "true") video.play().catch(function () {});
+        else if (!entry.isIntersecting) video.pause();
       });
     }, { threshold: 0.15 });
     videos.forEach(function (video) { manimObserver.observe(video); });

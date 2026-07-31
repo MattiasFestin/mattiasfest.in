@@ -35,6 +35,8 @@ Three scoring rules, three different winners, same five points.
 
 And none of the three is a lucky guess. Each line is the *exact* minimizer of the column it wins. Sweep a fine grid over every slope and every intercept, score all of them, and the grid hands back A, B and C to three decimals.
 
+{{ manim(file="0005-loss-chooses-the-line", title="The same five points fitted by three candidate lines under three loss functions", step_one="The red line A follows the four ordinary points and leaves the gold outlier with one large residual. The blue and green lines compromise differently.", step_two="Each dashed vertical segment is a residual. The animation shows the same five errors being scored under absolute, squared, and worst-case loss.", step_three="Each card highlights a different winner: A for MAE, B for MSE, and C for worst-case error. The data stays fixed; the definition of badness changes.", caption="Three defensible losses judge the same residuals and select three different exact best-fit lines.") }}
+
 ```python
 import numpy as np
 
@@ -120,6 +122,8 @@ X^T (y - X w) = 0 \quad \Longleftrightarrow \quad X^T X w = X^T y
 
 Those are the **normal equations** ("normal" as in perpendicular, not as in ordinary), and we didn't take a single derivative to get them: one perpendicularity condition, straight from the geometry. The inner product you met in [the vector-spaces post](@/blog/0001-linear-vector-spaces.md) is what decides what "perpendicular" means here; change the inner product and you change which projection is "the" answer. Weight each point by how much you trust it, for instance, and you get **weighted least squares**: the same projection, taken in a stretched geometry. We cash that in before the post is over.
 
+{{ manim(file="0005-least-squares-is-a-projection", title="A three-dimensional column-space plane, an observed vector, its least-squares projection, and the perpendicular residual", step_one="The blue plane is the column space of X: every possible prediction vector Xw lives somewhere on it as the weights vary.", step_two="The gold observed vector y sits outside that plane. Least squares chooses the blue point on the plane that is closest to y.", step_three="The red residual is the shortest route from the plane to y, so it is perpendicular to every direction in the plane. That single fact is the normal equation.", caption="Least squares is not merely a formula: it drops y perpendicularly onto the space of predictions Xw.") }}
+
 Two lines of numpy, and note the orthogonality check at the end, it's the whole theorem in one print:
 
 ```python
@@ -183,6 +187,8 @@ for step in range(1, 1001):
 <!-- output -->
 
 Watch the loss collapse and `$w, b$` crawl to the *same* values the normal equations produced instantly. So why bother? Because gradient descent never asked whether the loss was quadratic, whether a closed form existed, or whether `$X^T X$` fit in memory. It only asked for a gradient. That humility is why it scales to every model in the rest of this series, where closed forms are a distant memory.
+
+{{ manim(file="0005-gradient-descent-finds-the-line", title="Gradient descent moving through a mean squared error surface while its fitted line changes", step_one="On the left, each blue contour is a constant-MSE curve in parameter space. The gold dot starts with a poor line and repeatedly steps downhill.", step_two="On the right, the gold line is the current prediction for those same weights. Every step in parameter space updates the fit on the data.", step_three="The dot settles at the green least-squares solution and the MSE approaches 2. The plot centers x only to make the bowl easy to see; it does not change the fitted line.", caption="Gradient descent navigates the MSE bowl by following local slope information, arriving at the same least-squares fit as the normal equations.") }}
 
 ## Mini-batches: the loop that survives real data
 
