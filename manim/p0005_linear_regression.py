@@ -142,8 +142,12 @@ class LossChoosesTheLine(BlogScene):
             self.wait(0.8)
             self.play(FadeOut(residuals), run_time=0.35)
 
+        # Give the takeaway its own space: leaving the metric legend in the
+        # lower-right made the final sentence compete with the information it
+        # was meant to summarise.
         conclusion = label("The data did not choose a winner. The loss did.", color=ACCENT)
-        conclusion.to_edge(DOWN, buff=0.35)
+        conclusion.to_edge(UP, buff=0.35)
+        self.play(FadeOut(cards), FadeOut(winner_rows), FadeOut(heading), run_time=0.55)
         self.play(Write(conclusion), run_time=1.3)
         self.wait(2.3)
         self.play(
@@ -352,9 +356,11 @@ class GradientDescentFindsTheLine(BlogScene):
         fit.clear_updaters()
         status.clear_updaters()
 
+        # The panel captions occupy the lower third, so replace the heading
+        # instead of squeezing a second line into that already busy region.
         conclusion = label("A gradient is enough to find the same answer.", color=ACCENT)
-        conclusion.to_edge(DOWN, buff=0.3)
-        self.play(FadeIn(conclusion), run_time=1.0)
+        conclusion.to_edge(UP, buff=0.35)
+        self.play(FadeOut(labels), FadeOut(heading), FadeIn(conclusion), run_time=0.8)
         self.wait(2.5)
         self.play(
             FadeOut(
