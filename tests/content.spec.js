@@ -75,7 +75,7 @@ test("math posts can embed accessible, explained Manim figures", async ({ page }
     for (let i = 0; i < count; i++) {
       await expect(players.nth(i).locator(".manim-player-titlebar")).toHaveText(/Media Player/);
 
-      await expect(players.nth(i).locator("button.manim-player-button")).toHaveCount(3);
+      await expect(players.nth(i).locator(".manim-player-buttons > button.manim-player-button")).toHaveCount(3);
       await expect(players.nth(i).locator('input.manim-player-scrubber[type="range"]')).toHaveCount(1);
       await expect(videos.nth(i)).toHaveAttribute("autoplay", "");
       await expect(videos.nth(i)).toHaveAttribute("muted", "");

@@ -513,6 +513,12 @@ html.start-maximized .main-window:not(.dialog-window) {
       font-size: 10px;
     }
 
+    .manim-player-buttons {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 4px;
+    }
+
     .manim-player-button {
       display: inline-flex;
       align-items: center;
@@ -628,6 +634,10 @@ html.start-maximized .main-window:not(.dialog-window) {
         flex-wrap: wrap;
         column-gap: 3px;
         row-gap: 2px;
+      }
+
+      .manim-player-buttons {
+        gap: 3px;
       }
 
       .manim-player-scrubber {

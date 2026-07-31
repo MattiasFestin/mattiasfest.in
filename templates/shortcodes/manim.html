@@ -15,9 +15,11 @@
       </video>
     </div>
     <div class="manim-player-transport" role="group" aria-label="Animation controls">
-      <button class="manim-player-button" type="button" data-manim-action="play" aria-label="Play animation" disabled>▶</button>
-      <button class="manim-player-button" type="button" data-manim-action="stop" aria-label="Stop and rewind animation" disabled>■</button>
-      <button class="manim-player-button" type="button" data-manim-action="pause" aria-label="Pause animation" disabled>❚❚</button>
+      <div class="manim-player-buttons">
+        <button class="manim-player-button" type="button" data-manim-action="play" aria-label="Play animation" disabled>▶</button>
+        <button class="manim-player-button" type="button" data-manim-action="stop" aria-label="Stop and rewind animation" disabled>■</button>
+        <button class="manim-player-button" type="button" data-manim-action="pause" aria-label="Pause animation" disabled>❚❚</button>
+      </div>
       <input class="manim-player-scrubber" type="range" min="0" max="0" value="0" step="0.01" aria-label="Seek animation" disabled>
       <span class="manim-player-time">0:00 / 0:00</span>
     </div>
