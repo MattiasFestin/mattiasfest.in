@@ -460,6 +460,7 @@ html.start-maximized .main-window:not(.dialog-window) {
     text-align: center;
 
     .manim-player {
+      box-sizing: border-box;
       width: min(100%, 900px);
       margin: 0 auto;
       padding: 3px;
@@ -624,10 +625,20 @@ html.start-maximized .main-window:not(.dialog-window) {
       }
 
       .manim-player-transport {
-        gap: 2px;
+        flex-wrap: wrap;
+        column-gap: 3px;
+        row-gap: 2px;
+      }
+
+      .manim-player-scrubber {
+        flex-basis: 100%;
+        order: 1;
+        width: 100%;
+        min-width: 0;
       }
 
       .manim-player-time {
+        margin-left: auto;
         min-width: auto;
         font-size: 9px;
       }
@@ -637,8 +648,9 @@ html.start-maximized .main-window:not(.dialog-window) {
        subtitle. A loop is much easier to learn from when the reader knows
        which transition in it carries the point. */
     .manim-explainer {
+      box-sizing: border-box;
+      width: min(100%, 900px);
       margin: 9px auto 0;
-      max-width: min(100%, 740px);
       padding: 8px 12px;
       color: #000;
       background: #ffffcc;

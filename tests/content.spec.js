@@ -83,6 +83,9 @@ test("math posts can embed accessible, explained Manim figures", async ({ page }
       await expect(videos.nth(i).locator('source[type="video/webm"]')).toHaveCount(1);
       await expect(videos.nth(i).locator('source[type="video/mp4"]')).toHaveCount(1);
       await expect(explainers.nth(i).locator("ol > li")).toHaveCount(3);
+      const playerWidth = await players.nth(i).evaluate((el) => Math.round(el.getBoundingClientRect().width));
+      const explainerWidth = await explainers.nth(i).evaluate((el) => Math.round(el.getBoundingClientRect().width));
+      expect(explainerWidth).toBe(playerWidth);
     }
 
     const firstPlayer = players.first();
