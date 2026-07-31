@@ -624,9 +624,12 @@ html.start-maximized .main-window:not(.dialog-window) {
       cursor: pointer;
 
       /* Played, then buffered, then untouched: the same three-tone rail
-         the old players used. */
+         the old players used. The base range styling in 98.css reaches
+         into these pseudo-elements too, so every property that decides
+         geometry is set explicitly rather than inherited. */
       &::-webkit-slider-runnable-track {
-        height: 8px;
+        box-sizing: border-box;
+        height: 10px;
         background: linear-gradient(
           to right,
           #000080 0,
@@ -641,12 +644,17 @@ html.start-maximized .main-window:not(.dialog-window) {
         box-shadow: inset 1px 1px #000;
       }
 
+      /* `margin-top` is what centres the thumb on the rail, so 98.css's
+         `translateY(-8px)` (which nudges its own sprite thumb) has to go
+         or the handle floats above the groove. */
       &::-webkit-slider-thumb {
+        box-sizing: border-box;
         width: 9px;
-        height: 16px;
+        height: 18px;
         margin-top: -5px;
         appearance: none;
         -webkit-appearance: none;
+        transform: none;
         background: #c0c0c0;
         border: 1px solid;
         border-color: #fff #404040 #404040 #fff;
@@ -654,7 +662,8 @@ html.start-maximized .main-window:not(.dialog-window) {
       }
 
       &::-moz-range-track {
-        height: 8px;
+        box-sizing: border-box;
+        height: 10px;
         background: #808080;
         border: 1px solid;
         border-color: #404040 #fff #fff #404040;
@@ -662,13 +671,18 @@ html.start-maximized .main-window:not(.dialog-window) {
       }
 
       &::-moz-range-progress {
-        height: 8px;
+        box-sizing: border-box;
+        height: 10px;
         background: #000080;
       }
 
+      /* Firefox centres the thumb on the track by itself; 98.css's
+         `translateY(2px)` is the only thing knocking it off. */
       &::-moz-range-thumb {
-        width: 8px;
-        height: 15px;
+        box-sizing: border-box;
+        width: 9px;
+        height: 18px;
+        transform: none;
         background: #c0c0c0;
         border: 1px solid;
         border-color: #fff #404040 #404040 #fff;
@@ -739,15 +753,17 @@ html.start-maximized .main-window:not(.dialog-window) {
       .manim-player-scrubber {
         height: 28px;
 
+        /* Taller thumb, so it needs to be lifted further to stay centred
+           on the same 10px rail. */
         &::-webkit-slider-thumb {
           width: 14px;
-          height: 22px;
+          height: 24px;
           margin-top: -8px;
         }
 
         &::-moz-range-thumb {
-          width: 13px;
-          height: 21px;
+          width: 14px;
+          height: 24px;
         }
       }
     }
