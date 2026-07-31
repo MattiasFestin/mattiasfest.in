@@ -123,66 +123,21 @@ jobs:
         continue-on-error: true
         run: npm run test:external
 
-      # Final video rendering and VP9 transcoding dominate cold builds. Cache
-      # every delivery pair independently, so an unrelated site change restores
-      # all three and a missing pair is the only one that gets rendered.
-      #
-      # A post's scenes share one source module, so changing that module or a
-      # shared helper invalidates that post's delivery pairs. Bump v1 for a
-      # renderer or encoder change.
-      - name: Cache nearest-neighbor video
-        id: manim-nearest-neighbor
+      # A single immutable cache holds every delivery video. On a cache-key
+      # miss, restore the most recent compatible entry, then validate each
+      # post's fingerprint and remove only stale delivery pairs before the
+      # build renders the missing pairs. Bump v3 for a renderer or encoder
+      # change that must not reuse a previous full-video cache.
+      - name: Cache Manim delivery videos
         uses: actions/cache@v4
         with:
-          path: |
-            static/videos/0001-nearest-neighbor-is-a-decision.mp4
-            static/videos/0001-nearest-neighbor-is-a-decision.webm
-          key: manim-video-v1-0001-nearest-neighbor-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/mfblog/**/*.py') }}
+          path: static/videos
+          key: manim-videos-v3-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/prepare-video-cache.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/p0005_linear_regression.py', 'manim/mfblog/**/*.py') }}
+          restore-keys: |
+            manim-videos-v3-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-
 
-      - name: Cache unit-balls video
-        id: manim-unit-balls
-        uses: actions/cache@v4
-        with:
-          path: |
-            static/videos/0001-unit-balls-and-sparsity.mp4
-            static/videos/0001-unit-balls-and-sparsity.webm
-          key: manim-video-v1-0001-unit-balls-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/mfblog/**/*.py') }}
-
-      - name: Cache high-dimensions video
-        id: manim-high-dimensions
-        uses: actions/cache@v4
-        with:
-          path: |
-            static/videos/0001-high-dimensions-are-weird.mp4
-            static/videos/0001-high-dimensions-are-weird.webm
-          key: manim-video-v1-0001-high-dimensions-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/mfblog/**/*.py') }}
-
-      - name: Cache loss-choice video
-        id: manim-loss-choice
-        uses: actions/cache@v4
-        with:
-          path: |
-            static/videos/0005-loss-chooses-the-line.mp4
-            static/videos/0005-loss-chooses-the-line.webm
-          key: manim-video-v1-0005-loss-choice-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/p0005_linear_regression.py', 'manim/mfblog/**/*.py') }}
-
-      - name: Cache least-squares projection video
-        id: manim-projection
-        uses: actions/cache@v4
-        with:
-          path: |
-            static/videos/0005-least-squares-is-a-projection.mp4
-            static/videos/0005-least-squares-is-a-projection.webm
-          key: manim-video-v1-0005-projection-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/p0005_linear_regression.py', 'manim/mfblog/**/*.py') }}
-
-      - name: Cache gradient-descent video
-        id: manim-gradient-descent
-        uses: actions/cache@v4
-        with:
-          path: |
-            static/videos/0005-gradient-descent-finds-the-line.mp4
-            static/videos/0005-gradient-descent-finds-the-line.webm
-          key: manim-video-v1-0005-gradient-descent-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/p0005_linear_regression.py', 'manim/mfblog/**/*.py') }}
+      - name: Prepare cached Manim delivery videos
+        run: sh manim/prepare-video-cache.sh
 
       - name: Build site (prune scheduled posts, Zola + math rendering)
         run: npm run build:ci:cached

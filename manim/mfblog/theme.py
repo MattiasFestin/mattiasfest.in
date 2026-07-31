@@ -42,7 +42,9 @@ TITLE_SIZE = 40
 BODY_SIZE = 30
 LABEL_SIZE = 26
 
-FONT = "Helvetica Neue"
+# DejaVu Sans is present on GitHub's Ubuntu runners and is widely available
+# on Linux, avoiding Pango's nondeterministic fallback for macOS-only fonts.
+FONT = "DejaVu Sans"
 
 
 def label(text: str, size: float = BODY_SIZE, color: str = INK, **kwargs) -> Text:

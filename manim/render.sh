@@ -81,32 +81,54 @@ else
   folder="720p30"
 fi
 
-for scene do
-  case "$post:$scene" in
-    0001:NearestNeighborIsADecision) stem="nearest-neighbor-is-a-decision" ;;
-    0001:UnitBallsAndSparsity) stem="unit-balls-and-sparsity" ;;
-    0001:HighDimensionsAreWeird) stem="high-dimensions-are-weird" ;;
-    0005:LossChoosesTheLine) stem="loss-chooses-the-line" ;;
-    0005:LeastSquaresIsAProjection) stem="least-squares-is-a-projection" ;;
-    0005:GradientDescentFindsTheLine) stem="gradient-descent-finds-the-line" ;;
+stem_for_scene() {
+  case "$post:$1" in
+    0001:NearestNeighborIsADecision) echo "nearest-neighbor-is-a-decision" ;;
+    0001:UnitBallsAndSparsity) echo "unit-balls-and-sparsity" ;;
+    0001:HighDimensionsAreWeird) echo "high-dimensions-are-weird" ;;
+    0005:LossChoosesTheLine) echo "loss-chooses-the-line" ;;
+    0005:LeastSquaresIsAProjection) echo "least-squares-is-a-projection" ;;
+    0005:GradientDescentFindsTheLine) echo "gradient-descent-finds-the-line" ;;
     *)
-      echo "Unknown scene for post $post: $scene" >&2
+      echo "Unknown scene for post $post: $1" >&2
       exit 2
       ;;
   esac
+}
 
+# Keep cached delivery pairs, but batch every missing scene from a post into
+# one Manim process. A post's scenes share a source module, so CI either
+# restores the complete post cache or renders the complete post in one pass.
+targets=""
+for scene do
+  stem=$(stem_for_scene "$scene")
   destination="$output/$post-$stem"
   if [ "$skip_existing" = true ] && [ -s "$destination.mp4" ] && [ -s "$destination.webm" ]; then
     echo "Using cached delivery video: $destination"
-    continue
+  else
+    targets="$targets $scene"
   fi
+done
 
-  "$python" $render_args --disable_caching --media_dir "$media" "$source" "$scene"
+if [ -z "$targets" ]; then
+  echo "All delivery videos are available."
+  exit 0
+fi
+
+# Intentional word splitting: scene names cannot contain whitespace and the
+# Manim CLI accepts all requested scene names after the source file.
+# shellcheck disable=SC2086
+"$python" $render_args --disable_caching --media_dir "$media" "$source" $targets
+
+for scene in $targets; do
+  stem=$(stem_for_scene "$scene")
+  destination="$output/$post-$stem"
   input="$media/videos/$(basename "$source" .py)/$folder/$scene.mp4"
   cp "$input" "$destination.mp4"
   ffmpeg -y -i "$input" \
     -c:v libvpx-vp9 -crf 32 -b:v 0 -row-mt 1 -tile-columns 2 -an \
     "$destination.webm"
 done
+
 
 echo "Wrote delivery videos to $output"
