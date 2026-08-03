@@ -49,8 +49,12 @@ case "$post" in
     source="manim/p0005_linear_regression.py"
     default_scenes="LossChoosesTheLine LeastSquaresIsAProjection GradientDescentFindsTheLine"
     ;;
+  0006)
+    source="manim/p0006_classification_vs_regression.py"
+    default_scenes="ConfidentlyRightGetsFined TheGradientDiesWhereItHurts OneScorerManyProducts"
+    ;;
   *)
-    echo "Usage: manim/render.sh {0001|0002|0003|0004|0005} [--final] [--if-missing] [scene ...]" >&2
+    echo "Usage: manim/render.sh {0001|0002|0003|0004|0005|0006} [--final] [--if-missing] [scene ...]" >&2
     exit 2
     ;;
 esac
@@ -115,6 +119,9 @@ stem_for_scene() {
     0005:LossChoosesTheLine) echo "loss-chooses-the-line" ;;
     0005:LeastSquaresIsAProjection) echo "least-squares-is-a-projection" ;;
     0005:GradientDescentFindsTheLine) echo "gradient-descent-finds-the-line" ;;
+    0006:ConfidentlyRightGetsFined) echo "confidently-right-gets-fined" ;;
+    0006:TheGradientDiesWhereItHurts) echo "the-gradient-dies-where-it-hurts" ;;
+    0006:OneScorerManyProducts) echo "one-scorer-many-products" ;;
     *)
       echo "Unknown scene for post $post: $1" >&2
       exit 2

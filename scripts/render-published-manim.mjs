@@ -16,6 +16,7 @@ const posts = [
   { id: "0003", content: "content/blog/0003-how-are-embeddings-trained.md" },
   { id: "0004", content: "content/blog/0004-what-are-drift.md" },
   { id: "0005", content: "content/blog/0005-linear-regression.md" },
+  { id: "0006", content: "content/blog/0006-classification-vs-regression.md" },
 ];
 
 for (const post of posts) {

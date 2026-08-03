@@ -64,6 +64,7 @@ test("math posts can embed accessible, explained Manim figures", async ({ page }
     ["0003-how-are-embeddings-trained", 3],
     ["0004-what-are-drift", 3],
     ["0005-linear-regression", 3],
+    ["0006-classification-vs-regression", 3],
   ]) {
     await page.goto(`/blog/${post}/`);
     const figures = page.locator("figure.manim-figure");
