@@ -41,19 +41,21 @@ Size and dimensionality do matter, since a roomier envelope *can* hold finer dis
 
 The practical takeaway: if your application depends on a specific signal (exact product codes, negation, rare entities), don't assume any model preserves it. Test it.
 
+{{ manim(file="0002-embeddings-are-a-map", title="Short texts passing through an embedding model and landing as points on one shared map", step_one="Each input goes through the model once and comes out as a coordinate, which gets pinned to a single shared space.", step_two="Nobody drew the circles: the baking texts and the astronomy texts land near their own kind because the training rewarded exactly that.", step_three="The last two inputs differ only by an invoice number, and they land on the same point — the number was never something this model was trained to keep.", caption="The model is a function from inputs to points. Similar things land close together, and whatever the training never rewarded — like an invoice number — simply does not survive the fold.") }}
+
 ## Measuring "close"
 
 We compare envelopes by their direction more often than their length: **<u>cosine similarity</u>** is like checking whether two envelopes have the same tilt when you hold them up to the light. In practice, most pipelines L2-normalize their vectors first, and once everything has the same length, cosine ranking and Euclidean ranking agree exactly. Same neighbors, same order. The formal section below makes this precise.
 
 One caveat: cosine *distance* isn't a true metric, because it can break the triangle inequality. For most retrieval systems that's harmless, but some algorithms and index structures assume metric properties, and it's worth knowing when your notion of "distance" is only mostly a distance.
 
+{{ manim(file="0002-cosine-meets-euclidean", title="Vectors on the unit circle showing that cosine similarity and Euclidean distance produce the same ranking", step_one="Before normalizing, the raw dot product rewards the longer vector: a wins even though b points almost the same way as the query.", step_two="Once both are scaled to unit length only the angle is left, and the ranking flips to the one you actually wanted.", step_three="As the blue vector sweeps around, cosine falls exactly as the chord grows, because the squared distance is always 2(1 − cos). The two ranked lists at the end agree in every position.", caption="On L2-normalized vectors, ranking by cosine similarity and ranking by Euclidean distance are the same operation. Skip the normalization and vector length quietly becomes part of your relevance score.") }}
+
 ## Searching the map
 
 The map is a crowded, many-dimensional place, and exact search means measuring your query against every single pin, which is slow and expensive at scale. So we build **<u>approximate nearest neighbor</u>** indexes: shortcuts that partition or graph-connect the map so we only check the most promising regions.
 
 This is where the "bins" live: in the index, not the embedding. And it's worth being precise about how an approximate index fails: a badly tuned index doesn't confuse baking with astronomy. It just *misses*. Some true neighbors don't get checked, so recall drops. If your results are semantically bizarre, the problem is almost always the embedding (or a model mismatch), not the index.
-
-<video src="/videos/EmbeddingVectorSpace.mp4" autoplay loop controls></video>
 
 ## So what is embedding drift?
 
@@ -63,6 +65,8 @@ Now we can say it precisely. Each model defines its own map. Swap the model and 
 2. **Redrawing the map.** If you re-embed your whole corpus with the new model, every comparison is valid again. But the new model kept different things when it folded, so distances shift and **neighborhoods reshuffle**. Your data didn't move; the definition of "similar" did.
 
 The second one is what this series means by **<u>embedding drift</u>**. It's subtler and more dangerous than the first, because everything still *works* (queries return plausible results) while your carefully tuned thresholds, clusters, and "memory" layers stop meaning what they used to.
+
+{{ manim(file="0002-drift-redraws-the-map", title="One corpus on two different model maps, showing mixed coordinates and reshuffled neighborhoods", step_one="On the original map the bread query retrieves bread documents, and a tuned threshold circle holds exactly the three that belong.", step_two="Re-embed only the query and its coordinates now come from a different map: the arithmetic still works, the scores still look confident, and the top hits are billing documents.", step_three="Re-embed the whole corpus and comparisons are valid again — but the ranking has reshuffled and 'oven' has quietly fallen outside the threshold nobody re-tuned.", caption="Two distinct failure modes. Mixing coordinates from two models returns confident nonsense; re-embedding everything returns valid results that are simply different ones. The documents never moved — the definition of 'similar' did.") }}
 
 (A note on terminology: in ML monitoring, "embedding drift" often means your *data* distribution shifting over time under a fixed model. Related, but not our topic. Here the data holds still and the model moves.)
 

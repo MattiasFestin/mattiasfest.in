@@ -15,6 +15,11 @@
 # `static/videos/` is intentionally gitignored. CI runs `render:manim` before
 # Zola builds public/, so generated delivery files are deploy artifacts rather
 # than workstation-specific repository content.
+#
+# Changing the quality flags or the WebM encoder settings below changes every
+# post's output without changing any post's sources, which the delivery cache
+# cannot detect on its own: bump RECIPE in manim/prepare-video-cache.sh in the
+# same commit. Adding a post here needs no bump.
 
 set -eu
 
@@ -28,12 +33,20 @@ case "$post" in
     source="manim/p0001_linear_vector_spaces.py"
     default_scenes="NearestNeighborIsADecision UnitBallsAndSparsity HighDimensionsAreWeird"
     ;;
+  0002)
+    source="manim/p0002_what_are_embeddings.py"
+    default_scenes="EmbeddingsAreAMap CosineMeetsEuclidean DriftRedrawsTheMap"
+    ;;
+  0003)
+    source="manim/p0003_how_are_embeddings_trained.py"
+    default_scenes="TheExamAndItsTemperature AlignmentAndUniformity RotationIsInvisible"
+    ;;
   0005)
     source="manim/p0005_linear_regression.py"
     default_scenes="LossChoosesTheLine LeastSquaresIsAProjection GradientDescentFindsTheLine"
     ;;
   *)
-    echo "Usage: manim/render.sh {0001|0005} [--final] [--if-missing] [scene ...]" >&2
+    echo "Usage: manim/render.sh {0001|0002|0003|0005} [--final] [--if-missing] [scene ...]" >&2
     exit 2
     ;;
 esac
@@ -86,6 +99,12 @@ stem_for_scene() {
     0001:NearestNeighborIsADecision) echo "nearest-neighbor-is-a-decision" ;;
     0001:UnitBallsAndSparsity) echo "unit-balls-and-sparsity" ;;
     0001:HighDimensionsAreWeird) echo "high-dimensions-are-weird" ;;
+    0002:EmbeddingsAreAMap) echo "embeddings-are-a-map" ;;
+    0002:CosineMeetsEuclidean) echo "cosine-meets-euclidean" ;;
+    0002:DriftRedrawsTheMap) echo "drift-redraws-the-map" ;;
+    0003:TheExamAndItsTemperature) echo "the-exam-and-its-temperature" ;;
+    0003:AlignmentAndUniformity) echo "alignment-and-uniformity" ;;
+    0003:RotationIsInvisible) echo "rotation-is-invisible" ;;
     0005:LossChoosesTheLine) echo "loss-chooses-the-line" ;;
     0005:LeastSquaresIsAProjection) echo "least-squares-is-a-projection" ;;
     0005:GradientDescentFindsTheLine) echo "gradient-descent-finds-the-line" ;;

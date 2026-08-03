@@ -12,6 +12,8 @@ import { spawnSync } from "node:child_process";
 const cached = process.argv.includes("--if-missing");
 const posts = [
   { id: "0001", content: "content/blog/0001-linear-vector-spaces.md" },
+  { id: "0002", content: "content/blog/0002-what-are-embeddings.md" },
+  { id: "0003", content: "content/blog/0003-how-are-embeddings-trained.md" },
   { id: "0005", content: "content/blog/0005-linear-regression.md" },
 ];
 

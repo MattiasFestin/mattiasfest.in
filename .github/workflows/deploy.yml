@@ -129,13 +129,16 @@ jobs:
       # A single immutable cache holds every delivery video. On a cache-key
       # miss, restore the most recent compatible entry, then validate each
       # post's fingerprint and remove only stale delivery pairs before the
-      # build renders the missing pairs. Bump v3 for a renderer or encoder
-      # change that must not reuse a previous full-video cache.
+      # build renders the missing pairs. This key only decides which entry is
+      # restored and whether a new one is saved; what actually gets re-rendered
+      # is decided per post by manim/prepare-video-cache.sh, so listing a new
+      # post's module here does not cost the back catalogue a re-render. Bump
+      # v3 to abandon every previous full-video cache outright.
       - name: Cache Manim delivery videos
         uses: actions/cache@v4
         with:
           path: static/videos
-          key: manim-videos-v3-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/prepare-video-cache.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/p0005_linear_regression.py', 'manim/mfblog/**/*.py') }}
+          key: manim-videos-v3-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/prepare-video-cache.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/p0002_what_are_embeddings.py', 'manim/p0003_how_are_embeddings_trained.py', 'manim/p0005_linear_regression.py', 'manim/mfblog/**/*.py') }}
           restore-keys: |
             manim-videos-v3-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-
 

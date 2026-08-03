@@ -60,6 +60,8 @@ test("a page can mix pre-run and press-Run-yourself snippets", async ({ page }) 
 test("math posts can embed accessible, explained Manim figures", async ({ page }) => {
   for (const [post, count] of [
     ["0001-linear-vector-spaces", 3],
+    ["0002-what-are-embeddings", 3],
+    ["0003-how-are-embeddings-trained", 3],
     ["0005-linear-regression", 3],
   ]) {
     await page.goto(`/blog/${post}/`);
