@@ -130,5 +130,6 @@ prepare_post() {
 prepare_post 0001 content/blog/0001-linear-vector-spaces.md manim/p0001_linear_vector_spaces.py
 prepare_post 0002 content/blog/0002-what-are-embeddings.md manim/p0002_what_are_embeddings.py
 prepare_post 0003 content/blog/0003-how-are-embeddings-trained.md manim/p0003_how_are_embeddings_trained.py
+prepare_post 0004 content/blog/0004-what-are-drift.md manim/p0004_what_are_drift.py
 prepare_post 0005 content/blog/0005-linear-regression.md manim/p0005_linear_regression.py
 mv "$tmp_manifest" "$manifest"

@@ -138,7 +138,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: static/videos
-          key: manim-videos-v3-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/prepare-video-cache.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/p0002_what_are_embeddings.py', 'manim/p0003_how_are_embeddings_trained.py', 'manim/p0005_linear_regression.py', 'manim/mfblog/**/*.py') }}
+          key: manim-videos-v3-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-manim.txt', 'manim/render.sh', 'manim/prepare-video-cache.sh', 'manim/p0001_linear_vector_spaces.py', 'manim/p0002_what_are_embeddings.py', 'manim/p0003_how_are_embeddings_trained.py', 'manim/p0004_what_are_drift.py', 'manim/p0005_linear_regression.py', 'manim/mfblog/**/*.py') }}
           restore-keys: |
             manim-videos-v3-${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{ env.TYPST_VERSION }}-
 

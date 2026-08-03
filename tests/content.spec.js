@@ -62,6 +62,7 @@ test("math posts can embed accessible, explained Manim figures", async ({ page }
     ["0001-linear-vector-spaces", 3],
     ["0002-what-are-embeddings", 3],
     ["0003-how-are-embeddings-trained", 3],
+    ["0004-what-are-drift", 3],
     ["0005-linear-regression", 3],
   ]) {
     await page.goto(`/blog/${post}/`);

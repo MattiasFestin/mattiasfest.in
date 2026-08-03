@@ -41,12 +41,16 @@ case "$post" in
     source="manim/p0003_how_are_embeddings_trained.py"
     default_scenes="TheExamAndItsTemperature AlignmentAndUniformity RotationIsInvisible"
     ;;
+  0004)
+    source="manim/p0004_what_are_drift.py"
+    default_scenes="AnchorCosineLies NeighborsAreTheAPI TheProcrustesBridge"
+    ;;
   0005)
     source="manim/p0005_linear_regression.py"
     default_scenes="LossChoosesTheLine LeastSquaresIsAProjection GradientDescentFindsTheLine"
     ;;
   *)
-    echo "Usage: manim/render.sh {0001|0002|0003|0005} [--final] [--if-missing] [scene ...]" >&2
+    echo "Usage: manim/render.sh {0001|0002|0003|0004|0005} [--final] [--if-missing] [scene ...]" >&2
     exit 2
     ;;
 esac
@@ -105,6 +109,9 @@ stem_for_scene() {
     0003:TheExamAndItsTemperature) echo "the-exam-and-its-temperature" ;;
     0003:AlignmentAndUniformity) echo "alignment-and-uniformity" ;;
     0003:RotationIsInvisible) echo "rotation-is-invisible" ;;
+    0004:AnchorCosineLies) echo "anchor-cosine-lies" ;;
+    0004:NeighborsAreTheAPI) echo "neighbors-are-the-api" ;;
+    0004:TheProcrustesBridge) echo "the-procrustes-bridge" ;;
     0005:LossChoosesTheLine) echo "loss-chooses-the-line" ;;
     0005:LeastSquaresIsAProjection) echo "least-squares-is-a-projection" ;;
     0005:GradientDescentFindsTheLine) echo "gradient-descent-finds-the-line" ;;
