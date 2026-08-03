@@ -455,14 +455,14 @@ html.start-maximized .main-window:not(.dialog-window) {
      (or when the reader asks for reduced motion), so a long post does not
      quietly decode several videos at once. */
   .manim-figure {
-    margin-top: 22px;
-    margin-bottom: 22px;
+    /* <figure> defaults to margin: 1em 40px, which would inset the player
+       from the reading column it sits in. It should line up with the text. */
+    margin: 22px 0;
     text-align: center;
 
     .manim-player {
       box-sizing: border-box;
-      width: min(100%, 900px);
-      margin: 0 auto;
+      width: 100%;
       padding: 3px;
       color: #000;
       background: #c0c0c0;
@@ -773,8 +773,8 @@ html.start-maximized .main-window:not(.dialog-window) {
        which transition in it carries the point. */
     .manim-explainer {
       box-sizing: border-box;
-      width: min(100%, 900px);
-      margin: 9px auto 0;
+      width: 100%;
+      margin: 9px 0 0;
       padding: 8px 12px;
       color: #000;
       background: #ffffcc;
