@@ -29,6 +29,21 @@ test.describe("the internet", () => {
     await expect(page.locator("#dialup")).toBeHidden({ timeout: 4_000 * SLOW });
   };
 
+  /* Cancelling has to happen *during* the 1.5 s silent dial, which makes it a
+     footrace the test can lose: on a loaded CI runner the modem connects
+     before the click lands, the dialog is replaced by the Wayback iframe, and
+     Cancel is no longer there to click. Freezing the page clock before the app
+     opens turns "while dialing" into a state we can take our time inspecting.
+     The clock ticks in real time until it is explicitly paused, and it can
+     only be paused at a moment it has not passed yet, hence the jump. */
+  const DIAL_EPOCH = new Date("2026-01-01T09:00:00Z");
+
+  const freezeMidDial = async (page) => {
+    await page.clock.install({ time: DIAL_EPOCH });
+    await page.goto("/");
+    await page.clock.pauseAt(new Date(DIAL_EPOCH.getTime() + 60_000));
+  };
+
   test("browser.js is lazy: fetched on first open, not on page load", async ({ page }) => {
     const requests = [];
     page.on("request", (r) => requests.push(r.url()));
@@ -110,8 +125,12 @@ test.describe("the internet", () => {
   });
 
   test("cancel while dialing hangs up and closes the window", async ({ page }) => {
+    await freezeMidDial(page);
     await openInternet(page);
     await expect(page.locator("#dialup")).toBeVisible();
+    // Still mid-dial, so this really is the cancel path and not a connected
+    // browser that happens to have a Cancel button lying around.
+    await expect(page.locator("#dialup-status")).toHaveText(/Dialing 555-1998/);
     await page.locator("#dialup-cancel").click();
     await expect(win(page)).not.toBeVisible();
     await expect(page.locator("#browser-status")).toHaveText("Disconnected.");
