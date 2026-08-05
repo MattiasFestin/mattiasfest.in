@@ -2356,7 +2356,11 @@ $clip-phone-scale: 0.667;
   position: fixed;
   right: 18px;
   bottom: $taskbar-height + 14px;
-  z-index: 45;
+  /* Above every app window and the taskbar, below anything the reader
+     opened on purpose: menus (30, 35) and dialogs (40+). It arrives
+     uninvited now, so on a narrow screen the balloon must never end up
+     over the OK button of a dialog somebody is trying to answer. */
+  z-index: 29;
   width: $clip-w;
   /* The container floats over whatever window happens to be underneath;
      only the assistant's own controls should ever swallow a click. */

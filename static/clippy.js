@@ -292,6 +292,18 @@
     "Congratulate"
   );
 
+  /* Said exactly once, to someone who never asked for a paperclip: it
+     turns up uninvited on a first visit, so the welcome carries its own
+     way out rather than making anyone hunt for the X. */
+  var WELCOME = tip(
+    "welcome",
+    "Hi, I'm the Office Assistant. It looks like you're reading a website - I'll be down here if you need me.",
+    function () {
+      return [action("Thanks", null), action("Go away", dismiss)];
+    },
+    "Congratulate"
+  );
+
   var GENERAL = [
     tip("winamp", "There's a Winamp in the Start menu, and it really does whip the llama's ass.",
       offer("Play something", "openWinamp"), null, closed("winamp")),
@@ -892,17 +904,20 @@
   });
 
   /* The X is the opt-out, and the only thing here that persists: once
-     dismissed the assistant shouldn't come back on the next page. */
-  closeBtn.addEventListener("click", function () {
+     dismissed the assistant shouldn't come back on the next page. The
+     welcome's "Go away" is the same door, with a label on it. */
+  function dismiss() {
     hide();
     if (window.MF && typeof window.MF.setSetting === "function") {
       window.MF.setSetting("assistant", false);
     }
-  });
+  }
+
+  closeBtn.addEventListener("click", dismiss);
 
   /* --- Public API --- */
 
-  function reveal(greet) {
+  function reveal(greeting) {
     if (!wanted || shown) return;
     shown = true;
     root.hidden = false;
@@ -910,20 +925,28 @@
     intro = !reduced;
     playThen("Show", "Greeting");
     activity();
-    if (greet) speak(GREETING);
+    if (greeting) speak(greeting);
     /* Arriving somewhere is itself a situation. On a post that means
        the offer to read it out loud turns up while you're still at the
        top of it, which is the only moment the offer is worth anything. */
     considerSoon(FIRST_MS);
   }
 
+  /* Two ways of saying hello: `welcome` is the first-visit introduction,
+     `greet` the reply to someone who went looking for Help. */
+  function greetingFor(opts) {
+    if (!opts) return null;
+    if (opts.welcome) return WELCOME;
+    return opts.greet ? GREETING : null;
+  }
+
   function show(opts) {
-    var greet = !!(opts && opts.greet);
+    var greeting = greetingFor(opts);
     wanted = true;
     hiding = false;
     if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
     if (shown) {
-      if (greet) speak(GREETING);
+      if (greeting) speak(greeting);
       return;
     }
     /* The stylesheet carries the sprite's own size and rest frame, so
@@ -931,8 +954,8 @@
        fetch is not worth a broken feature: show the clip anyway, minus
        its animations, and try the stylesheet again next time. */
     loadSprites().then(
-      function () { reveal(greet); },
-      function () { reveal(greet); }
+      function () { reveal(greeting); },
+      function () { reveal(greeting); }
     );
   }
 

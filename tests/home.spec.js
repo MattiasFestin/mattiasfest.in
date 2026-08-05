@@ -37,7 +37,11 @@ test.describe("home page", () => {
     await icon.click();
     await expect(icon).toHaveClass(/selected/);
     const vp = page.viewportSize();
-    await page.locator("#desktop").click({ position: { x: vp.width - 30, y: vp.height - 120 } });
+    await page.locator("#desktop").click({
+      /* Middle of the wallpaper: clear of the icon column on the left
+         and of the Office Assistant in the bottom-right corner. */
+      position: { x: Math.round(vp.width / 2), y: vp.height - 120 },
+    });
     await expect(icon).not.toHaveClass(/selected/);
   });
 

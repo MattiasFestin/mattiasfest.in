@@ -656,7 +656,7 @@
     cpFaithful.checked = faithfulDefault();
     cpSaver.value = SAVER_DEFAULT;
     cpSaverWait.value = SAVER_WAIT_DEFAULT;
-    cpAssistant.checked = false;
+    cpAssistant.checked = true;
     document.documentElement.style.setProperty("--reading-width", "80ch");
   });
 
@@ -1682,15 +1682,15 @@
   scheduleIdle();
 
   /* --- Office Assistant (lazy-loaded) --- */
-  /* Summon-only, like every other app here: clippy.js is never fetched
-     until someone asks for the Assistant from Start > Help or turns it
-     on in the Control Panel. The setting persists, so for anyone who
-     opted in it comes back on later pages - but even then the fetch is
-     deferred to idle time so it never competes with the page itself. */
+  /* On by default, the way '98 shipped it - but the X and the Control
+     Panel are a permanent opt-out, and a saved false wins forever. Even
+     when it is wanted, clippy.js is fetched at idle time so the clip
+     never competes with the page itself; anyone who has dismissed it
+     never pays for the script at all. */
   var clippyPromise = null;
 
   function assistantOn() {
-    return settings.assistant === true;
+    return settings.assistant !== false;
   }
 
   function loadClippy() {
@@ -1705,15 +1705,15 @@
     return clippyPromise;
   }
 
-  function openAssistant(greet) {
+  function openAssistant(opts) {
     loadClippy().then(
-      function (clippy) { clippy.show({ greet: !!greet }); },
+      function (clippy) { clippy.show(opts || {}); },
       function () { /* no assistant is no tragedy */ }
     );
   }
 
   function applyAssistant() {
-    if (assistantOn()) openAssistant(false);
+    if (assistantOn()) openAssistant();
     else if (window.MFClippy) window.MFClippy.hide();
   }
 
@@ -1722,16 +1722,26 @@
     /* Asking for Help is consent: always greet, even if it was hidden. */
     settings.assistant = true;
     saveSettings();
-    openAssistant(true);
+    openAssistant({ greet: true });
   });
 
-  /* Opted in on a previous visit: bring it back, but only once the
-     browser has nothing better to do. */
+  /* Wanted here: bring it in, but only once the browser has nothing
+     better to do. A first visit gets the introduction rather than a
+     paperclip that simply materialises in the corner - recorded on its
+     own key, so `assistant` keeps meaning "what the reader chose". */
   if (assistantOn()) {
+    var welcome = settings.assistant === undefined && !settings.assistantWelcomed;
+    var arrive = function () {
+      if (welcome) {
+        settings.assistantWelcomed = true;
+        saveSettings();
+      }
+      openAssistant({ welcome: welcome });
+    };
     if (window.requestIdleCallback) {
-      requestIdleCallback(function () { openAssistant(false); }, { timeout: 4000 });
+      requestIdleCallback(arrive, { timeout: 4000 });
     } else {
-      window.addEventListener("load", function () { openAssistant(false); });
+      window.addEventListener("load", arrive);
     }
   }
 

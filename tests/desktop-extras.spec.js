@@ -144,6 +144,37 @@ test.describe("office assistant", () => {
     await expect(page.locator("#assistant-text")).not.toBeEmpty();
   });
 
+  /* Nobody asked for a paperclip, so the first one has to introduce
+     itself - and then never again. */
+  test("a first visit is welcomed, later ones are not", async ({ page }) => {
+    await expect(page.locator("#assistant")).toBeVisible({ timeout: 15_000 * SLOW });
+    await expect(page.locator("#assistant-text")).toContainText("I'll be down here");
+
+    const settings = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("mf-settings"))
+    );
+    expect(settings.assistantWelcomed).toBe(true);
+    /* Saying hello is not a preference: the setting still records only
+       what the reader actually chose. */
+    expect(settings.assistant).toBeUndefined();
+
+    await page.goto("/about/");
+    await expect(page.locator("#assistant")).toBeVisible({ timeout: 15_000 * SLOW });
+    await expect(page.locator("#assistant-balloon")).toBeHidden();
+  });
+
+  test("the welcome carries its own way out", async ({ page }) => {
+    await expect(page.locator("#assistant")).toBeVisible({ timeout: 15_000 * SLOW });
+    await page.getByRole("button", { name: "Go away" }).click();
+    await expect(page.locator("#assistant")).toBeHidden();
+
+    expect(
+      await page.evaluate(() => JSON.parse(localStorage.getItem("mf-settings")).assistant)
+    ).toBe(false);
+    await page.reload();
+    await expect(page.locator("#assistant")).toBeHidden();
+  });
+
   test("clicking the clip toggles a tip", async ({ page }) => {
     await page.locator("#start-button").click();
     await page.getByRole("menuitem", { name: "Help" }).click();
@@ -566,28 +597,57 @@ test.describe("the assistant reads the room", () => {
 });
 
 test.describe("lazy loading", () => {
-  /* The whole point: a reader who never asks for these never downloads
-     them. Watch the wire rather than trusting the globals. */
-  test("neither the assistant nor the saver is fetched by default", async ({ page }) => {
+  /* Nothing here is on the critical path. The saver is summon-only, and
+     the assistant - on by default now - is still a deferred fetch that a
+     reader who has dismissed it never pays for at all. */
+  const watchScripts = (page) => {
     const fetched = [];
     page.on("request", (r) => {
       const url = r.url();
       if (/\/(clippy|screensaver)[.\w]*\.js/.test(url)) fetched.push(url);
     });
+    return fetched;
+  };
+
+  test("the saver is not fetched until something wants one", async ({ page }) => {
+    const fetched = watchScripts(page);
 
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     /* Comfortably past anything the page does on its own. */
     await page.waitForTimeout(2000);
+    expect(fetched.some((u) => u.includes("screensaver"))).toBe(false);
+    expect(await page.evaluate(() => typeof window.MFScreensaver)).toBe("undefined");
+  });
+
+  test("the assistant is on by default, and arrives on its own", async ({ page }) => {
+    const fetched = watchScripts(page);
+
+    await page.goto("/");
+    await expect(page.locator("#assistant")).toBeVisible({ timeout: 15_000 * SLOW });
+    expect(fetched.some((u) => u.includes("clippy"))).toBe(true);
+    expect(fetched.some((u) => u.includes("screensaver"))).toBe(false);
+  });
+
+  test("an assistant that was dismissed is never downloaded again", async ({ page }) => {
+    /* Two seconds of deliberately watching nothing happen, then a summon
+       on top of it - too much to fit in the default budget. */
+    test.slow();
+    await page.addInitScript(() =>
+      localStorage.setItem("mf-settings", JSON.stringify({ assistant: false }))
+    );
+    const fetched = watchScripts(page);
+
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
     expect(fetched).toEqual([]);
     expect(await page.evaluate(() => typeof window.MFClippy)).toBe("undefined");
-    expect(await page.evaluate(() => typeof window.MFScreensaver)).toBe("undefined");
 
-    /* ...and each one arrives the moment it is actually asked for. */
+    /* ...and it still arrives the moment it is actually asked for. */
     await page.locator("#start-button").click();
     await page.getByRole("menuitem", { name: "Help" }).click();
     await expect(page.locator("#assistant")).toBeVisible();
     expect(fetched.some((u) => u.includes("clippy"))).toBe(true);
-    expect(fetched.some((u) => u.includes("screensaver"))).toBe(false);
   });
 });
