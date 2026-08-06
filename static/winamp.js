@@ -33,6 +33,7 @@
   var OCR_BASE = "https://archive.org/download/OCReMix1to3000v20170528/";
 
   var TRACKS = [
+    ["Stan LePard", "Windows 98: Velkommen", null, null, "https://dn721308.ca.archive.org/0/items/soundcloud-826123573/826123573.mp3"],
     ["zircon", "Super Mario World: Monstrous Turtles!", 226, "Super_Mario_World_Monstrous_Turtles_OC_ReMix"],
     ["Juan Medrano, zircon", "Mega Man 2: Nuclear Flash", 230, "Mega_Man_2_Nuclear_Flash_OC_ReMix"],
     ["Vig", "Donkey Kong Country: Beneath the Surface", 381, "Donkey_Kong_Country_Beneath_the_Surface_OC_ReMix"],
@@ -49,9 +50,10 @@
 
   function playlist() {
     return TRACKS.map(function (t) {
+      var directUrl = t[4];
       return {
-        metaData: { artist: t[0] + " (OC ReMix)", title: t[1] },
-        url: OCR_BASE + encodeURIComponent(t[3]) + ".mp3",
+        metaData: { artist: t[0] + (directUrl ? "" : " (OC ReMix)"), title: t[1] },
+        url: directUrl || OCR_BASE + encodeURIComponent(t[3]) + ".mp3",
         duration: t[2],
       };
     });

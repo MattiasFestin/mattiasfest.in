@@ -33,7 +33,7 @@ test.describe("winamp", () => {
     expect(requests.some((u) => /\/webamp\/webamp\.bundle/.test(u))).toBe(true);
     // ...and at most a metadata preload of the *current* track: the
     // browser's media element preloads track 1 when Webamp renders, but
-    // the other 11 must not be touched until someone actually plays.
+    // the other 12 must not be touched until someone actually plays.
     // Count distinct *tracks*, not URLs: archive.org redirects
     // /download/... to a node host (ia*.us.archive.org), so one track
     // legitimately shows up as two request URLs.
@@ -44,7 +44,7 @@ test.describe("winamp", () => {
     );
     expect(tracks.size).toBeLessThanOrEqual(1);
     if (tracks.size) {
-      expect([...tracks][0]).toContain("Monstrous_Turtles"); // track 1 only
+      expect([...tracks][0]).toContain("826123573"); // the new top track only
     }
 
     // Taskbar button appears and is active
@@ -63,6 +63,7 @@ test.describe("winamp", () => {
     await page.goto("/");
     await openWinamp(page);
     const text = await page.locator("#webamp #playlist-window").textContent();
+    expect(text).toContain("Windows 98: Velkommen");
     expect(text).toContain("OC ReMix");
     expect(text).toMatch(/Donkey Kong|Mario|Mega Man/);
   });
