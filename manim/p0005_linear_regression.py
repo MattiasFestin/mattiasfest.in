@@ -58,6 +58,7 @@ from mfblog.theme import (
     BlogScene,
     BlogScene3D,
     axis_numbers,
+    beat,
     caption,
     label,
     title,
@@ -139,7 +140,7 @@ class LossChoosesTheLine(BlogScene):
             winner_rows.add(row)
             winner_rows.arrange(DOWN, aligned_edge=LEFT, buff=0.15).to_corner(RIGHT + DOWN, buff=0.45)
             self.play(FadeIn(row, shift=UP * 0.1), run_time=0.45)
-            self.wait(0.8)
+            self.wait(beat(0.8))
             self.play(FadeOut(residuals), run_time=0.35)
 
         # Give the takeaway its own space: leaving the metric legend in the
@@ -149,12 +150,12 @@ class LossChoosesTheLine(BlogScene):
         conclusion.to_edge(UP, buff=0.35)
         self.play(FadeOut(cards), FadeOut(winner_rows), FadeOut(heading), run_time=0.55)
         self.play(Write(conclusion), run_time=1.3)
-        self.wait(2.3)
+        self.wait(beat(2.3))
         self.play(
             FadeOut(VGroup(axes, ticks, axis_labels, points, current, cards, winner_rows, conclusion, heading)),
             run_time=0.8,
         )
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     def card(self, name: str, slope: float, intercept: float, color: str, rule: str, score: float) -> VGroup:
         equation = tex(f"{name}: hat(y) = {slope:g}x {intercept:+g}", font_size=28, color=color)
@@ -217,7 +218,7 @@ class LeastSquaresIsAProjection(BlogScene3D):
         note.to_corner(LEFT + DOWN, buff=0.45)
         self.add_fixed_in_frame_mobjects(note)
         self.play(FadeIn(note), run_time=0.6)
-        self.wait(0.8)
+        self.wait(beat(0.8))
 
         p_arrow = Line3D(ORIGIN, prediction, color=L2, thickness=0.026)
         p_dot = Dot3D(prediction, radius=0.08, color=L2)
@@ -246,7 +247,7 @@ class LeastSquaresIsAProjection(BlogScene3D):
         self.add_fixed_in_frame_mobjects(equation, interpretation)
         self.play(FadeOut(note), FadeIn(interpretation), Write(equation), run_time=1.2)
         self.begin_ambient_camera_rotation(rate=0.06)
-        self.wait(3.0)
+        self.wait(beat(3.0))
         self.stop_ambient_camera_rotation()
         self.play(
             FadeOut(
@@ -272,7 +273,7 @@ class LeastSquaresIsAProjection(BlogScene3D):
             ),
             run_time=1.0,
         )
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     def column_plane(self, u: np.ndarray, v: np.ndarray) -> VGroup:
         corners = [
@@ -361,7 +362,7 @@ class GradientDescentFindsTheLine(BlogScene):
         conclusion = label("A gradient is enough to find the same answer.", color=ACCENT)
         conclusion.to_edge(UP, buff=0.35)
         self.play(FadeOut(labels), FadeOut(heading), FadeIn(conclusion), run_time=0.8)
-        self.wait(2.5)
+        self.wait(beat(2.5))
         self.play(
             FadeOut(
                 VGroup(
@@ -382,7 +383,7 @@ class GradientDescentFindsTheLine(BlogScene):
             ),
             run_time=0.9,
         )
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     def weight_contour(self, axes: Axes, center: np.ndarray, a: float, cross: float, c: float, level: float, opacity: float):
         curve = contour_ellipse(np.array([center[0], center[1], 0.0]), a, cross, c, level)

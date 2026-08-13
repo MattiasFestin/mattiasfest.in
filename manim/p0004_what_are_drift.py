@@ -54,6 +54,7 @@ from mfblog.theme import (
     L2,
     MUTED,
     BlogScene,
+    beat,
     caption,
     label,
     title,
@@ -172,14 +173,14 @@ class AnchorCosineLies(BlogScene):
         first = caption("One corpus, embedded by model v. Similarity is the angle.")
         first.to_edge(DOWN, buff=0.4)
         self.play(FadeIn(first), run_time=0.6)
-        self.wait(1.6)
+        self.wait(beat(1.6))
 
         dots_v1 = self.dots(V1, ACCENT)
         legend_v1 = self.tag("model v+1", ACCENT, RING_CENTRE + UP * (RING_RADIUS + 0.42) + RIGHT * 1.05)
         second = caption("Retrain. Same corpus, same recipe, a new map.")
         second.to_edge(DOWN, buff=0.4)
         self.play(FadeOut(first), FadeIn(dots_v1), FadeIn(legend_v1), FadeIn(second), run_time=1.2)
-        self.wait(1.4)
+        self.wait(beat(1.4))
 
         self.act_two_anchor(second)
         self.act_three_second_order()
@@ -188,9 +189,9 @@ class AnchorCosineLies(BlogScene):
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), run_time=0.4)
         self.play(Write(closing), run_time=1.3)
-        self.wait(2.4)
+        self.wait(beat(2.4))
         self.play(*(FadeOut(m) for m in list(self.mobjects)), run_time=1.0)
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- act two ---------------------------------------------------------------
 
@@ -209,7 +210,7 @@ class AnchorCosineLies(BlogScene):
         note = caption("Each item moved. Measure how far, item by item:", color=INK)
         note.to_edge(DOWN, buff=0.4)
         self.play(FadeOut(previous), FadeIn(arcs), FadeIn(note), run_time=1.1)
-        self.wait(1.2)
+        self.wait(beat(1.2))
 
         formula = tex(
             r'"anchor cosine" = 1/(|A|) sum_(x in A) cos(z_v (x), z_(v+1) (x))',
@@ -223,7 +224,7 @@ class AnchorCosineLies(BlogScene):
         block = panel(VGroup(formula, readout).arrange(DOWN, buff=0.4))
         block.move_to(RIGHT * 3.5 + UP * 0.35)
         self.play(FadeIn(block), run_time=0.9)
-        self.wait(1.0)
+        self.wait(beat(1.0))
 
         verdict = VGroup(
             caption("Near zero: by this number the two models are strangers.", color=BAD),
@@ -231,7 +232,7 @@ class AnchorCosineLies(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(note), FadeIn(verdict), run_time=0.7)
-        self.wait(2.6)
+        self.wait(beat(2.6))
 
         self.anchor_block = block
         self.arcs = arcs
@@ -284,7 +285,7 @@ class AnchorCosineLies(BlogScene):
         sample = Dot(axes.c2p(self.sims_v[0], self.sims_v1[0]), radius=0.07, color=GOOD)
         self.play(Create(chord_v), Create(chord_v1), run_time=0.8)
         self.play(FadeIn(sample), run_time=0.5)
-        self.wait(1.2)
+        self.wait(beat(1.2))
 
         cloud = VGroup(
             *(
@@ -308,7 +309,7 @@ class AnchorCosineLies(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(ask), FadeIn(verdict), run_time=0.7)
-        self.wait(2.8)
+        self.wait(beat(2.8))
         self.play(FadeOut(verdict), run_time=0.5)
 
     # -- pieces ----------------------------------------------------------------
@@ -375,11 +376,11 @@ class NeighborsAreTheAPI(BlogScene):
         opening = caption("One query. Its ten nearest neighbours under model v.")
         opening.to_edge(DOWN, buff=0.4)
         self.play(FadeIn(opening), run_time=0.6)
-        self.wait(1.8)
+        self.wait(beat(1.8))
 
         column_v = self.ranked_column("under v", self.before, LIST_LEFT, L2, highlight=False)
         self.play(FadeIn(column_v), run_time=0.8)
-        self.wait(1.6)
+        self.wait(beat(1.6))
 
         self.act_two_stability(opening, column_v)
         self.act_three_threshold(dots, query_tag)
@@ -388,9 +389,9 @@ class NeighborsAreTheAPI(BlogScene):
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), run_time=0.4)
         self.play(Write(closing), run_time=1.3)
-        self.wait(2.3)
+        self.wait(beat(2.3))
         self.play(*(FadeOut(m) for m in list(self.mobjects)), run_time=1.0)
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- act two ---------------------------------------------------------------
 
@@ -399,11 +400,11 @@ class NeighborsAreTheAPI(BlogScene):
         turning.to_edge(DOWN, buff=0.4)
         self.play(FadeOut(previous), FadeIn(turning), run_time=0.6)
         self.play(self.angles.animate.set_value(1.0), run_time=3.0, rate_func=smooth)
-        self.wait(0.6)
+        self.wait(beat(0.6))
 
         column_v1 = self.ranked_column("under v+1", self.after, LIST_RIGHT, ACCENT, highlight=True)
         self.play(FadeIn(column_v1), run_time=0.9)
-        self.wait(1.4)
+        self.wait(beat(1.4))
 
         readout = VGroup(
             label(f"stability@{K} = {self.query_stability:.2f}", size=30, color=INK),
@@ -419,7 +420,7 @@ class NeighborsAreTheAPI(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(turning), FadeIn(verdict), run_time=0.7)
-        self.wait(2.8)
+        self.wait(beat(2.8))
 
         self.play(
             FadeOut(VGroup(column_v, column_v1, block, verdict)),
@@ -479,7 +480,7 @@ class NeighborsAreTheAPI(BlogScene):
             FadeIn(intro),
             run_time=1.2,
         )
-        self.wait(2.2)
+        self.wait(beat(2.2))
 
         swap = caption("Another model family. Same corpus, a much narrower range.", color=ACCENT)
         swap.to_edge(DOWN, buff=0.4)
@@ -495,7 +496,7 @@ class NeighborsAreTheAPI(BlogScene):
             run_time=2.6,
             rate_func=smooth,
         )
-        self.wait(1.0)
+        self.wait(beat(1.0))
 
         verdict = VGroup(
             caption("The threshold never moved. The distribution underneath it did.", color=BAD),
@@ -503,7 +504,7 @@ class NeighborsAreTheAPI(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(swap), FadeIn(verdict), run_time=0.7)
-        self.wait(2.8)
+        self.wait(beat(2.8))
 
         dots.clear_updaters()
         query_tag.clear_updaters()
@@ -658,7 +659,7 @@ class TheProcrustesBridge(BlogScene):
         legend.move_to(RING_CENTRE + UP * (RING_RADIUS + 0.45))
 
         self.play(FadeIn(new_dots), FadeIn(old_dots), FadeIn(legend), run_time=1.2)
-        self.wait(1.2)
+        self.wait(beat(1.2))
 
         self.act_one_naive()
         self.act_two_bridge()
@@ -667,10 +668,10 @@ class TheProcrustesBridge(BlogScene):
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), run_time=0.4)
         self.play(Write(closing), run_time=1.4)
-        self.wait(2.4)
+        self.wait(beat(2.4))
         old_dots.clear_updaters()
         self.play(*(FadeOut(m) for m in list(self.mobjects)), run_time=1.0)
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- act one ---------------------------------------------------------------
 
@@ -709,7 +710,7 @@ class TheProcrustesBridge(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(note), FadeIn(verdict), run_time=0.7)
-        self.wait(2.6)
+        self.wait(beat(2.6))
 
         self.naive_bits = VGroup(marks, query, block, verdict)
 
@@ -727,7 +728,7 @@ class TheProcrustesBridge(BlogScene):
         note = caption(f"Take {len(BRIDGE_ANCHORS)} anchors you can embed with both models:", color=INK)
         note.to_edge(DOWN, buff=0.4)
         self.play(FadeOut(self.naive_bits), FadeIn(anchors), FadeIn(note), run_time=1.0)
-        self.wait(1.2)
+        self.wait(beat(1.2))
 
         formula = tex(
             r"Z_v^top Z_(v+1) = U Sigma V^top, quad W = U V^top",
@@ -748,14 +749,14 @@ class TheProcrustesBridge(BlogScene):
         cosine_readout = always_redraw(self.cosine_readout)
         block = VGroup(card, cosine_readout)
         self.play(FadeIn(card), FadeIn(cosine_readout), run_time=0.8)
-        self.wait(1.0)
+        self.wait(beat(1.0))
 
         spin = caption("One linear-algebra call, and the old map turns into place.", color=GOOD)
         spin.to_edge(DOWN, buff=0.4)
         self.play(FadeOut(note), FadeIn(spin), run_time=0.6)
         self.play(FadeOut(anchors), run_time=0.4)
         self.play(self.turn.animate.set_value(1.0), run_time=3.2, rate_func=smooth)
-        self.wait(0.8)
+        self.wait(beat(0.8))
 
         recovered = label(
             f"recovered turn {self.turn_back:+.1f}\u00b0  (actual {TURN:.0f}\u00b0)",
@@ -764,7 +765,7 @@ class TheProcrustesBridge(BlogScene):
         )
         recovered.next_to(block, DOWN, buff=0.3)
         self.play(FadeIn(recovered), run_time=0.6)
-        self.wait(1.4)
+        self.wait(beat(1.4))
 
         stability = VGroup(
             label(f"stability@{K}, bridged", size=24, color=MUTED),
@@ -773,7 +774,7 @@ class TheProcrustesBridge(BlogScene):
         stability_block = panel(stability, pad=0.28)
         stability_block.move_to(RIGHT * 3.5 + DOWN * 1.95)
         self.play(FadeIn(stability_block), run_time=0.7)
-        self.wait(1.6)
+        self.wait(beat(1.6))
 
         residual = VGroup(
             *(
@@ -796,7 +797,7 @@ class TheProcrustesBridge(BlogScene):
         ).arrange(DOWN, buff=0.14)
         limit.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(spin), FadeIn(residual), FadeIn(limit), run_time=1.0)
-        self.wait(3.0)
+        self.wait(beat(3.0))
         block.clear_updaters()
         for part in block:
             part.clear_updaters()

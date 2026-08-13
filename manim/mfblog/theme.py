@@ -46,6 +46,22 @@ LABEL_SIZE = 26
 # runners, avoiding warnings from platform-specific font names.
 FONT = "Sans"
 
+# Global pacing dial for reading pauses: multiplies every `self.wait(...)`
+# call that goes through `beat()`. Raise this if viewers need more time to
+# read the text/formulas on screen before a scene moves on; lower it to
+# tighten the pacing. One dial, so every scene's timing moves together.
+PACING = 1.6
+
+
+def beat(seconds: float) -> float:
+    """Scale a wait duration by the shared `PACING` dial.
+
+    Call sites keep writing the wait time they intend on today's pacing
+    (`self.wait(beat(1.8))`), and turning the dial up or down here retimes
+    every scene at once without touching call sites.
+    """
+    return seconds * PACING
+
 
 def label(text: str, size: float = BODY_SIZE, color: str = INK, **kwargs) -> Text:
     """Sans-serif prose label. Formulas should use `typst.tex` instead."""
@@ -138,10 +154,12 @@ __all__ = [
     "LEFT",
     "LINF",
     "MUTED",
+    "PACING",
     "RIGHT",
     "TITLE_SIZE",
     "UP",
     "axis_numbers",
+    "beat",
     "caption",
     "corner_note",
     "frame_bottom",

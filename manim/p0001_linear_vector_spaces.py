@@ -67,6 +67,7 @@ from mfblog.theme import (
     BlogScene,
     BlogScene3D,
     axis_numbers,
+    beat,
     caption,
     label,
     title,
@@ -117,7 +118,7 @@ class NearestNeighborIsADecision(BlogScene3D):
         question.to_edge(UP, buff=0.4)
         self.add_fixed_in_frame_mobjects(question)
         self.play(Write(question), run_time=1.5)
-        self.wait(0.7)
+        self.wait(beat(0.7))
 
         self.begin_ambient_camera_rotation(rate=0.055)
 
@@ -132,7 +133,7 @@ class NearestNeighborIsADecision(BlogScene3D):
         self.add_fixed_in_frame_mobjects(closing)
         self.play(FadeOut(question), run_time=0.5)
         self.play(Write(closing), run_time=1.8)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(
             FadeOut(closing),
             FadeOut(verdicts),
@@ -142,7 +143,7 @@ class NearestNeighborIsADecision(BlogScene3D):
             *[FadeOut(dot_labels[k]) for k in POINTS],
             run_time=1.2,
         )
-        self.wait(0.5)
+        self.wait(beat(0.5))
 
     # -- construction --------------------------------------------------------
 
@@ -237,7 +238,7 @@ class NearestNeighborIsADecision(BlogScene3D):
         verdicts.arrange(DOWN, aligned_edge=LEFT, buff=0.28).to_corner(LEFT + DOWN, buff=0.5)
         self.add_fixed_in_frame_mobjects(verdict)
         self.play(FadeIn(verdict, shift=UP * 0.15), run_time=0.7)
-        self.wait(1.5)
+        self.wait(beat(1.5))
 
         self.play(FadeOut(ball), FadeOut(spoke), FadeOut(head), FadeOut(readout), run_time=0.7)
 
@@ -302,7 +303,7 @@ class UnitBallsAndSparsity(BlogScene):
         self.act_two_sparsity(plane)
 
         self.play(FadeOut(plane), run_time=0.8)
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- act one -------------------------------------------------------------
 
@@ -333,7 +334,7 @@ class UnitBallsAndSparsity(BlogScene):
             self.play(log_p.animate.set_value(np.log(target_p)), run_time=1.6)
             tag = caption(name, color=color).next_to(plane.c2p(0, 0), DOWN, buff=SCALE + 0.45)
             self.play(FadeIn(tag, shift=UP * 0.1), run_time=0.5)
-            self.wait(0.9)
+            self.wait(beat(0.9))
             self.play(FadeOut(tag), run_time=0.4)
 
         # Below p = 1 the ball caves in, and the triangle inequality goes with it.
@@ -344,7 +345,7 @@ class UnitBallsAndSparsity(BlogScene):
         ).arrange(DOWN, buff=0.15)
         warning.next_to(plane.c2p(0, 0), DOWN, buff=SCALE + 0.35)
         self.play(FadeIn(warning), run_time=0.6)
-        self.wait(1.8)
+        self.wait(beat(1.8))
         self.play(FadeOut(warning), log_p.animate.set_value(np.log(1.0)), run_time=1.6)
 
         ball.clear_updaters()
@@ -389,7 +390,7 @@ class UnitBallsAndSparsity(BlogScene):
         note = caption("the best fit, if weights were free", color=MUTED)
         note.next_to(beta_label, RIGHT, buff=0.25)
         self.play(GrowFromCenter(beta_dot), FadeIn(beta_label), FadeIn(note), run_time=1.0)
-        self.wait(1.0)
+        self.wait(beat(1.0))
         self.play(FadeOut(note), run_time=0.5)
 
         story = caption("Grow the loss contours until they reach the budget.")
@@ -415,7 +416,7 @@ class UnitBallsAndSparsity(BlogScene):
         self.play(
             FadeOut(story), FadeIn(verdict_l1), FadeIn(zero_tag, shift=UP * 0.1), Create(leader), run_time=1.0
         )
-        self.wait(2.4)
+        self.wait(beat(2.4))
 
         # --- ridge: same loss, same budget size, round ball ---
         self.play(
@@ -445,7 +446,7 @@ class UnitBallsAndSparsity(BlogScene):
         verdict_l2 = caption("A circle has no corners. That is ridge.", color=INK)
         verdict_l2.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(verdict_l2), Create(drops), run_time=1.0)
-        self.wait(2.4)
+        self.wait(beat(2.4))
 
         # --- both answers, side by side ---
         self.play(
@@ -465,7 +466,7 @@ class UnitBallsAndSparsity(BlogScene):
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), FadeIn(legend), run_time=0.7)
         self.play(Write(closing), run_time=1.3)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(
             FadeOut(closing),
             FadeOut(legend),
@@ -616,12 +617,12 @@ class HighDimensionsAreWeird(BlogScene):
         readout = always_redraw(lambda: self.shell_readout(tracker.get_value(), axes))
         self.play(Create(curve), FadeIn(marker), FadeIn(readout), run_time=1.2)
         self.play(tracker.animate.set_value(50), run_time=3.4, rate_func=smooth)
-        self.wait(1.4)
+        self.wait(beat(1.4))
 
         punchline = caption("In 50 dimensions the middle is empty. A ball is all skin.", color=INK)
         punchline.to_edge(DOWN, buff=0.3)
         self.play(FadeIn(punchline), run_time=0.8)
-        self.wait(2.2)
+        self.wait(beat(2.2))
 
         marker.clear_updaters()
         readout.clear_updaters()
@@ -696,15 +697,15 @@ class HighDimensionsAreWeird(BlogScene):
         spread = always_redraw(lambda: self.spread_bracket(axes, self.dimension(log_n)))
         readout = always_redraw(lambda: self.dimension_readout(self.dimension(log_n)))
         self.play(FadeIn(bars), FadeIn(spread), FadeIn(readout), run_time=0.9)
-        self.wait(1.6)
+        self.wait(beat(1.6))
 
         self.play(log_n.animate.set_value(np.log(1000)), run_time=11.0, rate_func=linear)
-        self.wait(1.6)
+        self.wait(beat(1.6))
 
         closing = label('In high dimensions, "nearest" is a photo finish.', color=ACCENT)
         closing.to_edge(DOWN, buff=0.3)
         self.play(FadeOut(panel_note), FadeIn(closing), run_time=1.0)
-        self.wait(2.8)
+        self.wait(beat(2.8))
 
         for mobject in (rings, bars, spread, readout):
             mobject.clear_updaters()
@@ -716,7 +717,7 @@ class HighDimensionsAreWeird(BlogScene):
             ),
             run_time=1.0,
         )
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- pieces --------------------------------------------------------------
 

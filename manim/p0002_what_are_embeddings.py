@@ -53,6 +53,7 @@ from mfblog.theme import (
     L2,
     MUTED,
     BlogScene,
+    beat,
     caption,
     label,
     title,
@@ -148,18 +149,18 @@ class EmbeddingsAreAMap(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(note), FadeIn(verdict), run_time=0.7)
-        self.wait(2.4)
+        self.wait(beat(2.4))
 
         closing = label("The fold is lossy. Training picks what survives.", color=ACCENT)
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), FadeOut(verdict), run_time=0.5)
         self.play(Write(closing), run_time=1.5)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(
             FadeOut(VGroup(closing, machine, function, frame, frame_note, cards, pins, self.hulls)),
             run_time=1.0,
         )
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- construction --------------------------------------------------------
 
@@ -248,7 +249,7 @@ class EmbeddingsAreAMap(BlogScene):
         story = caption("Nobody drew these circles. The points simply landed there.")
         story.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(self.hulls), FadeIn(story), run_time=1.0)
-        self.wait(2.0)
+        self.wait(beat(2.0))
         self.play(FadeOut(story), run_time=0.5)
 
 
@@ -358,7 +359,7 @@ class CosineMeetsEuclidean(BlogScene):
         complaint = caption("a wins — only because a is longer.", color=MUTED)
         complaint.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(complaint), run_time=0.6)
-        self.wait(2.0)
+        self.wait(beat(2.0))
 
         rule = tex(r"hat(x) = x \/ norm(x)_2", font_size=30, color=INK)
         rule.next_to(heading, DOWN, buff=0.35).shift(RIGHT * 3.3)
@@ -385,7 +386,7 @@ class CosineMeetsEuclidean(BlogScene):
         verdict = caption("The ranking flips. Now only the angle is left.", color=ACCENT)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(verdict), run_time=0.6)
-        self.wait(2.4)
+        self.wait(beat(2.4))
 
         self.play(
             FadeOut(VGroup(normalised, verdict, rule, heading, arrows["a"], arrows["b"], tags["a"], tags["b"])),
@@ -443,17 +444,17 @@ class CosineMeetsEuclidean(BlogScene):
 
         self.play(FadeIn(moving), Create(chord), Create(wedge), run_time=0.9)
         self.play(FadeIn(readout), FadeIn(identity), FadeIn(equality), run_time=0.8)
-        self.wait(1.0)
+        self.wait(beat(1.0))
 
         self.play(angle.animate.set_value(QUERY_ANGLE + 180.0), run_time=6.0, rate_func=smooth)
-        self.wait(1.0)
+        self.wait(beat(1.0))
         self.play(angle.animate.set_value(QUERY_ANGLE + 40.0), run_time=3.4, rate_func=smooth)
-        self.wait(0.8)
+        self.wait(beat(0.8))
 
         punchline = caption("Cosine falls exactly as distance rises. Never independently.", color=ACCENT)
         punchline.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(punchline), run_time=0.7)
-        self.wait(2.4)
+        self.wait(beat(2.4))
 
         for mobject in (moving, chord, wedge, readout, equality):
             mobject.clear_updaters()
@@ -537,12 +538,12 @@ class CosineMeetsEuclidean(BlogScene):
         ).arrange(RIGHT, buff=0.2)
         seal.next_to(lists, DOWN, buff=0.45)
         self.play(FadeIn(seal), run_time=0.7)
-        self.wait(2.2)
+        self.wait(beat(2.2))
 
         closing = label("Normalise first, and the choice stops mattering.", color=ACCENT)
         closing.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(closing), run_time=0.9)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(
             FadeOut(
                 VGroup(
@@ -551,7 +552,7 @@ class CosineMeetsEuclidean(BlogScene):
             ),
             run_time=1.0,
         )
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     def ranking(self, header: str, rows, color: str) -> VGroup:
         entries = VGroup(caption(header, color=MUTED).scale(0.85))
@@ -703,7 +704,7 @@ class DriftRedrawsTheMap(BlogScene):
 
         board = self.board("model A query → model A vectors", MODEL_A, QUERY_A, GOOD)
         self.play(FadeIn(board, shift=LEFT * 0.2), run_time=0.9)
-        self.wait(2.2)
+        self.wait(beat(2.2))
 
         board = self.act_one_mixing(board)
         board = self.act_two_reembed(board)
@@ -712,7 +713,7 @@ class DriftRedrawsTheMap(BlogScene):
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), run_time=0.4)
         self.play(Write(closing), run_time=1.5)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(
             FadeOut(
                 VGroup(
@@ -729,7 +730,7 @@ class DriftRedrawsTheMap(BlogScene):
             ),
             run_time=1.0,
         )
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- act one: two maps at once -------------------------------------------
 
@@ -756,7 +757,7 @@ class DriftRedrawsTheMap(BlogScene):
         ).arrange(DOWN, buff=0.14)
         note.to_edge(DOWN, buff=0.3)
         self.play(FadeIn(note), run_time=0.7)
-        self.wait(3.0)
+        self.wait(beat(3.0))
         self.play(FadeOut(note), FadeOut(banner), run_time=0.6)
         return replacement
 
@@ -781,7 +782,7 @@ class DriftRedrawsTheMap(BlogScene):
         ).arrange(DOWN, buff=0.14)
         note.to_edge(DOWN, buff=0.3)
         self.play(FadeIn(note), run_time=0.7)
-        self.wait(3.2)
+        self.wait(beat(3.2))
         self.play(FadeOut(note), FadeOut(banner), run_time=0.6)
         return replacement
 

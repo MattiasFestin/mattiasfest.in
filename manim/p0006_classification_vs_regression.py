@@ -52,6 +52,7 @@ from mfblog.theme import (
     MUTED,
     BlogScene,
     axis_numbers,
+    beat,
     caption,
     label,
     title,
@@ -126,7 +127,7 @@ class ConfidentlyRightGetsFined(BlogScene):
         opening = caption("Nine emails. x counts trigger words, y is 1 for spam and 0 for ham.")
         opening.to_edge(DOWN, buff=0.4)
         self.play(*(FadeIn(dot) for dot, _, _ in self.points), FadeIn(opening), run_time=0.9)
-        self.wait(1.4)
+        self.wait(beat(1.4))
 
         self.act_one_it_works(opening)
         self.act_two_the_bill()
@@ -136,9 +137,9 @@ class ConfidentlyRightGetsFined(BlogScene):
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), run_time=0.4)
         self.play(Write(closing), run_time=1.4)
-        self.wait(2.4)
+        self.wait(beat(2.4))
         self.play(*(FadeOut(m) for m in list(self.mobjects)), run_time=1.0)
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- act one ---------------------------------------------------------------
 
@@ -166,7 +167,7 @@ class ConfidentlyRightGetsFined(BlogScene):
         verdict = caption("Every email lands on the right side of the cutoff. Ship it.", color=GOOD)
         verdict.to_edge(DOWN, buff=0.4)
         self.play(FadeOut(note), FadeIn(verdict), run_time=0.6)
-        self.wait(2.2)
+        self.wait(beat(2.2))
         self.play(FadeOut(verdict), run_time=0.4)
 
     # -- act two ---------------------------------------------------------------
@@ -197,7 +198,7 @@ class ConfidentlyRightGetsFined(BlogScene):
         ]
         self.play(*(FadeIn(dot) for dot, _, _ in extra), run_time=0.8)
         self.points.extend(extra)
-        self.wait(1.0)
+        self.wait(beat(1.0))
 
         # The hero image: out here the old line is not wrong, it is emphatically
         # right, and the loss bills it for the difference anyway.
@@ -222,7 +223,7 @@ class ConfidentlyRightGetsFined(BlogScene):
         blame.to_edge(DOWN, buff=0.4)
         self.play(FadeOut(note), FadeIn(blame), Create(residual), run_time=1.0)
         self.play(FadeIn(bill_card), run_time=0.7)
-        self.wait(2.6)
+        self.wait(beat(2.6))
 
         # Sweep the fit from the old coefficients to the new ones, with the loss
         # it is actually minimising read out live over all twelve points.
@@ -244,7 +245,7 @@ class ConfidentlyRightGetsFined(BlogScene):
             FadeIn(loss_card), run_time=0.8,
         )
         self.play(self.march.animate.set_value(1.0), run_time=3.0, rate_func=smooth)
-        self.wait(1.2)
+        self.wait(beat(1.2))
 
         live_line.clear_updaters()
         live_loss.clear_updaters()
@@ -277,7 +278,7 @@ class ConfidentlyRightGetsFined(BlogScene):
         cut_line = self.cut_rule()
         edge = self.boundary_rule(boundary(slope, intercept))
         self.play(FadeIn(cut_line), FadeIn(edge), run_time=0.8)
-        self.wait(0.8)
+        self.wait(beat(0.8))
 
         # Recolour by verdict, counted rather than asserted.
         wrong = 0
@@ -300,7 +301,7 @@ class ConfidentlyRightGetsFined(BlogScene):
         card = panel(readout, pad=0.26)
         card.move_to(RIGHT * CARD_X + UP * 0.5)
         self.play(FadeIn(card), run_time=0.7)
-        self.wait(1.6)
+        self.wait(beat(1.6))
 
         verdict = VGroup(
             caption("Adding unambiguous examples of spam made the filter worse.", color=BAD),
@@ -308,7 +309,7 @@ class ConfidentlyRightGetsFined(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(scored), FadeIn(verdict), run_time=0.7)
-        self.wait(2.8)
+        self.wait(beat(2.8))
         self.play(FadeOut(verdict), run_time=0.5)
 
     # -- pieces ----------------------------------------------------------------
@@ -440,7 +441,7 @@ class TheGradientDiesWhereItHurts(BlogScene):
         ).arrange(DOWN, buff=0.14)
         opening.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(opening), run_time=0.7)
-        self.wait(2.6)
+        self.wait(beat(2.6))
 
         self.act_one_the_derivative(opening)
         self.build_right()
@@ -451,11 +452,11 @@ class TheGradientDiesWhereItHurts(BlogScene):
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), run_time=0.4)
         self.play(Write(closing), run_time=1.4)
-        self.wait(2.4)
+        self.wait(beat(2.4))
         for live in (self.marker, self.dots, self.numbers):
             live.clear_updaters()
         self.play(*(FadeOut(m) for m in list(self.mobjects)), run_time=1.0)
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- acts ------------------------------------------------------------------
 
@@ -470,7 +471,7 @@ class TheGradientDiesWhereItHurts(BlogScene):
         note = caption("Chain rule on squared error, and there is the trouble:", color=INK)
         note.to_edge(DOWN, buff=0.4)
         self.play(FadeOut(opening), FadeIn(card), FadeIn(note), run_time=0.8)
-        self.wait(1.6)
+        self.wait(beat(1.6))
 
         blame = VGroup(
             caption("The second factor is the slope of the squashing function,", color=MUTED),
@@ -478,7 +479,7 @@ class TheGradientDiesWhereItHurts(BlogScene):
         ).arrange(DOWN, buff=0.14)
         blame.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(note), FadeIn(blame), run_time=0.7)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(FadeOut(card), FadeOut(blame), run_time=0.6)
 
     def act_two_the_sweep(self) -> None:
@@ -486,7 +487,7 @@ class TheGradientDiesWhereItHurts(BlogScene):
         note.to_edge(DOWN, buff=0.4)
         self.play(FadeIn(note), run_time=0.5)
         self.play(self.score.animate.set_value(-6.0), run_time=4.0, rate_func=smooth)
-        self.wait(1.2)
+        self.wait(beat(1.2))
 
         verdict = VGroup(
             caption(
@@ -500,7 +501,7 @@ class TheGradientDiesWhereItHurts(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(note), FadeIn(verdict), run_time=0.7)
-        self.wait(2.8)
+        self.wait(beat(2.8))
         self.play(FadeOut(verdict), run_time=0.5)
 
     def act_three_the_alternative(self) -> None:
@@ -511,7 +512,7 @@ class TheGradientDiesWhereItHurts(BlogScene):
         note.to_edge(DOWN, buff=0.4)
         self.show_log = True
         self.play(FadeIn(note), Create(curve), FadeIn(tag), run_time=1.4)
-        self.wait(1.2)
+        self.wait(beat(1.2))
 
         ratio = log_gradient(-6.0) / mse_gradient(-6.0)
         verdict = VGroup(
@@ -520,7 +521,7 @@ class TheGradientDiesWhereItHurts(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(note), FadeIn(verdict), run_time=0.7)
-        self.wait(2.8)
+        self.wait(beat(2.8))
         self.play(FadeOut(verdict), run_time=0.5)
 
     # -- pieces ----------------------------------------------------------------
@@ -682,7 +683,7 @@ class OneScorerManyProducts(BlogScene):
         ).arrange(DOWN, buff=0.14)
         opening.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(opening), run_time=0.7)
-        self.wait(2.6)
+        self.wait(beat(2.6))
 
         self.act_one_vanity(opening)
         self.act_two_sweep()
@@ -692,11 +693,11 @@ class OneScorerManyProducts(BlogScene):
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), run_time=0.4)
         self.play(Write(closing), run_time=1.4)
-        self.wait(2.4)
+        self.wait(beat(2.4))
         for live in (self.bars, self.spam_dots, self.rule):
             live.clear_updaters()
         self.play(*(FadeOut(m) for m in list(self.mobjects)), run_time=1.0)
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- acts ------------------------------------------------------------------
 
@@ -715,7 +716,7 @@ class OneScorerManyProducts(BlogScene):
         note.to_edge(DOWN, buff=0.4)
         self.play(FadeOut(opening), FadeIn(note), run_time=0.6)
         self.play(FadeIn(card), run_time=0.8)
-        self.wait(2.0)
+        self.wait(beat(2.0))
 
         verdict = VGroup(
             caption(f"{accuracy * 100:.0f}% accurate, and it has never caught anything.", color=BAD),
@@ -723,7 +724,7 @@ class OneScorerManyProducts(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(note), FadeIn(verdict), run_time=0.7)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(FadeOut(card), FadeOut(verdict), run_time=0.6)
 
     def act_two_sweep(self) -> None:
@@ -731,9 +732,9 @@ class OneScorerManyProducts(BlogScene):
         note = caption("Now a real scorer, and one cutoff sliding down through it:", color=INK)
         note.to_edge(DOWN, buff=0.4)
         self.play(FadeIn(note), FadeIn(self.live_card), run_time=0.8)
-        self.wait(1.2)
+        self.wait(beat(1.2))
         self.play(self.threshold.animate.set_value(SCREEN_CUT), run_time=5.0, rate_func=smooth)
-        self.wait(1.2)
+        self.wait(beat(1.2))
 
         verdict = VGroup(
             caption("Nothing about the model changed. Only where the line was drawn.", color=MUTED),
@@ -741,7 +742,7 @@ class OneScorerManyProducts(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(note), FadeIn(verdict), run_time=0.7)
-        self.wait(2.4)
+        self.wait(beat(2.4))
         self.play(FadeOut(verdict), run_time=0.5)
 
     def act_three_products(self) -> None:
@@ -785,7 +786,7 @@ class OneScorerManyProducts(BlogScene):
             FadeIn(curve_heading), FadeIn(note), run_time=0.9,
         )
         self.play(Create(curve), run_time=2.0)
-        self.wait(0.8)
+        self.wait(beat(0.8))
 
         marks = []
         for cut, colour in ((FILTER_CUT, ACCENT), (SCREEN_CUT, GOOD)):
@@ -802,7 +803,7 @@ class OneScorerManyProducts(BlogScene):
             FILTER_CUT, "the spam filter", "burying real mail is the expensive mistake", ACCENT
         )
         self.play(FadeIn(marks[0]), FadeIn(filter_note), run_time=0.7)
-        self.wait(2.8)
+        self.wait(beat(2.8))
 
         screen_note = self.posture_note(
             SCREEN_CUT, "the screening test", "a missed case is the catastrophe, and follow-ups mop up", GOOD
@@ -814,7 +815,7 @@ class OneScorerManyProducts(BlogScene):
             rate_func=smooth,
         )
         self.play(FadeIn(marks[1]), FadeIn(screen_note), run_time=0.7)
-        self.wait(2.8)
+        self.wait(beat(2.8))
 
         verdict = VGroup(
             caption("Same weights, same scores, opposite souls.", color=INK),
@@ -822,7 +823,7 @@ class OneScorerManyProducts(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.35)
         self.play(FadeOut(screen_note), FadeIn(verdict), run_time=0.7)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(FadeOut(verdict), run_time=0.5)
 
     # -- pieces ----------------------------------------------------------------

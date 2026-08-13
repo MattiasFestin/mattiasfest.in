@@ -133,4 +133,5 @@ prepare_post 0003 content/blog/0003-how-are-embeddings-trained.md manim/p0003_ho
 prepare_post 0004 content/blog/0004-what-are-drift.md manim/p0004_what_are_drift.py
 prepare_post 0005 content/blog/0005-linear-regression.md manim/p0005_linear_regression.py
 prepare_post 0006 content/blog/0006-classification-vs-regression.md manim/p0006_classification_vs_regression.py
+prepare_post 0007 content/blog/0007-logistic-regression.md manim/p0007_logistic_regression.py
 mv "$tmp_manifest" "$manifest"

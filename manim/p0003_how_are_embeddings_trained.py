@@ -53,6 +53,7 @@ from mfblog.theme import (
     L2,
     MUTED,
     BlogScene,
+    beat,
     caption,
     label,
     title,
@@ -195,7 +196,7 @@ class TheExamAndItsTemperature(BlogScene):
         prompt = caption("One true match. Five decoys. Point to the match.")
         prompt.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(prompt), run_time=0.7)
-        self.wait(1.6)
+        self.wait(beat(1.6))
 
         formula = tex(
             r"cal(L) = -log (exp(q dot p \/ tau)) / (sum_j exp(q dot c_j \/ tau))",
@@ -208,7 +209,7 @@ class TheExamAndItsTemperature(BlogScene):
         explain = caption("Softmax over the candidates. The loss is the match's share.")
         explain.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(explain), run_time=0.7)
-        self.wait(2.2)
+        self.wait(beat(2.2))
 
         self.act_two_temperature(explain)
         self.act_three_gradient(dots)
@@ -217,7 +218,7 @@ class TheExamAndItsTemperature(BlogScene):
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), run_time=0.4)
         self.play(Write(closing), run_time=1.4)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         dots.clear_updaters()
         tags.clear_updaters()
         bars.clear_updaters()
@@ -225,7 +226,7 @@ class TheExamAndItsTemperature(BlogScene):
             FadeOut(VGroup(closing, stage, query, query_tag, dots, tags, bars, formula)),
             run_time=1.0,
         )
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- act two ---------------------------------------------------------------
 
@@ -240,7 +241,7 @@ class TheExamAndItsTemperature(BlogScene):
         ).arrange(DOWN, buff=0.14)
         sharp.to_edge(DOWN, buff=0.3)
         self.play(FadeOut(note), FadeIn(sharp), run_time=0.7)
-        self.wait(2.4)
+        self.wait(beat(2.4))
 
         # Retire the caption *before* the sweep, so the words on screen never
         # contradict the τ readout above them.
@@ -252,7 +253,7 @@ class TheExamAndItsTemperature(BlogScene):
         ).arrange(DOWN, buff=0.14)
         soft.to_edge(DOWN, buff=0.3)
         self.play(FadeIn(soft), run_time=0.7)
-        self.wait(2.2)
+        self.wait(beat(2.2))
 
         self.play(
             FadeOut(soft), self.tau.animate.set_value(np.log(DESCENT_TAU)), run_time=1.6
@@ -274,10 +275,10 @@ class TheExamAndItsTemperature(BlogScene):
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.16)
         legend.to_edge(DOWN, buff=0.3)
         self.play(FadeIn(arrows), FadeIn(legend), run_time=0.9)
-        self.wait(2.2)
+        self.wait(beat(2.2))
 
         self.play(self.step.animate.set_value(DESCENT_STEPS), run_time=7.0, rate_func=linear)
-        self.wait(0.8)
+        self.wait(beat(0.8))
 
         arrows.clear_updaters()
         verdict = VGroup(
@@ -286,7 +287,7 @@ class TheExamAndItsTemperature(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.3)
         self.play(FadeOut(arrows), FadeOut(legend), FadeIn(verdict), run_time=0.8)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(FadeOut(verdict), run_time=0.5)
 
     # -- pieces ----------------------------------------------------------------
@@ -493,7 +494,7 @@ class AlignmentAndUniformity(BlogScene):
         intro = caption("Each colour is a positive pair: two things that should land together.")
         intro.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(intro), FadeIn(self.readout), run_time=0.8)
-        self.wait(2.2)
+        self.wait(beat(2.2))
         self.play(FadeOut(intro), run_time=0.5)
 
         self.run_regime(
@@ -532,13 +533,13 @@ class AlignmentAndUniformity(BlogScene):
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), run_time=0.4)
         self.play(Write(closing), run_time=1.4)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         for mobject in (self.dots, self.chords, self.readout):
             mobject.clear_updaters()
         self.play(
             FadeOut(VGroup(closing, circle, self.dots, self.chords, self.readout)), run_time=1.0
         )
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     # -- one regime ------------------------------------------------------------
 
@@ -550,12 +551,12 @@ class AlignmentAndUniformity(BlogScene):
         banner.move_to(RIGHT * 3.5 + UP * 2.5)
         self.play(FadeIn(banner), run_time=0.6)
         self.play(self.step.animate.set_value(TUG_STEPS), run_time=4.6, rate_func=smooth)
-        self.wait(0.6)
+        self.wait(beat(0.6))
 
         verdict = VGroup(*(caption(line, color=INK if i == 0 else MUTED) for i, line in enumerate(lesson)))
         verdict.arrange(DOWN, buff=0.14).to_edge(DOWN, buff=0.3)
         self.play(FadeIn(verdict), run_time=0.7)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(FadeOut(verdict), FadeOut(banner), run_time=0.6)
 
     def show_collapse(self) -> None:
@@ -585,7 +586,7 @@ class AlignmentAndUniformity(BlogScene):
         ).arrange(DOWN, buff=0.14)
         verdict.to_edge(DOWN, buff=0.3)
         self.play(FadeIn(verdict), run_time=0.7)
-        self.wait(3.0)
+        self.wait(beat(3.0))
         self.play(FadeOut(verdict), FadeOut(warning), run_time=0.6)
 
     # -- pieces ----------------------------------------------------------------
@@ -686,13 +687,13 @@ class RotationIsInvisible(BlogScene):
         table = always_redraw(self.build_table)
         coordinates = always_redraw(self.build_coordinates)
         self.play(FadeIn(table), FadeIn(coordinates), run_time=0.9)
-        self.wait(1.8)
+        self.wait(beat(1.8))
 
         spin = caption("Now turn the whole map. Watch both columns.", color=ACCENT)
         spin.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(spin), run_time=0.6)
         self.play(self.turn.animate.set_value(210.0), run_time=5.0, rate_func=smooth)
-        self.wait(0.8)
+        self.wait(beat(0.8))
         self.play(self.turn.animate.set_value(430.0), run_time=4.4, rate_func=smooth)
 
         verdict = VGroup(
@@ -701,7 +702,7 @@ class RotationIsInvisible(BlogScene):
         ).arrange(DOWN, buff=0.2)
         verdict.to_edge(DOWN, buff=0.3)
         self.play(FadeOut(spin), FadeIn(verdict), run_time=0.8)
-        self.wait(2.8)
+        self.wait(beat(2.8))
 
         for mobject in (shape, dots, tags, table, coordinates):
             mobject.clear_updaters()
@@ -740,19 +741,19 @@ class RotationIsInvisible(BlogScene):
         rows = VGroup(same, differ).arrange(DOWN, buff=0.24)
         block = panel(rows).move_to(DOWN * 2.75)
         self.play(FadeIn(block), run_time=0.8)
-        self.wait(2.6)
+        self.wait(beat(2.6))
 
         closing = label("Nothing in training picks which way is up.", color=ACCENT)
         closing.to_edge(UP, buff=0.35)
         self.play(FadeOut(heading), FadeOut(subtitle), run_time=0.4)
         self.play(Write(closing), run_time=1.4)
-        self.wait(1.4)
+        self.wait(beat(1.4))
         warning = caption("So never compare vectors across runs. There is nothing to compare.", color=BAD)
         warning.to_edge(DOWN, buff=0.3)
         self.play(FadeOut(block), FadeIn(warning), run_time=0.8)
-        self.wait(2.6)
+        self.wait(beat(2.6))
         self.play(FadeOut(VGroup(closing, left, right, warning)), run_time=1.0)
-        self.wait(0.4)
+        self.wait(beat(0.4))
 
     def run_panel(self, center: np.ndarray, turn: float, name: str, color: str) -> VGroup:
         radius = 1.35

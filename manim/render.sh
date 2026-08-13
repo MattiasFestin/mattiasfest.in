@@ -53,8 +53,12 @@ case "$post" in
     source="manim/p0006_classification_vs_regression.py"
     default_scenes="ConfidentlyRightGetsFined TheGradientDiesWhereItHurts OneScorerManyProducts"
     ;;
+  0007)
+    source="manim/p0007_logistic_regression.py"
+    default_scenes="SigmoidFromLogOdds ThePunchlineGradient SoftmaxGoesMulticlass"
+    ;;
   *)
-    echo "Usage: manim/render.sh {0001|0002|0003|0004|0005|0006} [--final] [--if-missing] [scene ...]" >&2
+    echo "Usage: manim/render.sh {0001|0002|0003|0004|0005|0006|0007} [--final] [--if-missing] [scene ...]" >&2
     exit 2
     ;;
 esac
@@ -122,6 +126,9 @@ stem_for_scene() {
     0006:ConfidentlyRightGetsFined) echo "confidently-right-gets-fined" ;;
     0006:TheGradientDiesWhereItHurts) echo "the-gradient-dies-where-it-hurts" ;;
     0006:OneScorerManyProducts) echo "one-scorer-many-products" ;;
+    0007:SigmoidFromLogOdds) echo "sigmoid-from-log-odds" ;;
+    0007:ThePunchlineGradient) echo "the-punchline-gradient" ;;
+    0007:SoftmaxGoesMulticlass) echo "softmax-goes-multiclass" ;;
     *)
       echo "Unknown scene for post $post: $1" >&2
       exit 2
