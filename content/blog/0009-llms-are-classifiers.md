@@ -1,6 +1,6 @@
 +++
 title = "From lines to language models: Part 5 - A language model is a classifier"
-date = 2026-08-28
+date = 2026-08-27
 description = "\"The cat sat on the ___\" is a multiple-choice exam with roughly 50,000 options, and a language model does nothing else. The head of GPT is literally Part 3's softmax regression with a bigger K, and the labels come free because raw text grades its own next token. Plus: train a character-level language model in your browser and watch it babble."
 
 [extra]
